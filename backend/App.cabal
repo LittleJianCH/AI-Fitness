@@ -1,0 +1,12 @@
+cabal-version: 3.0
+name: ai-fitness-backend
+version: 0.1.0.0
+build-type: Simple
+
+executable ai-fitness-backend
+  main-is: Main.hs
+  other-modules: Api, Config
+  hs-source-dirs: .
+  build-depends: base, ihp, servant, servant-server, text, wai, warp
+  default-language: Haskell2010
+  ghc-options: -Wall -threaded -rtsopts

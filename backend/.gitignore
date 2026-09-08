@@ -1,0 +1,9 @@
+build/
+dist-newstyle/
+*.hi
+*.o
+.env
+# Local state left by the initial IHP scaffold.
+.devenv*
+.direnv/
+Config/client_session_key.aes
