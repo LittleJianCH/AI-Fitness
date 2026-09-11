@@ -21,3 +21,8 @@ Thumbs.db
 # Vite
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Generated API and browser test artifacts
+/src/lib/api/generated/
+/test-results/
+/playwright-report/

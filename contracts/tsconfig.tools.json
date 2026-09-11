@@ -9,5 +9,10 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["orval.config.ts", "fetch-client.ts"]
+  "include": [
+    "orval.config.ts",
+    "fetch-client.ts",
+    "web.config.ts",
+    "web-zod-client.ts"
+  ]
 }

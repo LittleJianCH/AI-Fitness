@@ -1,0 +1,154 @@
+import type { Workout, WorkoutCard, CommonSummary, TimedHeartRate } from '../api/generated/client';
+
+export type Metric = {
+	key: string;
+	title: string;
+	unit: string;
+	color: string;
+	average?: number;
+	maximum?: number;
+	samples: TimedHeartRate[];
+	factor: number;
+};
+export function commonCard(card: WorkoutCard): CommonSummary {
+	return card.summary.type === 'cyclingSummary'
+		? card.summary.data.recordedSummary.cyclingCommonSummary
+		: card.summary.data.recordedSummary.runningCommonSummary;
+}
+export function common(workout: Workout): CommonSummary {
+	const sport = workout.workoutObservation.observationSport;
+	return sport.type === 'cycling'
+		? sport.data.cyclingSummary.recordedSummary.cyclingCommonSummary
+		: sport.data.runningSummary.recordedSummary.runningCommonSummary;
+}
+export function motion(workout: Workout) {
+	const sport = workout.workoutObservation.observationSport;
+	return sport.type === 'cycling' ? sport.data.cyclingMotion : sport.data.runningMotion;
+}
+export function metrics(workout: Workout): Metric[] {
+	const s = common(workout),
+		m = motion(workout),
+		sport = workout.workoutObservation.observationSport;
+	const cadence =
+		sport.type === 'cycling'
+			? sport.data.cyclingSummary.recordedSummary.summaryCyclingCadence
+			: sport.data.runningSummary.recordedSummary.summaryRunningCadence;
+	const result: Metric[] = [
+		{
+			key: 'power',
+			title: '功率',
+			unit: 'W',
+			color: '#7350C7',
+			average: s.summaryPower.averageValue,
+			maximum: s.summaryPower.maximumValue,
+			samples: m.motionPower,
+			factor: 1
+		},
+		{
+			key: 'heart-rate',
+			title: '心率',
+			unit: 'bpm',
+			color: '#D43A4A',
+			average: s.summaryHeartRate.averageValue,
+			maximum: s.summaryHeartRate.maximumValue,
+			samples: m.motionHeartRate,
+			factor: 1
+		},
+		{
+			key: 'cadence',
+			title: sport.type === 'cycling' ? '踏频' : '步频',
+			unit: sport.type === 'cycling' ? 'rpm' : '步/分钟',
+			color: '#9A6300',
+			average: cadence.averageValue,
+			maximum: cadence.maximumValue,
+			samples: sport.type === 'cycling' ? sport.data.cyclingCadence : sport.data.runningCadence,
+			factor: 1
+		},
+		{
+			key: 'speed',
+			title: '速度',
+			unit: 'km/h',
+			color: '#1769D2',
+			average: s.summarySpeed.averageValue,
+			maximum: s.summarySpeed.maximumValue,
+			samples: m.motionSpeed,
+			factor: 3.6
+		},
+		{
+			key: 'altitude',
+			title: '海拔',
+			unit: 'm',
+			color: '#586B63',
+			average: s.summaryAltitude.averageValue,
+			maximum: s.summaryAltitude.maximumValue,
+			samples: m.motionAltitude,
+			factor: 1
+		}
+	];
+	return result.filter(
+		(item) => item.samples.length || item.average !== undefined || item.maximum !== undefined
+	);
+}
+export const valueText = (value: number | undefined, factor = 1, digits = 0) =>
+	value === undefined
+		? '未记录'
+		: (value * factor).toLocaleString('zh-CN', { maximumFractionDigits: digits });
+export function duration(seconds: number | undefined) {
+	if (seconds === undefined) return '未记录';
+	const total = Math.floor(seconds),
+		h = Math.floor(total / 3600),
+		m = Math.floor((total % 3600) / 60),
+		s = total % 60;
+	return [h, m, s].map((n) => String(n).padStart(2, '0')).join(':');
+}
+export function timeSummary(summary: CommonSummary) {
+	if (summary.summaryMovingTime !== undefined)
+		return { label: '移动时长', seconds: summary.summaryMovingTime };
+	if (summary.summaryTimerTime !== undefined)
+		return { label: '计时时长', seconds: summary.summaryTimerTime };
+	return { label: '经过时长', seconds: summary.summaryElapsedTime };
+}
+export const dateText = (value: string) =>
+	new Date(value).toLocaleString('zh-CN', {
+		year: 'numeric',
+		month: 'long',
+		day: 'numeric',
+		hour: '2-digit',
+		minute: '2-digit',
+		hour12: false
+	});
+export const dayText = (value: string) =>
+	new Date(value).toLocaleDateString('zh-CN', {
+		year: 'numeric',
+		month: 'long',
+		day: 'numeric',
+		weekday: 'long'
+	});
+
+// Display rule only: separate samples more than two minutes apart. The points
+// and all reported statistics remain unchanged, and the rule is stated in UI.
+export function chartPoints(
+	samples: TimedHeartRate[],
+	start: string,
+	factor: number
+): [number, number | null][] {
+	const points: [number, number | null][] = [];
+	for (let i = 0; i < samples.length; i++) {
+		const sample = samples[i];
+		const t = (Date.parse(sample.timestamp) - Date.parse(start)) / 1000;
+		const previous = samples[i - 1];
+		if (previous && Date.parse(sample.timestamp) - Date.parse(previous.timestamp) > 120000)
+			points.push([t - 0.001, null]);
+		points.push([t, sample.value * factor]);
+	}
+	return points;
+}
+
+export function groupCards(items: WorkoutCard[]): [string, WorkoutCard[]][] {
+	const groups = new Map<string, WorkoutCard[]>();
+	for (const item of items) {
+		const key = dayText(item.range.rangeStart);
+		groups.set(key, [...(groups.get(key) ?? []), item]);
+	}
+	return [...groups];
+}

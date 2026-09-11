@@ -2,12 +2,18 @@
   "name": "ai-fitness-contract-checks",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=24" },
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "generate": "node openapi.mjs && orval --config orval.config.ts",
-    "check": "tsc -p tsconfig.tools.json && tsc && node check.mjs && node determinism.mjs"
+    "check": "tsc -p tsconfig.tools.json && tsc && node check.mjs && node determinism.mjs",
+    "generate:web": "orval --config web.config.ts",
+    "check:web": "npm run generate:web && node web-determinism.mjs"
   },
-  "overrides": { "ajv": "$ajv" },
+  "overrides": {
+    "ajv": "$ajv"
+  },
   "devDependencies": {
     "@apidevtools/swagger-parser": "12.0.0",
     "@types/node": "22.20.2",

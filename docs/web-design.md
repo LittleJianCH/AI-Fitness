@@ -15,9 +15,9 @@ acceptance remains part of the same feature.
 
 This document owns the Web visual and interaction design. Page descriptions are
 design targets, not an implementation checklist for the current task. The current
-Web app is a static placeholder; its temporary green landing-page styling is not
-the product design baseline. Source code and manifests establish available
-capabilities. The numerical values below are working design defaults to validate
+Web app is a synthetic training-review demo implementing a subset of these
+design targets; real product handlers remain future work. Source code and
+manifests establish available capabilities. The numerical values below are working design defaults to validate
 in real layouts, rather than individually approved pixel-level requirements.
 
 ## Visual language
@@ -33,6 +33,12 @@ with unit and statistic label, then a chart spanning the available card width.
 Analysis-page section headings sit above their content surfaces. Multiple
 statistics use aligned label/value rows or a small group that can wrap vertically.
 Numbers use tabular figures and consistent unit spacing.
+
+Use the [Tabler Icons](https://tabler.io/icons) outline family for sport and
+interface symbols, with rounded strokes and a shared 24-unit grid. The current
+stroke weight is 1.8; icons inherit text color and keep their existing contextual
+sizes. Sport icons use the blue accent on a pale background. Visible labels carry
+the meaning; accompanying icons are decorative for assistive technology.
 
 Give the current task room: previews communicate overall shape; a dedicated
 analysis page gives the main chart visual priority. Content grows and scrolls at

@@ -2,7 +2,7 @@
 
 A personal fitness and training data system managed as a monorepo.
 The current backend is a minimal Servant API using IHP configuration and logging.
-The `web/` directory contains a minimal Svelte 5 / SvelteKit frontend with strict TypeScript.
+The `web/` directory contains a Svelte 5 / SvelteKit training-review demo with strict TypeScript.
 Canonical workout/import models and a generated API contract are available;
 product endpoints are not mounted yet.
 
@@ -27,19 +27,20 @@ Use `PORT=8080 make run` to change the port. Ctrl-C stops the server; `exit` lea
 the development shell. No database, SQL initialization, or background services
 are started. `make` compiles without starting the server.
 
-## Run the web app
+## Run the web demo
 
 ```sh
+./scripts/web_generate
 ./scripts/web_dev
 pnpm install --frozen-lockfile
-pnpm dev
+pnpm demo
 ```
 
-Open http://localhost:5173. The initial page is a standalone placeholder and does
-not call the backend. Ctrl-C stops the server; `exit` leaves the development shell.
-See [Web development](web/README.md) for checks and project structure.
-See [Web UI Design](docs/web-design.md) for visual style, responsive layouts and
-interaction design.
+Open http://127.0.0.1:5173/workouts. The demo uses generated API contracts with
+synthetic read-only responses; real authentication and workout handlers are not
+implemented yet. See [Web development](web/README.md) for data flow, checks and
+ordinary-mode behavior, and [Web UI Design](docs/web-design.md) for design rules.
+Ctrl-C stops the server; `exit` leaves the development shell.
 
 ## Domain checks
 

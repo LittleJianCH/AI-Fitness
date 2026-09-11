@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+repo_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$repo_root"
+exec nix develop path:. --accept-flake-config --no-update-lock-file -c sh -c '
+  make -C backend contract contract-test &&
+  cd contracts &&
+  npm ci --ignore-scripts &&
+  npm run generate &&
+  npm run generate:web
+'

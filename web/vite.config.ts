@@ -1,9 +1,11 @@
+import { demoPlugin } from './demo/server.ts';
 import adapter from '@sveltejs/adapter-auto';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
 	plugins: [
+		...(mode === 'demo' ? [demoPlugin()] : []),
 		sveltekit({
 			compilerOptions: {
 				// Force runes mode for the project, except for libraries. Can be removed in svelte 6.
@@ -17,4 +19,4 @@ export default defineConfig({
 			adapter: adapter()
 		})
 	]
-});
+}));
