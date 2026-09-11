@@ -3,6 +3,10 @@
 Minimal Svelte 5 / SvelteKit app with strict TypeScript, scaffolded with the
 [official Svelte CLI](https://svelte.dev/docs/cli/sv-create) (`sv@0.17.0`).
 
+See [Web UI Design](../docs/web-design.md) for the desktop-priority visual and
+interaction baseline and joint desktop/mobile acceptance. The current homepage
+is a development placeholder.
+
 ## Development
 
 From the repository root:

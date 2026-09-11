@@ -38,6 +38,8 @@ pnpm dev
 Open http://localhost:5173. The initial page is a standalone placeholder and does
 not call the backend. Ctrl-C stops the server; `exit` leaves the development shell.
 See [Web development](web/README.md) for checks and project structure.
+See [Web UI Design](docs/web-design.md) for visual style, responsive layouts and
+interaction design.
 
 ## Domain checks
 

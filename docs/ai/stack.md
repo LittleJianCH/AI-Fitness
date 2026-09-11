@@ -19,7 +19,7 @@ The root flake supplies the current development shell. Haskell packages/tools co
 | Web | Svelte 5, SvelteKit, strict TypeScript | Initialized in `web/` with a static homepage; no API integration yet. SvelteKit is not a second domain backend. |
 | Web API/state | Orval, TanStack Svelte Query, boundary validation with Zod | Orval generates a fetch client for contract checks. Zod is installed in web/ but not used by the static homepage yet. Query integration and application boundary validation remain future work. |
 | Web effects | Effect (`effect`) | Approved, not default and not installed. Introduce locally when concrete effect orchestration justifies it; start with direct TypeScript. Svelte retains UI state ownership. |
-| Web presentation | Tailwind CSS, shadcn-svelte/Bits UI, ECharts | Carried-forward UI choices; introduce only components needed by the active feature. |
+| Web presentation | Tailwind CSS, shadcn-svelte/Bits UI, ECharts | Carried-forward UI choices; introduce only components needed by the active feature. Visual and responsive rules live in [Web UI Design](../web-design.md). |
 | iOS | Swift, SwiftUI, HealthKit; URLSession, Keychain; Swift OpenAPI Generator | Planned native client. SwiftData is the planned local persistence option, not a requirement to duplicate the full server database. |
 | Android | Kotlin, Jetpack Compose | Latest native-client direction. Coroutines/Flow and ViewModel are recommended implementation defaults, not existing code. |
 | Android supporting choices | Gradle Kotlin DSL; Health Connect/Room when required | Proposed or conditional. Network library, Kotlin API generator, persistence scope, and SDK levels remain to be settled. No Kotlin Multiplatform baseline. |

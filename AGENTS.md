@@ -28,6 +28,7 @@ Select guidance by **behavior and affected boundaries**, not by file extension a
 | --- | --- |
 | Haskell implementation | `docs/ai/haskell.md` |
 | Web TypeScript, Svelte, UI state | `docs/ai/web.md` |
+| Web visual design, responsive layout, navigation, charts | `docs/web-design.md` |
 | Swift, SwiftUI, HealthKit | `docs/ai/ios.md` |
 | Kotlin, Compose, Android integration | `docs/ai/android.md` |
 | Go MCP tools or transport | `docs/ai/mcp.md` |

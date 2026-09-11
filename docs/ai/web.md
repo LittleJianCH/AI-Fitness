@@ -18,7 +18,7 @@ SvelteKit routing/loading and TanStack Query must have a defined ownership bound
 
 SvelteKit MAY perform rendering, routing, and thin transport adaptation. It MUST NOT acquire independent database ownership or implement a second copy of domain calculations. A server route is not inherently forbidden, but business-heavy `+server.ts` endpoints require an architectural discussion.
 
-Use semantic HTML, labeled controls, keyboard access, and explicit loading/empty/error states. Preserve the product's mobile-first, predominantly single-column layout: show the main chart and use drill-down views for detail rather than shrinking text to fit every metric. Social features, friends, leaderboards, badges, and a route library are outside product scope.
+Use semantic HTML, labeled controls, keyboard access, and explicit loading/empty/error states. Desktop Web is the primary experience; design, implement and validate desktop and mobile Web together in each feature slice. Follow [Web UI Design](../web-design.md) for visual tokens, responsive layouts, navigation, chart behavior and product scope. Keep these design rules in that document rather than duplicating them here.
 
 Suggested checks: Prettier with the Svelte plugin, ESLint, `svelte-check`, Vitest for pure/component behavior, and a small Playwright suite for critical journeys. Install/configure only what the active frontend needs. Do not claim these scripts exist before checking `package.json`. [svelte-testing]
 
