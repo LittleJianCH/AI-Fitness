@@ -12,6 +12,9 @@ import Data.Vector (Vector)
 import Workout.Common.Types
 import Workout.Measurement.Types
 
+-- The initial cycling baseline is heart rate, power, speed, altitude and GPS
+-- in cyclingMotion, plus cyclingCadence (rpm). Every stream is independently
+-- sampled; an unavailable sensor leaves an empty stream.
 data CyclingData = CyclingData
     { cyclingMotion :: MotionData
     , cyclingCadence :: TimeSeries CyclingCadence

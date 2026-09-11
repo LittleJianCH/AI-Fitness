@@ -1,4 +1,4 @@
-module Workout.Sport (motion, heartRate, power, invalidateCalculated) where
+module Workout.Sport (motion, heartRate, power, speed, altitude, position, invalidateCalculated) where
 
 import qualified Workout.Cycling.Update as Cycling
 import Workout.Measurement.Types
@@ -15,6 +15,15 @@ heartRate = motionHeartRate . motion
 
 power :: Sport -> TimeSeries Power
 power = motionPower . motion
+
+speed :: Sport -> TimeSeries Speed
+speed = motionSpeed . motion
+
+altitude :: Sport -> TimeSeries Altitude
+altitude = motionAltitude . motion
+
+position :: Sport -> TimeSeries Position
+position = motionPosition . motion
 
 invalidateCalculated :: Sport -> Sport
 invalidateCalculated sport = case sport of

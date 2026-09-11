@@ -4,6 +4,8 @@
 
 The intended flow is `Servant API/DTO definitions → OpenAPI → TypeScript, Swift, Kotlin, and Go clients`. Kotlin is an added contract consumer, not a second API source of truth. Generator selection remains part of each client's implementation task. The public wire schema is shared; framework models, persistence objects, and every internal Haskell type are not. [repo-architecture] [openapi] [orval]
 
+Reuse canonical workout measurement types across the model and API. Keep serialization and OpenAPI instances in separate modules; do not duplicate cycling, running, or time-series records solely to create an API layer. Define separate request, response, or projection types when their meaning actually differs from the canonical model.
+
 Keep names, IDs, units, timestamps, required/optional/null semantics, tagged unions, pagination, and error responses explicit. Use string IDs or another representation that all clients can round-trip exactly. Do not use clever generic encodings that compile in one language but become `any` or unusable models in another.
 
 First prove a small contract containing an identifier, timestamp, optional value, tagged alternative, success response, and error response. Generate and compile the relevant clients. Validate encoding behavior against the real server; schema syntax validity alone is insufficient. A generated client is not a runtime proof that an endpoint obeys the schema.

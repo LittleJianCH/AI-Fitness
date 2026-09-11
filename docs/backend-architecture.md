@@ -109,6 +109,19 @@ Workout/WorkoutGroup decision superseding its native multisport representation.
 It separates canonical observations, user-owned content, derived results, and import state.
 Only cycling and running are modeled; other sports are added when needed.
 
+Cycling and running are developed together. Their initial measurement baseline is:
+
+| Sport | Baseline time series |
+| --- | --- |
+| Cycling | Heart rate, power, altitude, speed, cycling cadence, GPS position |
+| Running | Heart rate, running cadence, altitude, GPS position |
+
+This is a capability baseline, not a requirement that every workout has every
+sensor. Existing additional measurements remain supported. Altitude is stored as
+timestamped elevations, preserving rises and falls for later analysis. The shared
+`Workout.Sport` operations expose heart rate, power, speed, altitude and position;
+cycling and running retain their own cadence types and units.
+
 ```text
 Workout (UUID, revision)
 ├── WorkoutUserData: title, notes, tags, statistics inclusion
@@ -310,7 +323,7 @@ revision conflicts, reported-value preservation, cache invalidation, batch refre
 suppression decisions. `make` still builds the existing API. This validates pure
 model behavior; it is not a FIT, database, HealthKit, export or performance test.
 
-Tests are grouped into workout, import-state and import-output modules with a
+Tests are grouped into workout, cycling, running, import-state and import-output modules with a
 small shared runner. `make format` applies the adopted Fourmolu configuration;
 `make format-check lint` checks formatting and HLint suggestions. Fourmolu and
 HLint use the existing pinned Nix toolchain; Haskell2010 and strict GHC warnings

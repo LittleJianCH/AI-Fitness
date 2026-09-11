@@ -8,6 +8,7 @@ module Fixtures
     , rideRange
     , rideSummary
     , ride
+    , run
     , observation
     , workout
     , group
@@ -79,9 +80,12 @@ ride =
             emptyMotion
                 { motionHeartRate = V.fromList [Timed start (HeartRate 122), Timed (at 2) (HeartRate 160)]
                 , motionPower = V.fromList [Timed start (Power 0), Timed (at 1) (Power 82)]
+                , motionSpeed = V.fromList [Timed (at 1) (Speed 0), Timed (at 3) (Speed 6.5)]
                 , motionDistance = V.fromList [Timed start (Distance 0), Timed (at 17442) (Distance 75470)]
-                , motionPosition = V.singleton (Timed start (Position 31.2 121.5))
-                , motionAltitude = V.singleton (Timed start (Altitude (-2)))
+                , motionPosition =
+                    V.fromList [Timed start (Position 31.2 121.5), Timed (at 3) (Position 31.2001 121.5001)]
+                , motionAltitude =
+                    V.fromList [Timed start (Altitude (-2)), Timed (at 1) (Altitude 3), Timed (at 2) (Altitude 1)]
                 , motionGrade = V.singleton (Timed start (Grade (-8.23)))
                 , motionEnergy = V.singleton (Timed (at 17442) (Energy (972 * 4184)))
                 , motionEnvironment =
@@ -193,6 +197,30 @@ groupedOutput =
         (workoutGroupId group)
         (ImportedWorkout ridePart wid :| [ImportedWorkout runPart otherId])
 
+-- Synthetic running samples deliberately use different clocks for each metric.
+run :: RunningData
+run =
+    emptyRunning
+        { runningMotion =
+            emptyMotion
+                { motionHeartRate =
+                    V.fromList [Timed (at 18000) (HeartRate 135), Timed (at 18002) (HeartRate 150)]
+                , motionAltitude =
+                    V.fromList
+                        [ Timed (at 18000) (Altitude (-1))
+                        , Timed (at 18003) (Altitude 4)
+                        , Timed (at 18005) (Altitude 2)
+                        ]
+                , motionPosition =
+                    V.fromList
+                        [ Timed (at 18001) (Position 31.2 121.5)
+                        , Timed (at 18004) (Position 31.2001 121.5001)
+                        ]
+                }
+        , runningCadence =
+            V.fromList [Timed (at 18001) (RunningCadence 160), Timed (at 18003) (RunningCadence 172)]
+        }
+
 runningWorkout :: Workout
 runningWorkout =
     Workout
@@ -200,7 +228,7 @@ runningWorkout =
         (WorkoutRevision 1)
         ( observation
             { observationRange = TimeRange (at 18000) (at 19000)
-            , observationSport = Running emptyRunning
+            , observationSport = Running run
             , observationEvents = V.empty
             , observationCoursePoints = V.empty
             , observationExtensions = V.empty

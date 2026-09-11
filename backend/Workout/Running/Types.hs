@@ -8,6 +8,9 @@ import Data.Vector (Vector)
 import Workout.Common.Types
 import Workout.Measurement.Types
 
+-- The initial running baseline is heart rate, altitude and GPS in runningMotion,
+-- plus runningCadence (total steps/minute). Every stream is independently
+-- sampled; additional motion metrics and running dynamics remain optional data.
 data RunningData = RunningData
     { runningMotion :: MotionData
     , runningCadence :: TimeSeries RunningCadence
