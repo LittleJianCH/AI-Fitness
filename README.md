@@ -4,7 +4,7 @@ A personal fitness and training data system managed as a monorepo.
 The backend uses Servant, IHP configuration, Hasql and PostgreSQL.
 The `web/` directory contains a Svelte 5 / SvelteKit training-review demo with strict TypeScript.
 Canonical workout/import models and a generated API contract are available;
-authentication endpoints now use real database sessions.
+authentication and manual Workout endpoints now use PostgreSQL.
 
 ## Run the backend
 
@@ -39,8 +39,8 @@ pnpm demo
 ```
 
 Open http://127.0.0.1:5173/workouts. The demo uses generated API contracts with
-synthetic read-only responses; real authentication and workout handlers are not
-implemented yet. See [Web development](web/README.md) for data flow, checks and
+synthetic read-only responses. Backend authentication and manual Workout handlers
+are implemented; the web demo is not connected to them yet. See [Web development](web/README.md) for data flow, checks and
 ordinary-mode behavior, and [Web UI Design](docs/web-design.md) for design rules.
 Ctrl-C stops the server; `exit` leaves the development shell.
 
@@ -66,8 +66,8 @@ import-state decisions and import-output refresh behavior.
 The [API contract guide](docs/api-contract.md) defines authentication, workouts,
 groups, imports and exports for web/iOS development. Servant definitions reuse
 the canonical model and generate OpenAPI 3.1, TypeScript and Swift clients.
-Authentication and user/session/workout storage are implemented; feature handlers
-are added separately. See the guide for the exact mounted routes.
+Authentication, user/session storage and manual Workout CRUD are implemented.
+Group/import/export handlers are added separately. See the guide for the exact mounted routes.
 
 From the root inside `nix develop`:
 

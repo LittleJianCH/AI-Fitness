@@ -32,7 +32,7 @@ readCursor environment context scope (Just token) = maybe invalid (pure . Just) 
     signature <- Token.decodeHex signatureText
     if Token.sign (cursorKey environment) payload `constEq` signature then Just () else Nothing
     (actualScope, position) <- decodeStrict payload
-    if actualScope == scope
+    if actualScope == scopeDigest environment scope
         then case fromJSON position of
             Success value -> Just value
             Error _ -> Nothing
@@ -43,7 +43,16 @@ readCursor environment context scope (Just token) = maybe invalid (pure . Just) 
 writeCursor :: (ToJSON a) => Environment -> Value -> a -> Text
 writeCursor environment scope position = Token.encodeHex payload <> "." <> Token.encodeHex (Token.sign (cursorKey environment) payload)
   where
-    payload = LBS.toStrict (encode (scope, position))
+    payload = LBS.toStrict (encode (scopeDigest environment scope, position))
+
+-- A fixed-size fingerprint keeps cursors bounded even for large filter values.
+scopeDigest :: Environment -> Value -> Text
+scopeDigest environment =
+    Token.encodeHex
+        . Token.sign (cursorKey environment)
+        . ("cursor-scope/v1:" <>)
+        . LBS.toStrict
+        . encode
 
 page :: Int -> (a -> Text) -> V.Vector a -> Page a
 page limit cursor rows = Page visible next

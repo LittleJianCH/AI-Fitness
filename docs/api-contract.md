@@ -7,10 +7,13 @@ grouped by feature. The generated OpenAPI document is a build artifact.
 
 **Implementation status:** the runtime mounts all eleven authentication routes,
 including browser/native login, `/me`, session management and password change,
-against PostgreSQL. The hello probe remains available. Workout/group/import/export
-routes remain contracts until their handlers are connected. Local FIT parsing and
+against PostgreSQL. All five Workout routes support manual cycling/running data:
+creation, list/detail, metadata edits and revision-checked deletion. The hello
+probe remains available. Group/import/export routes remain contracts. Group
+filters currently have no matching memberships; deletion requires a manual
+submission mapping and cannot yet perform source suppression or group cleanup. Local FIT parsing and
 the SvelteKit skeleton exist independently. Contract tests use synthetic responses;
-`make -C backend http-test` separately exercises actual authentication handlers
+`make -C backend http-test` separately exercises actual authentication and Workout handlers
 against a fresh private PostgreSQL cluster. The rules below apply to each feature
 as it is implemented.
 
@@ -41,7 +44,7 @@ summary card, a paginated collection, or a group with its storage revision.
 There is no parallel API copy of the cycling/running measurement records.
 
 `Api.Auth.Context` associates `AuthProtect SessionAuth` with a server-only
-`Principal`. A future authentication handler validates credentials and supplies
+`Principal`. The authentication handler validates credentials and supplies
 that principal to private handlers. User identity is not an editable field of
 every request. Owner-scoped persistence queries must use the principal.
 

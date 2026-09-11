@@ -2,7 +2,7 @@
 
 module Api.Error (problemError, problem, storage, errorFormatters) where
 
-import Api.Common.Types (Problem (..))
+import Api.Common.Types (FieldError (..), Problem (..))
 import App.Types
 import Control.Monad.IO.Class (liftIO)
 import Data.Aeson (encode)
@@ -12,6 +12,7 @@ import qualified Hasql.Pool as Pool
 import Servant
 import qualified Storage.Database as Database
 import Storage.Types
+import qualified Workout.Validation.Types as Validation
 
 problemError :: RequestContext -> Int -> Text -> Text -> ServerError
 problemError context status code message =
@@ -34,8 +35,22 @@ storage environment context work = do
     translate SessionConflict = problem context 409 "session_conflict" "Session state changed; retry the request"
     translate AuthenticationFailed = problem context 401 "unauthenticated" "Invalid or expired credentials"
     translate WorkoutConflict = problem context 409 "revision_conflict" "Workout changed; reload before editing"
+    translate SubmissionConflict = problem context 409 "submission_conflict" "Submission ID was already used for different content"
+    translate WorkoutNotManual = problem context 409 "reconciliation_required" "This workout requires source-aware deletion"
     translate WorkoutNotFound = problem context 404 "not_found" "Workout not found"
-    translate (InvalidWorkout _) = problem context 422 "validation_failed" "Workout validation failed"
+    translate (InvalidWorkout errors) =
+        throwError
+            (problemError context 422 "validation_failed" "Workout validation failed")
+                { errBody =
+                    encode
+                        ( Problem
+                            "validation_failed"
+                            "Workout validation failed"
+                            (requestId context)
+                            [ FieldError (Validation.errorField err) "invalid_value" (Validation.errorMessage err) | err <- errors
+                            ]
+                        )
+                }
     translate CorruptWorkout = problem context 500 "internal_error" "Stored workout cannot be read"
 
 errorFormatters :: RequestContext -> ErrorFormatters

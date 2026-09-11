@@ -17,7 +17,7 @@ Discuss material changes in direction with the project owner before implementing
 them; a separate ADR is not required unless requested.
 
 The runtime uses IHP configuration, Warp on localhost, and a bounded Hasql pool.
-Servant mounts the authentication endpoints and the existing hello probe. Browser
+Servant mounts authentication, manual Workout CRUD and the existing hello probe. Browser
 and native credentials share PostgreSQL sessions; the API performs ownership,
 CSRF and expiry checks explicitly. Request bodies are bounded and errors use the
 shared `Problem` shape. No request headers, credentials or health payloads are
@@ -329,7 +329,7 @@ and field semantics, not copied implementations:
 
 Inside the development shell, run `make check test` in `backend/`. Strict GHC
 compilation covers every domain/import module, including modules not yet reached
-by the hello endpoint. The standalone test runner covers canonical validation,
+by the current HTTP handlers. The standalone test runner covers canonical validation,
 representative cycling data, running, single/grouped import outputs, group membership,
 revision conflicts, reported-value preservation, cache invalidation, batch refresh identity matching, retry and
 suppression decisions. `make` still builds the existing API. This validates pure
@@ -348,17 +348,17 @@ PostgreSQL is the primary persistent database. `Storage.*` uses the Hasql versio
 supplied by IHP. Its operations compose as `ExceptT StorageError Transaction`.
 `Storage.Database.transaction` converts that composition into a Hasql `Session`
 that can run in IHP's pool; `withConnection`/`runTransaction` supply a bracketed
-connection for CLI and integration tests. The HTTP server does not acquire a
-database pool yet. Time, IDs, password hashes and token digests are explicit
+connection for CLI and integration tests. `App.Environment` owns the HTTP pool. Time, IDs, password hashes and token digests are explicit
 inputs; storage transactions do not generate secrets or run SDK/network work.
 Revocation also samples the database clock at the write and never precedes a
 session's creation time, including when a concurrent login won the account lock.
 
 | Table | Durable contents and constraints |
 | --- | --- |
-| `users` | UUID, exact case-sensitive unique username, Argon2id PHC password hash, creation/disabled timestamps. Password verification belongs to the subsequent auth service; the SQL prefix check does not prove a hash is valid. |
+| `users` | UUID, exact case-sensitive unique username, Argon2id PHC password hash, creation/disabled timestamps. Password verification belongs to `Auth.Password`; the SQL prefix check does not prove a hash is valid. |
 | `sessions` | UUID, optional user FK, unique 32-byte token digest, transport, optional CSRF digest, device name, creation/activity/expiry/revocation timestamps. Anonymous sessions are allowed only for browser CSRF bootstrap; native sessions require a user. |
-| `workouts` | UUID, owner FK, positive integral `NUMERIC` revision, storage version, canonical observation and user data in separate JSONB columns. Owner/ID indexes support scoped retrieval. |
+| `workouts` | UUID, owner FK, positive integral `NUMERIC` revision, storage version, canonical observation and user data in separate JSONB columns. Owner/ID and exact start-key indexes support scoped retrieval and pagination. |
+| `workout_submissions` | Owner/submission identity, request digest and nullable owned-workout reference. Deletion retains the submission as a tombstone, preventing retries from recreating the workout. |
 
 There are no separate tables per sensor or sport. Storage version 1 reuses the
 existing canonical JSON codec in `Api.Workout.Codec`, without duplicating cycling
@@ -383,16 +383,16 @@ the same absence result as a missing workout. Updates lock the owned row, apply
 the existing pure `Workout.Update` rules, and write with owner, ID and expected
 revision predicates. They preserve the other field owner's content, increment
 the revision and invalidate calculated summaries. These checks are application
-query isolation, not PostgreSQL RLS: future handlers must derive the owner from
-an authenticated `Principal`, never from a request's claimed user ID.
+query isolation, not PostgreSQL RLS. Mounted handlers derive ownership from an
+authenticated `Principal`, never from a request's claimed user ID.
 
 The transaction boundary uses Read Committed and explicitly condemns a transaction
 on `Left`, rolling back earlier writes in a composed operation. SQL failures also
 roll back; public storage errors contain neither SQL parameter dumps nor health
 payloads. Session lookup enforces creation time, idle/absolute expiry, revocation
 and account status. A returned anonymous bootstrap session is not a Principal.
-Credential generation/verification, login rotation and extending idle expiry
-remain auth-service work.
+`Auth.*` implements credential verification, login rotation and bounded idle
+extension; `Api.Auth.Handlers` connects those operations to the shared contract.
 
 `backend/Application/Migration/` is the authoritative schema history. `make migrate`
 runs the pinned IHP migration tool against `DATABASE_URL`, applying each
@@ -405,8 +405,9 @@ was checked against the pinned implementation.
 migration twice, checks failed-migration rollback, exercises actual Hasql queries,
 constraints, ownership and simultaneous revision updates, then restarts PostgreSQL
 and reads durable data again. It does not touch a configured development database.
-Workout listing/filtering, manual-submission idempotency, groups, import indexes,
-export receipts, deletion policy and HTTP handlers are subsequent feature work.
+The HTTP suite additionally verifies manual-submission idempotency, exact
+pagination, owner isolation, edits and deletion tombstones. Groups, import indexes
+and export receipts remain subsequent work.
 
 ## Authentication
 
@@ -421,8 +422,8 @@ implicitly introduced.
 handlers; request bodies do not establish user identity. Every persistence query
 must enforce ownership. The [API contract](api-contract.md#authentication-and-ownership)
 defines login/bootstrap, expiry, logout, registration and authorization behavior.
-Session storage now implements the persistence subset above; no authentication
-handler or session lookup is mounted in the hello API yet.
+All eleven authentication routes are mounted. Runtime configuration and the
+transaction boundaries are described in [Authentication runtime](#authentication-runtime).
 
 ## FIT parsing
 
@@ -603,3 +604,35 @@ from its first page. Session credentials remain valid across restarts because
 their digests and deadlines are durable. Expired/revoked rows are retained for
 now; periodic retention cleanup and administrator recovery tooling are subsequent
 operational work. No public password-recovery endpoint is implied.
+
+## Manual Workout runtime
+
+`Api.Workout.Handlers` mounts creation, list/detail, user-data replacement and
+manual deletion. Both cycling and running reuse the same canonical input types
+and sport-specific validation. `Auth.Session.owned` takes the account lock and
+rechecks the session before the storage operation, keeping ownership and
+revocation checks inside the transaction. It deliberately serializes operations
+for one account in this first slice.
+
+`Storage.Workout.Submission` claims `(user_id, submission_id)` using a unique
+constraint, hashes the decoded canonical observation/user-data pair, creates the
+workout and publishes the mapping in one transaction. Failed validation rolls
+back the claim. Matching retries load the current resource; conflicting content
+returns `409 submission_conflict`. Deletion clears only the mapped workout ID,
+retaining the digest as a tombstone. A matching retry then returns `404` and
+cannot recreate the workout. Hash encoding follows storage version 1; changing
+it requires a compatibility/migration decision for existing submissions.
+
+`Storage.Workout.Query` reads only the list projection from JSONB. It filters by
+owner, exact start boundaries, sport and whole tags, orders by start then UUID,
+and fetches at most `limit + 1` rows. A generated NUMERIC calendar key preserves
+canonical decimal-second precision for the indexed order, without timestamp
+rounding. Signed cursors carry owner/filter scope and the last position. Group
+persistence is absent, so no memberships can match a `groupId` filter yet.
+
+Manual deletion uses owner, ID and expected revision in SQL and requires a manual
+submission mapping. Unmapped workouts return `409 reconciliation_required`;
+source-aware deletion must be implemented alongside import/group persistence.
+`deleteEmptyGroups` has no effect while no groups can be stored. Group, import and
+export route groups are not mounted. This is an explicit implementation boundary,
+not a claim that source suppression or group reconciliation is already available.

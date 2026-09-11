@@ -25,11 +25,13 @@ export IHP_MIGRATION_DIR=Application/Migration/
 unset MINIMUM_REVISION
 migrate
 migrate
-test "$(psql "$DATABASE_URL" -Atqc 'SELECT count(*) FROM schema_migrations')" = 1
+migration_files=(Application/Migration/*.sql)
+expected_migrations=${#migration_files[@]}
+test "$(psql "$DATABASE_URL" -Atqc 'SELECT count(*) FROM schema_migrations')" = "$expected_migrations"
 
 # A failed IHP migration must roll back its DDL and leave its revision unapplied.
 mkdir "$test_root/migrations"
-cat >"$test_root/migrations/1789171201-failing.sql" <<'SQL'
+cat >"$test_root/migrations/9999999999-failing.sql" <<'SQL'
 CREATE TABLE must_rollback (id INTEGER);
 SELECT 1 / 0;
 SQL
@@ -38,9 +40,12 @@ if IHP_MIGRATION_DIR="$test_root/migrations/" migrate >"$test_root/migration-err
     exit 1
 fi
 test "$(psql "$DATABASE_URL" -Atqc "SELECT to_regclass('must_rollback') IS NULL")" = t
-test "$(psql "$DATABASE_URL" -Atqc 'SELECT count(*) FROM schema_migrations')" = 1
+test "$(psql "$DATABASE_URL" -Atqc 'SELECT count(*) FROM schema_migrations')" = "$expected_migrations"
 if [[ "${1:-storage}" == http ]]; then
-    ./build/http-tests
+    ./build/http-tests "$test_root/http-state.json"
+    pg_ctl -D "$test_root/data" -m fast -w stop >/dev/null
+    start_database
+    ./build/http-tests verify-restart "$test_root/http-state.json"
     exit 0
 fi
 ./build/storage-tests

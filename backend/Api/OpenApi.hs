@@ -57,7 +57,7 @@ openApi =
         & info . title .~ "AI Fitness API"
         & info . version .~ "1.0.0-draft.1"
         & info . description
-            ?~ "Contract definitions only. Product routes are not mounted until authentication and real handlers are implemented. All private resources are scoped to the authenticated user."
+            ?~ "V1 contract. Authentication and manual Workout routes are implemented; group, import and export handlers are pending. All private resources are scoped to the authenticated user."
         & components . securitySchemes
             .~ SecurityDefinitions
                 [

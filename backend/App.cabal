@@ -69,6 +69,7 @@ common backend-settings
                  Api.Scalar,
                  Api.Types,
                  Api.Workout.Codec,
+                 Api.Workout.Handlers,
                  Api.Workout.Common.Codec,
                  Api.Workout.Cycling.Codec,
                  Api.Workout.Identity.Codec,
@@ -85,7 +86,10 @@ common backend-settings
                  Storage.User.Types,
                  Storage.Session,
                  Storage.Session.Types,
-                 Storage.Workout
+                 Storage.Workout,
+                 Storage.Workout.Types,
+                 Storage.Workout.Query,
+                 Storage.Workout.Submission
 
 executable ai-fitness-backend
   import: backend-settings
@@ -116,4 +120,4 @@ test-suite http
   hs-source-dirs: test, test/http
   main-is: http/Main.hs
   build-depends: async
-  other-modules: AuthChecks, AuthRaceChecks, HttpSupport
+  other-modules: AuthChecks, AuthRaceChecks, InputChecks, HttpSupport, WorkoutChecks, RestartChecks, Fixtures

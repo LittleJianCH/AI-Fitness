@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Storage.Workout (createWorkout, loadWorkout, replaceUserData, replaceObservation) where
+module Storage.Workout (createWorkout, loadWorkout, replaceUserData, replaceObservation, revisionText) where
 
 import Api.Workout.Codec ()
 import Control.Monad.Trans.Except (ExceptT (..))

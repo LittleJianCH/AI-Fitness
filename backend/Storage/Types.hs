@@ -13,6 +13,8 @@ data StorageError
     | SessionConflict
     | AuthenticationFailed
     | WorkoutConflict
+    | SubmissionConflict
+    | WorkoutNotManual
     | WorkoutNotFound
     | InvalidWorkout [ValidationError]
     | CorruptWorkout
