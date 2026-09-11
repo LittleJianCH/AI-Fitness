@@ -20,17 +20,52 @@
             overlays = [ ihp.overlays.default ];
           };
           haskell = ihpPkgs.ghc;
+          fitSdk = stable.stdenv.mkDerivation {
+            pname = "garmin-fit-cpp-sdk";
+            version = "21.214.0";
+            src = stable.fetchzip {
+              url = "https://codeload.github.com/garmin/fit-cpp-sdk/tar.gz/37cc1743e6b4e9e1642f1cbc83a6cf0c49632931";
+              hash = "sha256-cXeMKX8M1K2xgsY84uHWC6ATo4KY+GeI+ka5RHOiKsk=";
+            };
+            buildPhase = ''
+              runHook preBuild
+              mkdir objects
+              for source in src/*.cpp; do
+                $CXX -std=c++17 -O2 -fPIC -Isrc -c "$source" -o "objects/$(basename "$source" .cpp).o"
+              done
+              $AR rcs libfitsdk.a objects/*.o
+              runHook postBuild
+            '';
+            installPhase = ''
+              runHook preInstall
+              mkdir -p $out/lib/pkgconfig $out/include/fitsdk $out/share/licenses/fitsdk
+              cp libfitsdk.a $out/lib/
+              cp src/*.hpp src/*.h $out/include/fitsdk/
+              cp LICENSE.txt $out/share/licenses/fitsdk/
+              cat > $out/lib/pkgconfig/fitsdk.pc <<EOF
+              Name: fitsdk
+              Description: Garmin FIT C++ SDK
+              Version: 21.214.0
+              Libs: -L$out/lib -lfitsdk -l${if stable.stdenv.isDarwin then "c++" else "stdc++"}
+              Cflags: -I$out/include/fitsdk
+              EOF
+              runHook postInstall
+            '';
+          };
         in
         {
           default = stable.mkShell {
             packages = [
               (haskell.ghc.withPackages (p: [
-                p.ihp p.servant p.servant-server p.text p.time p.uuid-types p.vector p.wai p.warp
+                p.bytestring p.ihp p.servant p.servant-server p.text p.time p.uuid-types p.vector p.wai p.warp
               ]))
               haskell.cabal-install
               haskell.hlint
               haskell.fourmolu
               haskell.haskell-language-server
+              fitSdk
+              stable.pkg-config
+              stable.clang-tools
               stable.gnumake
               stable.nodejs
               stable.curl

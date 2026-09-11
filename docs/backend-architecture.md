@@ -267,7 +267,8 @@ start time is not identity. FIT identity is SHA-256 of actual input FIT bytes;
 HealthKit identity is its owner-scoped object UUID, with explicit refresh support.
 A database unique constraint on owner and source identity is required. The current
 `ImportKey` and planner express that identity but do not implement hashing,
-transactional claims, parsing, persistence or concurrency control.
+transactional claims, persistence or concurrency control. A separate minimal FIT
+decoder exists below; it is not yet wired to the import planner or publication.
 
 `ImportRecord` stores an optional archive path, last successful output/version,
 latest attempt state, suppression timestamp and device metadata. `recordFailure`
@@ -367,8 +368,61 @@ C ABI wrapper
 Garmin C++ FIT SDK
 ```
 
+The initial integration is implemented in `backend/Import/Fit.hs`, with separate
+`Decode`, `Normalize`, and `Types` modules and `backend/native/fit_adapter.*`.
+`readFit` performs a bounded local read, `decodeFit` calls the SDK in `IO`,
+and pure `normalizeWorkout` constructs and validates a `WorkoutObservation`.
+It does not create IDs, update import state, archive inputs or publish records.
+
+The [official Garmin C++ SDK](https://github.com/garmin/fit-cpp-sdk) is pinned to
+21.214.0, commit `37cc1743e6b4e9e1642f1cbc83a6cf0c49632931`, with a fixed source
+hash in the root flake. Nix builds a static library and retains upstream license
+text; the project does not vendor or modify SDK code. `pkg-config` supplies SDK
+headers and platform-specific C++ runtime linkage to Make and Cabal.
+
+The C ABI owns an opaque result and exposes borrowed fixed-width numeric rows.
+The header documents units, missing-value representation and allocation/free
+ownership. C++ catches exceptions and emits bounded status codes, without source
+data in logs. Haskell copies values before `bracket` releases native storage.
+Missing SDK values become `Nothing` or absent samples. FIT device-relative times
+are rejected, not interpreted as UTC. SDK scale/offset conversion happens once;
+canonical constructors and domain validation remain in Haskell.
+
+This subset requires a single cycling or running session in an activity file. It maps
+session start/end, reported elapsed/timer duration and distance, and records for
+heart rate, power, speed (enhanced preferred), cumulative distance, cadence,
+altitude (enhanced preferred) and GPS. It leaves
+other fields unmapped, including laps, course points, events and extensions. It rejects
+other sports, multi-session files and non-activity files explicitly; it never selects
+one session silently. Duplicate or out-of-range sample timestamps fail existing
+domain validation rather than being sorted, dropped or interpolated.
+
+`FitSport` preserves the source session sport through decoding; `normalizeWorkout`
+selects the existing Cycling/Running constructors and shares only the common
+motion/summary mapping. Running dynamics and derived results stay empty.
+Cadence prefers `cadence256`; otherwise it combines `cadence` and optional
+`fractional_cadence`, requiring the integer field. Cycling retains cycles/minute;
+running doubles it to total steps/minute, per [Garmin's cadence explanation](https://forums.garmin.com/developer/fit-sdk/f/discussion/288454/fractional-cadence-values).
+GPS requires a complete pair and converts signed semicircles to WGS84 degrees.
+Enhanced altitude takes precedence, and below-sea-level values remain valid.
+The C ABI summary has six doubles (including a sport discriminator); each record
+has nine. Both sides and the native regression harness share this documented layout.
+
+CRC/integrity and exact file length are checked; truncated and concatenated files
+are rejected. Limits are 16 MiB, 100,000 records and 250,000 total messages. A
+`safe` FFI call allows other Haskell threads to run, but cannot promise prompt
+cancellation of native CPU work or a hard timeout. The adapter tests and limits
+do not establish complete SDK memory safety or production upload readiness.
+
+`make fit-test` runs SDK-encoded synthetic fixtures through the full Haskell
+path. `make native-sanitize` runs allocation, invalid input and borrowed-buffer
+checks with ASan/UBSan on project-owned C++ code; the SDK static library is not
+instrumented. Real private files are optional local checks, kept outside all
+worktrees and never committed or embedded in fixtures. The test harness prints
+only outcomes/error categories for private inputs. See README for commands.
+
 Do not design FIT ingestion around spawning a separate parser CLI or subprocess.
-Introduce the FFI integration when FIT ingestion becomes an active requirement.
+The native fixture generator and test harness are development tools only.
 
 ## Background work
 

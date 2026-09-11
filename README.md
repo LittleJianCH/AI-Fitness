@@ -33,14 +33,66 @@ Inside the development shell in `backend/`:
 make check test format-check lint
 ```
 
-This checks all workout/import model modules and runs pure validation and update
-scenarios. It does not exercise FIT decoding, persistence or platform sync, which
-are not implemented yet. `make` continues to build the existing hello API.
+This checks all workout/import modules and runs pure validation and update
+scenarios. FIT integration has separate checks below. Persistence and platform sync
+are not implemented. `make` continues to build the existing hello API.
 
 `make format` applies Fourmolu to backend sources and tests using the root
 `fourmolu.yaml`. The formatter and HLint are provided by the pinned Nix environment;
 `format-check` checks without editing. Tests are separated by workout validation,
 import-state decisions and import-output refresh behavior.
+
+## Local FIT parsing
+
+`Import.Fit.readFit` reads a local file; `parseFit` accepts a strict
+`ByteString`. Both return `IO (Either FitError WorkoutObservation)`. The decoder
+calls Garmin's C++ SDK in process through a small C ABI, then Haskell normalizes
+and validates the observation. No upload endpoint or database writes are added.
+
+The initial subset accepts one complete activity file with exactly one cycling
+or running session. It reads absolute start/end times, reported elapsed/timer time and total
+distance, plus heart-rate, power, speed, distance, cadence, altitude and GPS samples. Missing values stay
+absent and zero power stays zero. Enhanced speed takes precedence when valid.
+Other sports, multiple sessions and non-activity files return `UnsupportedFit`.
+Laps, course points, events, device metadata, other summaries and extensions
+are not mapped yet; do not use this subset as a full-fidelity import or export.
+
+Cadence uses `cadence256` when valid, otherwise integer cadence plus its optional
+fraction. Cycling retains cycles/minute; running multiplies by two for total
+steps/minute. GPS requires both coordinates and converts FIT semicircles to WGS84
+degrees once. Negative altitude is valid. No sensor gaps are filled.
+
+In the Nix development shell, from `backend/`:
+
+```sh
+make fit-test native-format-check native-sanitize
+```
+
+Tests generate deterministic synthetic FIT bytes using the SDK encoder under
+ignored `backend/build/`. No FIT binary fixtures are committed. Tests cover unit
+and UTC conversion, missing/invalid values, zero values, enhanced speed, distinct
+durations, malformed/truncated/CRC failures, unsupported types, timestamp
+validation, limits and repeated allocation/free. `native-sanitize` instruments
+our C ABI adapter with ASan/UBSan; the pinned SDK library is not instrumented.
+
+Private sample checks are optional and print only success or a bounded error
+category. Keep real files **outside every worktree**; never commit source files,
+extracted records, private filenames or snapshots. For example, with shell
+variables pointing to files in a private directory outside the repository:
+
+```sh
+./build/fit-tests --private-cycling "$FIT_CYCLING_SAMPLE"
+./build/fit-tests --private-running "$FIT_RUNNING_SAMPLE"
+```
+
+Both private checks require successful decoding and the expected sport. `.gitignore` excludes FIT files as an additional
+precaution, not as permission to place private inputs in the source tree.
+
+Inputs are limited to 16 MiB, 100,000 record messages and 250,000 total messages.
+The native call uses `safe` FFI; other Haskell threads can run, but cancellation
+waits for native decoding to return. These limits are not a hard wall-clock
+timeout or a proof of SDK memory safety. Native memory is copied into Haskell
+values and released with `bracket`, including on Haskell exceptions.
 
 ## Dependencies and architecture
 

@@ -29,10 +29,18 @@ executable ai-fitness-backend
                  Workout.Update,
                  Workout.Validation.Types,
                  Workout.Validation,
+                 Import.Fit,
+                 Import.Fit.Decode,
+                 Import.Fit.Normalize,
+                 Import.Fit.Types,
                  Import.Output,
                  Import.State,
                  Import.Types
   hs-source-dirs: .
-  build-depends: base, ihp, servant, servant-server, text, time, uuid-types, vector, wai, warp
+  build-depends: base, bytestring, ihp, servant, servant-server, text, time, uuid-types, vector, wai, warp
+  cxx-sources: native/fit_adapter.cpp
+  include-dirs: native
+  cxx-options: -std=c++17 -Wall -Wextra
+  pkgconfig-depends: fitsdk == 21.214.0
   default-language: Haskell2010
   ghc-options: -Wall -threaded -rtsopts

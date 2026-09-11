@@ -3,3 +3,8 @@
 .direnv/
 result
 result-*
+
+# FIT inputs and native/Haskell build products never belong in source control.
+*.fit
+*.FIT
+backend/build/
