@@ -6,6 +6,12 @@ Use strict TypeScript. Treat unvalidated external values as `unknown`, not `any`
 
 Consume the generated API contract rather than retyping backend responses. Keep API DTOs distinct from UI state when their semantics differ. Use tagged unions for exclusive states and ordinary records for independent states; refreshing existing data, for example, need not discard it into a data-less `loading` variant.
 
+Zod is the default runtime validation library for untrusted boundaries, including browser storage, URL parameters, imported JSON, external responses and forms. Prefer generated runtime schemas when the API contract pipeline can reliably provide them. Do not hand-maintain a parallel schema for every generated OpenAPI DTO; add handwritten schemas only where runtime validation is needed and a generated schema is unavailable. Backend domain rules and authorization remain authoritative.
+
+Effect is approved for sufficiently complex effectful TypeScript workflows, but is not the default. Start with direct TypeScript and async/await; introduce Effect locally when a concrete workflow benefits from typed error composition, retries, timeouts, cancellation, concurrency or resource management. Compare with the direct implementation. Do not wrap ordinary Svelte state, simple transformations or straightforward TanStack Query calls in Effect merely for stylistic consistency. Keep UI state in Svelte and interactive remote state in Query, with explicit cancellation and lifecycle boundaries when integrating Effect.
+
+Do not introduce Effect Schema unless Effect becomes a meaningful part of the web application architecture. If it becomes the primary runtime schema system, avoid maintaining equivalent Zod schemas in parallel.
+
 For new Svelte 5 code, use `$props`, `$state`, and `$derived` deliberately. Derive values instead of using `$effect` to copy one piece of state into another. Effects are for synchronizing with external systems, such as chart instances, and need cleanup. Framework-native local mutation of `$state` is not a violation of the project's functional principles. [svelte-effects]
 
 SvelteKit routing/loading and TanStack Query must have a defined ownership boundary. Once Query owns an interactive remote resource, do not independently fetch and cache the same resource through another mechanism without coordinating hydration/invalidation. Create user-specific SSR state and query clients per request/component context, not module-global singletons. Keep server secrets and private modules out of browser bundles. [svelte-state] [orval]

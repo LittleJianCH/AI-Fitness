@@ -4,7 +4,7 @@
 
 ## What is actually present
 
-The inspected default branch contains a minimal Haskell backend. IHP supplies configuration/logging, Servant exposes `GET /api/v1/hello`, and Warp runs the application. PostgreSQL initialization, domain features, authentication, OpenAPI generation, and clients are not implemented in this skeleton. The frontend is explicitly not initialized. No iOS, Android, MCP, FIT integration, or GitHub Actions workflow appears in the inspected tree. [repo-readme] [repo-architecture] [repo-tree]
+The inspected default branch contains a minimal Haskell backend. IHP supplies configuration/logging, Servant exposes `GET /api/v1/hello`, and Warp runs the application. PostgreSQL initialization, domain features, authentication, OpenAPI generation, and clients are not implemented in this skeleton. The `web/` directory now contains a minimal SvelteKit frontend with a static homepage, strict TypeScript, ESLint and Prettier. No iOS, Android, MCP, FIT integration, or GitHub Actions workflow appears in the inspected tree. [repo-readme] [repo-architecture] [repo-tree]
 
 The root flake supplies the current development shell. Haskell packages/tools come from IHP's package set; general tools come from the configured Nixpkgs 26.05 input. IHP's input references its `v1.6` branch; `flake.lock`, rather than the moving branch name, pins the fetched dependency graph. The Haskell package declares `Haskell2010`. Do not silently upgrade the compiler, language edition, framework, or dependency graph to match examples from newer documentation. [repo-flake] [repo-cabal]
 
@@ -16,8 +16,9 @@ The root flake supplies the current development shell. Haskell packages/tools co
 | Database | PostgreSQL using the selected IHP version's Hasql-based infrastructure | Planned; no database integration exists in the inspected skeleton. |
 | Application effects | `effectful` | Previously discussed/selected for application effects, but absent from current dependencies. Introduce only for a current orchestration need; pure domain code does not require it. |
 | API contract | Servant-derived OpenAPI; target OpenAPI 3.1 | Planned. The generator/toolchain compatibility is not yet demonstrated. |
-| Web | Svelte 5, SvelteKit, strict TypeScript | Selected direction; not initialized. SvelteKit is not a second domain backend. |
-| Web API/state | Orval, TanStack Svelte Query, boundary validation with Zod | Carried-forward plan; not installed. Verify compatible generator/adapter versions when needed. |
+| Web | Svelte 5, SvelteKit, strict TypeScript | Initialized in `web/` with a static homepage; no API integration yet. SvelteKit is not a second domain backend. |
+| Web API/state | Orval, TanStack Svelte Query, boundary validation with Zod | Zod is installed for upcoming boundary validation; the static homepage does not use it yet. Orval and Query remain planned. Verify compatible generator/adapter versions when needed. |
+| Web effects | Effect (`effect`) | Approved, not default and not installed. Introduce locally when concrete effect orchestration justifies it; start with direct TypeScript. Svelte retains UI state ownership. |
 | Web presentation | Tailwind CSS, shadcn-svelte/Bits UI, ECharts | Carried-forward UI choices; introduce only components needed by the active feature. |
 | iOS | Swift, SwiftUI, HealthKit; URLSession, Keychain; Swift OpenAPI Generator | Planned native client. SwiftData is the planned local persistence option, not a requirement to duplicate the full server database. |
 | Android | Kotlin, Jetpack Compose | Latest native-client direction. Coroutines/Flow and ViewModel are recommended implementation defaults, not existing code. |

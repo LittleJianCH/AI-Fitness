@@ -2,7 +2,7 @@
 
 A personal fitness and training data system managed as a monorepo.
 The current backend is a minimal Servant API using IHP configuration and logging.
-The SvelteKit frontend has not been initialized.
+The `web/` directory contains a minimal Svelte 5 / SvelteKit frontend with strict TypeScript.
 
 ## Run the backend
 
@@ -24,6 +24,18 @@ curl http://127.0.0.1:8000/api/v1/hello
 Use `PORT=8080 make run` to change the port. Ctrl-C stops the server; `exit` leaves
 the development shell. No database, SQL initialization, or background services
 are started. `make` compiles without starting the server.
+
+## Run the web app
+
+```sh
+./scripts/web_dev
+pnpm install --frozen-lockfile
+pnpm dev
+```
+
+Open http://localhost:5173. The initial page is a standalone placeholder and does
+not call the backend. Ctrl-C stops the server; `exit` leaves the development shell.
+See [Web development](web/README.md) for checks and project structure.
 
 ## Domain checks
 

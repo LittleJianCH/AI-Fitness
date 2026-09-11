@@ -54,6 +54,9 @@
           };
         in
         {
+          web = stable.mkShell {
+            packages = [ stable.nodejs stable.pnpm ];
+          };
           default = stable.mkShell {
             packages = [
               (haskell.ghc.withPackages (p: [
@@ -68,6 +71,7 @@
               stable.clang-tools
               stable.gnumake
               stable.nodejs
+              stable.pnpm
               stable.curl
               stable.git
             ];
