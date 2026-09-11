@@ -2,7 +2,7 @@
 
 **Read when:** changing authentication, authorization, health/route-data exposure, logging, or external-provider access.
 
-The accepted [API authentication contract](../api-contract.md#authentication-and-ownership) uses username/password login and one opaque database-session model: a Secure/HttpOnly cookie plus CSRF/Origin checks for browsers, and a Keychain-held Bearer credential for native clients. User/session persistence exists in `Storage.*`; authentication handlers and credential generation/verification are not implemented yet. Do not restore the superseded token design or infer MCP authorization from native sessions.
+The accepted [API authentication contract](../api-contract.md#authentication-and-ownership) uses username/password login and one opaque database-session model: a Secure/HttpOnly cookie plus CSRF/Origin checks for browsers, and a Keychain-held Bearer credential for native clients. Authentication handlers in `Api.Auth.Handlers` use `Auth.*` and the persistent user/session operations in `Storage.*`. Do not restore the superseded token design or infer MCP authorization from native sessions.
 
 Implement password verification through maintained Argon2id facilities, never bespoke cryptography, plaintext passwords, or a fast unsalted digest. SHA-256 is used only to index high-entropy random session secrets. Enforce owner-scoped access from the authenticated principal, expiry/revocation, enumeration resistance and rate limits. Reject ambiguous cookie/Bearer credentials. [owasp-auth]
 

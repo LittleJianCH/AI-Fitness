@@ -39,6 +39,10 @@ if IHP_MIGRATION_DIR="$test_root/migrations/" migrate >"$test_root/migration-err
 fi
 test "$(psql "$DATABASE_URL" -Atqc "SELECT to_regclass('must_rollback') IS NULL")" = t
 test "$(psql "$DATABASE_URL" -Atqc 'SELECT count(*) FROM schema_migrations')" = 1
+if [[ "${1:-storage}" == http ]]; then
+    ./build/http-tests
+    exit 0
+fi
 ./build/storage-tests
 pg_ctl -D "$test_root/data" -m fast -w stop >/dev/null
 start_database

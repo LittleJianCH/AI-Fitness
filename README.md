@@ -1,10 +1,10 @@
 # AI Fitness
 
 A personal fitness and training data system managed as a monorepo.
-The current backend is a minimal Servant API using IHP configuration and logging.
+The backend uses Servant, IHP configuration, Hasql and PostgreSQL.
 The `web/` directory contains a Svelte 5 / SvelteKit training-review demo with strict TypeScript.
 Canonical workout/import models and a generated API contract are available;
-product endpoints are not mounted yet.
+authentication endpoints now use real database sessions.
 
 ## Run the backend
 
@@ -12,11 +12,13 @@ With Nix installed and `nix-command` and `flakes` enabled:
 
 ```sh
 ./scripts/backend_dev
+export DATABASE_URL='host=localhost dbname=ai_fitness user=ai_fitness'
+make migrate
 make run
 ```
 
 The script enters the Nix environment in `backend/`. `make run` compiles and starts
-only the API. In another terminal:
+only the API; PostgreSQL and its database/role must already exist. In another terminal:
 
 ```sh
 curl http://127.0.0.1:8000/api/v1/hello
@@ -24,8 +26,8 @@ curl http://127.0.0.1:8000/api/v1/hello
 ```
 
 Use `PORT=8080 make run` to change the port. Ctrl-C stops the server; `exit` leaves
-the development shell. No database, SQL initialization, or background services
-are started. `make` compiles without starting the server.
+the development shell. No database process or background services are started. The server opens a
+connection pool and checks connectivity; migrations are a separate explicit step. `make` compiles without starting the server.
 
 ## Run the web demo
 
@@ -52,7 +54,7 @@ make check test format-check lint
 
 This checks all workout/import modules and runs pure validation and update
 scenarios. FIT and PostgreSQL integration have separate checks below. Platform sync
-and product handlers are not implemented. `make` continues to build the existing hello API.
+is not implemented. `make` builds the API server, including authentication.
 
 `make format` applies Fourmolu to backend sources and tests using the root
 `fourmolu.yaml`. The formatter and HLint are provided by the pinned Nix environment;
@@ -64,7 +66,8 @@ import-state decisions and import-output refresh behavior.
 The [API contract guide](docs/api-contract.md) defines authentication, workouts,
 groups, imports and exports for web/iOS development. Servant definitions reuse
 the canonical model and generate OpenAPI 3.1, TypeScript and Swift clients.
-Feature handlers, authentication and persistence are subsequent work.
+Authentication and user/session/workout storage are implemented; feature handlers
+are added separately. See the guide for the exact mounted routes.
 
 From the root inside `nix develop`:
 
@@ -81,8 +84,8 @@ generator configuration and dependency locks are maintained in `contracts/`.
 
 ## PostgreSQL storage
 
-The backend has user, session and canonical Workout storage operations, separate
-from the running HTTP server. PostgreSQL and IHP's migration executable are in
+The backend has user, session and canonical Workout storage operations. Authentication uses
+the same storage through a pool in the running HTTP server. PostgreSQL and IHP's migration executable are in
 the default Nix shell. Apply migrations to an explicitly configured database:
 
 ```sh
@@ -98,7 +101,7 @@ authoritative history; IHP records applied revisions in `schema_migrations`.
 Run isolated integration tests from the repository root inside `nix develop`:
 
 ```sh
-make -C backend storage-test
+make -C backend storage-test http-test
 ```
 
 This creates a private temporary PostgreSQL cluster with no TCP listener, tests
@@ -174,3 +177,9 @@ provided by Nix, without a separate Cabal dependency download.
 See [Backend architecture](docs/backend-architecture.md) for the current design
 and future boundaries. Update affected documentation when implementation or
 architecture changes. All repository documentation is written in English.
+
+Authentication deployment settings, HTTPS browser setup, credential handling and
+current operational limits are documented in the
+[authentication runtime](docs/backend-architecture.md#authentication-runtime).
+`http-test` uses a fresh private database and synthetic credentials; it never uses
+your configured development database.

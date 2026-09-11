@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Storage.User (createUser, loadUser, findUserByUsername) where
+module Storage.User (createUser, loadUser, lockUser, changePassword, findUserByUsername) where
 
 import Control.Monad.Trans.Class (lift)
 import Control.Monad.Trans.Except (ExceptT (..))
@@ -14,6 +14,25 @@ import qualified Hasql.Transaction as T
 import Storage.Codec
 import Storage.Types
 import Storage.User.Types
+
+-- Login and account-wide revocation use the same lock as password changes.
+lockUser :: UserId -> Store (Maybe StoredUser)
+lockUser uid =
+    lift $
+        T.statement uid $
+            preparable
+                "SELECT id, username, password_hash, created_at, disabled_at FROM users WHERE id = $1 FOR UPDATE"
+                (param userIdValue)
+                (D.rowMaybe userRow)
+
+changePassword :: UserId -> PasswordHash -> Store ()
+changePassword uid (PasswordHash value) =
+    lift $
+        T.statement (uid, value) $
+            preparable
+                "UPDATE users SET password_hash = $2 WHERE id = $1"
+                ((fst >$< param userIdValue) <> (snd >$< param E.text))
+                D.noResult
 
 createUser :: StoredUser -> Store ()
 createUser user = ExceptT $ do

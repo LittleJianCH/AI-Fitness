@@ -11,6 +11,7 @@ data StorageError
     = DatabaseFailure
     | UserConflict
     | SessionConflict
+    | AuthenticationFailed
     | WorkoutConflict
     | WorkoutNotFound
     | InvalidWorkout [ValidationError]

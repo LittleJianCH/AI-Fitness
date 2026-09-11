@@ -3,16 +3,18 @@
 DOMAIN_SOURCES := $(wildcard Workout/*.hs Workout/*/*.hs Import/*.hs Import/Fit/*.hs)
 API_SOURCES := $(wildcard Api/*.hs Api/*/*.hs Api/*/*/*.hs)
 STORAGE_SOURCES := $(wildcard Storage/*.hs Storage/*/*.hs)
+RUNTIME_SOURCES := $(wildcard App/*.hs Auth/*.hs)
 CONTRACT_SOURCES := $(wildcard contract/*.hs)
 TEST_SOURCES := $(wildcard test/*.hs)
 FIT_CFLAGS = $(subst -I,-isystem ,$(shell pkg-config --cflags fitsdk))
 FIT_LIBS = $(shell pkg-config --libs fitsdk)
 NATIVE_FLAGS = -std=c++17 -Wall -Wextra -Werror -O2
-HASKELL_SOURCES := Main.hs Api.hs Config.hs $(DOMAIN_SOURCES) $(API_SOURCES) $(STORAGE_SOURCES) $(TEST_SOURCES) $(CONTRACT_SOURCES) test/fit/Main.hs test/storage/Main.hs
+HASKELL_SOURCES := Main.hs Api.hs Config.hs $(DOMAIN_SOURCES) $(API_SOURCES) $(STORAGE_SOURCES) $(RUNTIME_SOURCES) $(TEST_SOURCES) $(CONTRACT_SOURCES) test/fit/Main.hs test/storage/Main.hs
+HASKELL_SOURCES += $(wildcard test/http/*.hs)
 
 all: build/backend
 
-build/backend: Main.hs Api.hs Config.hs $(DOMAIN_SOURCES) build/native/fit_adapter.o Makefile
+build/backend: Main.hs Api.hs Config.hs $(DOMAIN_SOURCES) $(API_SOURCES) $(STORAGE_SOURCES) $(RUNTIME_SOURCES) build/native/fit_adapter.o Makefile
 	mkdir -p build
 	ghc --make -Wall -Werror -threaded -rtsopts -outputdir build Main.hs build/native/fit_adapter.o $(FIT_LIBS) -o $@
 
@@ -20,7 +22,7 @@ run: build/backend
 	./build/backend
 
 check:
-	ghc -fno-code -Wall -Werror -i. $(DOMAIN_SOURCES) $(API_SOURCES) $(STORAGE_SOURCES)
+	ghc -fno-code -Wall -Werror -i. $(DOMAIN_SOURCES) $(API_SOURCES) $(STORAGE_SOURCES) $(RUNTIME_SOURCES)
 
 build/domain-tests: $(DOMAIN_SOURCES) $(TEST_SOURCES) Makefile
 	mkdir -p build/test
@@ -55,6 +57,14 @@ build/storage-tests: $(STORAGE_SOURCES) $(DOMAIN_SOURCES) $(API_SOURCES) test/st
 
 storage-test: build/storage-tests
 	bash test/storage/run.sh
+
+build/http-tests: Api.hs $(API_SOURCES) $(DOMAIN_SOURCES) $(STORAGE_SOURCES) $(RUNTIME_SOURCES) $(wildcard test/http/*.hs) test/Fixtures.hs Makefile
+	mkdir -p build/http-test
+	ghc --make -Wall -Werror -threaded -i. -itest -itest/http -outputdir build/http-test test/http/Main.hs -o $@
+
+.PHONY: http-test
+http-test: build/http-tests
+	bash test/storage/run.sh http
 
 format:
 	fourmolu --mode inplace $(HASKELL_SOURCES)

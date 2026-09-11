@@ -1,6 +1,14 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Storage.Session (createSession, findActiveSession, revokeSession, revokeUserSessions) where
+module Storage.Session
+    ( createSession
+    , findActiveSession
+    , consumeSession
+    , touchSession
+    , listSessions
+    , revokeSession
+    , revokeUserSessions
+    ) where
 
 import Control.Monad.Trans.Class (lift)
 import Control.Monad.Trans.Except (ExceptT (..))
@@ -9,6 +17,8 @@ import Data.Int (Int64)
 import Data.Maybe (isJust)
 import Data.Text (Text)
 import Data.Time (UTCTime)
+import Data.UUID.Types (UUID)
+import Data.Vector (Vector)
 import qualified Hasql.Decoders as D
 import qualified Hasql.Encoders as E
 import Hasql.Statement (preparable)
@@ -17,6 +27,53 @@ import Storage.Codec
 import Storage.Session.Types
 import Storage.Types
 import Storage.User.Types (UserId (..))
+
+-- Used during login rotation; only one concurrent login may consume a cookie.
+consumeSession :: TokenDigest -> UTCTime -> Store Bool
+consumeSession digest now =
+    lift $
+        isJust
+            <$> T.statement
+                (digest, now)
+                ( preparable
+                    "UPDATE sessions SET revoked_at = GREATEST(created_at, $2, clock_timestamp()) WHERE token_digest = $1 AND revoked_at IS NULL \
+                    \AND created_at <= $2 AND idle_expires_at > $2 AND absolute_expires_at > $2 RETURNING id"
+                    ((fst >$< param digestValue) <> (snd >$< param E.timestamptz))
+                    (D.rowMaybe (column D.uuid))
+                )
+
+touchSession :: TokenDigest -> UTCTime -> UTCTime -> Store ()
+touchSession digest now expires =
+    lift $
+        T.statement (digest, now, expires) $
+            preparable
+                "UPDATE sessions SET last_seen_at = GREATEST(last_seen_at, $2), \
+                \idle_expires_at = LEAST(absolute_expires_at, GREATEST(idle_expires_at, $3)) \
+                \WHERE token_digest = $1 AND revoked_at IS NULL AND created_at <= $2 \
+                \AND idle_expires_at > $2 AND absolute_expires_at > $2"
+                ( ((\(d, _, _) -> d) >$< param digestValue)
+                    <> ((\(_, n, _) -> n) >$< param E.timestamptz)
+                    <> ((\(_, _, e) -> e) >$< param E.timestamptz)
+                )
+                D.noResult
+
+listSessions :: UserId -> UTCTime -> Maybe (UTCTime, UUID) -> Int64 -> Store (Vector StoredSession)
+listSessions uid now after limit =
+    lift $
+        T.statement (uid, now, after, limit) $
+            preparable
+                "SELECT id, user_id, token_digest, transport = 'browser', csrf_digest, device_name, \
+                \created_at, last_seen_at, idle_expires_at, absolute_expires_at, revoked_at FROM sessions \
+                \WHERE user_id = $1 AND revoked_at IS NULL AND created_at <= $2 AND idle_expires_at > $2 \
+                \AND absolute_expires_at > $2 AND ($3::timestamptz IS NULL OR (created_at, id) < ($3,$4)) \
+                \ORDER BY created_at DESC, id DESC LIMIT $5"
+                ( ((\(u, _, _, _) -> u) >$< param userIdValue)
+                    <> ((\(_, n, _, _) -> n) >$< param E.timestamptz)
+                    <> ((\(_, _, a, _) -> fst <$> a) >$< E.param (E.nullable E.timestamptz))
+                    <> ((\(_, _, a, _) -> snd <$> a) >$< E.param (E.nullable E.uuid))
+                    <> ((\(_, _, _, l) -> l) >$< param E.int8)
+                )
+                (D.rowVector sessionRow)
 
 createSession :: StoredSession -> Store ()
 createSession value = ExceptT $ do
@@ -64,7 +121,7 @@ revokeSession uid sid now =
             <$> T.statement
                 (uid, sid, now)
                 ( preparable
-                    "UPDATE sessions SET revoked_at = COALESCE(revoked_at, $3) WHERE user_id = $1 AND id = $2 RETURNING id"
+                    "UPDATE sessions SET revoked_at = COALESCE(revoked_at, GREATEST(created_at, $3, clock_timestamp())) WHERE user_id = $1 AND id = $2 RETURNING id"
                     ( ((\(u, _, _) -> u) >$< param userIdValue)
                         <> ((\(_, s, _) -> s) >$< param sessionIdValue)
                         <> ((\(_, _, t) -> t) >$< param E.timestamptz)
@@ -73,11 +130,13 @@ revokeSession uid sid now =
                 )
 
 revokeUserSessions :: UserId -> UTCTime -> Store Int64
+-- The request's timestamp may predate a concurrent login that won the user
+-- lock. Sample the DB clock at the write and never precede a row's creation.
 revokeUserSessions uid now =
     lift $
         T.statement (uid, now) $
             preparable
-                "UPDATE sessions SET revoked_at = $2 WHERE user_id = $1 AND revoked_at IS NULL"
+                "UPDATE sessions SET revoked_at = GREATEST(created_at, $2, clock_timestamp()) WHERE user_id = $1 AND revoked_at IS NULL"
                 ((fst >$< param userIdValue) <> (snd >$< param E.timestamptz))
                 D.rowsAffected
 

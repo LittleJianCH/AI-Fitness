@@ -16,16 +16,15 @@ instructions alongside implementation changes so they describe the same system.
 Discuss material changes in direction with the project owner before implementing
 them; a separate ADR is not required unless requested.
 
-The current implementation is deliberately small: IHP supplies configuration and
-request logging, Servant serves `GET /api/v1/hello` as plain text (`hello world`),
-and Warp runs the application on localhost. The backend does not initialize a
-database, create a connection pool, generate schema types, or start PostgreSQL.
-The MVC welcome page, sessions, development UI, and background workers are not
-part of this entry point. Pure workout/import operations and the API contract
-pipeline exist separately. The contract generates OpenAPI 3.1 and TypeScript/Swift
-consumers. PostgreSQL migrations and user/session/workout storage operations exist
-separately and have real database tests; product handlers and authentication are
-future work. See the [API contract guide](api-contract.md) for exact scope and commands.
+The runtime uses IHP configuration, Warp on localhost, and a bounded Hasql pool.
+Servant mounts the authentication endpoints and the existing hello probe. Browser
+and native credentials share PostgreSQL sessions; the API performs ownership,
+CSRF and expiry checks explicitly. Request bodies are bounded and errors use the
+shared `Problem` shape. No request headers, credentials or health payloads are
+logged. The full contract also describes features that are not mounted yet; see
+the [API contract guide](api-contract.md) for the current implementation scope.
+Migrations are applied separately before startup; the server never starts a
+PostgreSQL process or silently changes its schema.
 
 ## System overview
 
@@ -112,7 +111,7 @@ tested compatibility corrections and the checks still required for other clients
 `Api/<feature>/Routes` declares HTTP operations. Canonical workout records are
 shared directly and their JSON/schema instances live in `Api/Workout/*/Codec`.
 `Api.Types` composes public authentication and session-protected product routes;
-it is not mounted by the current hello application.
+`Api.application` composes only the implemented route groups using the same aliases.
 
 ## Domain: workout data and operations
 
@@ -352,6 +351,8 @@ that can run in IHP's pool; `withConnection`/`runTransaction` supply a bracketed
 connection for CLI and integration tests. The HTTP server does not acquire a
 database pool yet. Time, IDs, password hashes and token digests are explicit
 inputs; storage transactions do not generate secrets or run SDK/network work.
+Revocation also samples the database clock at the write and never precedes a
+session's creation time, including when a concurrent login won the account lock.
 
 | Table | Durable contents and constraints |
 | --- | --- |
@@ -559,3 +560,46 @@ for IHP compatibility.
 Use IHP to reduce routine infrastructure work while keeping the Servant API,
 domain logic, and PostgreSQL behavior explicit and understandable. Framework
 features are available tools, not reasons to expand the current task.
+
+## Authentication runtime
+
+`App.Environment` reads deployment settings and owns the Hasql pool, clock,
+password-work semaphore and bounded process-local authentication rate windows.
+`Auth.Password` wraps crypton's Argon2id implementation and PHC encoding;
+`Auth.Token` generates 256-bit secrets and hashes them for lookup. `Auth.Request`
+validates credential transport, cookies, Origin and CSRF. `Auth.Session` resolves
+the authenticated principal and coordinates account-locked transactions.
+`Api.Auth.Handlers` translates the existing routes into these operations.
+
+Passwords are 15–128 Unicode characters. Usernames are case-sensitive, 3–64 ASCII
+letters/digits or `_.-`. Production Argon2id defaults to 64 MiB, three iterations,
+one lane; `ARGON_MEMORY_KIB` and `ARGON_ITERATIONS` configure bounded costs. At
+most two password calculations run concurrently. Missing-user login performs the
+same password verification against a dummy hash. Authentication is limited to 30
+requests per minute per direct peer IP and 300 across the process; forwarded IP
+headers are not trusted. A reverse proxy must enforce its own client rate limit
+when many clients share one backend peer. Multiple backend processes require a
+shared limiter before deployment at that scale.
+
+`APP_ORIGIN` must be the exact HTTPS browser origin, without a path or trailing
+slash; default `https://localhost:5173`. Use a same-origin HTTPS reverse proxy for
+browser development. The server binds to localhost; it does not terminate TLS or
+provide cross-origin CORS. `REGISTRATION_OPEN` defaults to `false`; temporarily
+enable it for the initial browser registration, then disable it again.
+`BROWSER_IDLE_SECONDS`, `BROWSER_ABSOLUTE_SECONDS`, `NATIVE_IDLE_SECONDS` and
+`NATIVE_ABSOLUTE_SECONDS` override the contract defaults. Each must be positive,
+idle cannot exceed absolute, and absolute cannot exceed one year.
+
+Browser login atomically consumes the old cookie session and creates a new one.
+CSRF tokens are reproducible HMACs of the presented cookie, permitting safe token
+reuse across browser tabs while persisting only a digest. Login, password change
+and account-wide revocation lock the same user row. Password verification occurs
+outside transactions; login rechecks the password hash under the lock so a
+concurrent password change cannot leave a newly issued session valid.
+
+Session listings use signed cursors scoped to the owner and ordered by creation
+time then UUID. The signing key is process-local: after a restart, retry listing
+from its first page. Session credentials remain valid across restarts because
+their digests and deadlines are durable. Expired/revoked rows are retained for
+now; periodic retention cleanup and administrator recovery tooling are subsequent
+operational work. No public password-recovery endpoint is implied.

@@ -5,14 +5,14 @@ for parallel web and iOS development. Its source is
 [`Api.Types`](../backend/Api/Types.hs), with routes, request types and codecs
 grouped by feature. The generated OpenAPI document is a build artifact.
 
-**These are contract definitions, not deployed features.** The production
-application still serves only `/api/v1/hello`. These routes do not invoke authentication
-handlers, database writes, FIT upload/export handlers or HealthKit synchronization
-services yet. The separate `Storage.*` foundation has PostgreSQL migrations and
-user/session/workout operations; HTTP integration remains subsequent work.
-Local FIT parsing and the SvelteKit skeleton were merged
-independently and are present; this contract does not connect their feature flows. The test router serves synthetic canonical responses only. The
-rules below are obligations for the subsequent implementations.
+**Implementation status:** the runtime mounts all eleven authentication routes,
+including browser/native login, `/me`, session management and password change,
+against PostgreSQL. The hello probe remains available. Workout/group/import/export
+routes remain contracts until their handlers are connected. Local FIT parsing and
+the SvelteKit skeleton exist independently. Contract tests use synthetic responses;
+`make -C backend http-test` separately exercises actual authentication handlers
+against a fresh private PostgreSQL cluster. The rules below apply to each feature
+as it is implemented.
 
 ## Module relationships
 
@@ -92,7 +92,8 @@ only their SHA-256 digest. This fast digest is for random tokens; passwords use
 Argon2id through a maintained implementation with configurable, measured cost.
 Check session validity, idle/absolute expiry, revocation and account status on
 every authenticated request. Reject requests carrying both session-cookie and
-Bearer credentials instead of choosing one silently.
+Bearer credentials instead of choosing one silently. The Bearer scheme name is
+case-insensitive; the opaque credential remains case-sensitive.
 
 Initial configurable session limits are browser idle 30 minutes / absolute 12
 hours and native idle 7 days / absolute 30 days. Activity may extend idle expiry

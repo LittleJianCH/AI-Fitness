@@ -64,6 +64,7 @@
                 p.aeson p.bytestring p.http-api-data p.http-types p.lens
                 p.openapi3 p.servant-openapi3 p.wai-extra
                 p.hasql p.hasql-transaction p.contravariant p.transformers p.async
+                p.crypton p.memory p.cookie p.hasql-pool p.uuid p.containers p.network p.network-uri
               ]))
               haskell.cabal-install
               haskell.hlint

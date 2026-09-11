@@ -5,7 +5,7 @@ build-type: Simple
 
 common backend-settings
   hs-source-dirs: .
-  build-depends: base, ihp, servant, servant-server, text, time, uuid-types, vector, wai, warp, aeson, bytestring, http-api-data, http-types, lens, openapi3, servant-openapi3, wai-extra, hasql, hasql-transaction, contravariant, transformers
+  build-depends: base, ihp, servant, servant-server, text, time, uuid-types, vector, wai, warp, aeson, bytestring, http-api-data, http-types, lens, openapi3, servant-openapi3, wai-extra, hasql, hasql-transaction, contravariant, transformers, crypton, memory, cookie, hasql-pool, uuid, containers, network, network-uri
   cxx-sources: native/fit_adapter.cpp
   include-dirs: native
   cxx-options: -std=c++17 -Wall -Wextra
@@ -45,6 +45,16 @@ common backend-settings
                  Import.State,
                  Import.Types,
                  Api.Auth.Context,
+                 Api.Auth.Handlers,
+                 Api.Boundary,
+                 Api.Error,
+                 Api.Pagination,
+                 App.Types,
+                 App.Environment,
+                 Auth.Password,
+                 Auth.Token,
+                 Auth.Request,
+                 Auth.Session,
                  Api.Auth.Routes,
                  Api.Auth.Types,
                  Api.Binary,
@@ -99,3 +109,11 @@ test-suite storage
   main-is: storage/Main.hs
   build-depends: async
   other-modules: Fixtures
+
+test-suite http
+  import: backend-settings
+  type: exitcode-stdio-1.0
+  hs-source-dirs: test, test/http
+  main-is: http/Main.hs
+  build-depends: async
+  other-modules: AuthChecks, AuthRaceChecks, HttpSupport

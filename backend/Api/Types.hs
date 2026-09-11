@@ -12,8 +12,7 @@ import Api.WorkoutGroup.Routes (WorkoutGroupAPI)
 import Data.Text (Text)
 import Servant
 
--- Definitions for the product API. Api.application still serves only hello until
--- authentication, ownership checks and real handlers are implemented together.
+-- Complete product contract. Api.application mounts the implemented groups.
 type API =
     "api"
         :> "v1"
