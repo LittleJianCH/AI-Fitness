@@ -5,8 +5,34 @@ build-type: Simple
 
 executable ai-fitness-backend
   main-is: Main.hs
-  other-modules: Api, Config
+  other-modules: Api, Config,
+                 Workout.Common.Empty,
+                 Workout.Common.Types,
+                 Workout.Common.Validation,
+                 Workout.Cycling.Empty,
+                 Workout.Cycling.Types,
+                 Workout.Cycling.Update,
+                 Workout.Cycling.Validation,
+                 Workout.Empty,
+                 Workout.Identity.Types,
+                 Workout.Measurement.Summary,
+                 Workout.Measurement.Types,
+                 Workout.Measurement.Validation,
+                 Workout.Running.Empty,
+                 Workout.Running.Types,
+                 Workout.Running.Update,
+                 Workout.Running.Validation,
+                 Workout.Sport.Types,
+                 Workout.Sport.Validation,
+                 Workout.Sport,
+                 Workout.Types,
+                 Workout.Update,
+                 Workout.Validation.Types,
+                 Workout.Validation,
+                 Import.Output,
+                 Import.State,
+                 Import.Types
   hs-source-dirs: .
-  build-depends: base, ihp, servant, servant-server, text, wai, warp
+  build-depends: base, ihp, servant, servant-server, text, time, uuid-types, vector, wai, warp
   default-language: Haskell2010
   ghc-options: -Wall -threaded -rtsopts

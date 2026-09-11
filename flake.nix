@@ -25,10 +25,11 @@
           default = stable.mkShell {
             packages = [
               (haskell.ghc.withPackages (p: [
-                p.ihp p.servant p.servant-server p.text p.wai p.warp
+                p.ihp p.servant p.servant-server p.text p.time p.uuid-types p.vector p.wai p.warp
               ]))
               haskell.cabal-install
               haskell.hlint
+              haskell.fourmolu
               haskell.haskell-language-server
               stable.gnumake
               stable.nodejs

@@ -25,6 +25,23 @@ Use `PORT=8080 make run` to change the port. Ctrl-C stops the server; `exit` lea
 the development shell. No database, SQL initialization, or background services
 are started. `make` compiles without starting the server.
 
+## Domain checks
+
+Inside the development shell in `backend/`:
+
+```sh
+make check test format-check lint
+```
+
+This checks all workout/import model modules and runs pure validation and update
+scenarios. It does not exercise FIT decoding, persistence or platform sync, which
+are not implemented yet. `make` continues to build the existing hello API.
+
+`make format` applies Fourmolu to backend sources and tests using the root
+`fourmolu.yaml`. The formatter and HLint are provided by the pinned Nix environment;
+`format-check` checks without editing. Tests are separated by workout validation,
+import-state decisions and import-output refresh behavior.
+
 ## Dependencies and architecture
 
 The root `flake.nix` and `flake.lock` manage the development environment:

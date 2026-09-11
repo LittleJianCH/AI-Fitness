@@ -6,7 +6,11 @@
 
 Domain calculations and validation SHOULD be ordinary pure functions. Reading files, invoking the FIT SDK, accessing the database, obtaining time/randomness, and performing network operations belong to explicit effectful boundaries. Pass time/configuration into calculations instead of reading global state from inside them.
 
-A pure `Either` computation written with `do` is fully acceptable. Use `map`/`fmap`, `traverse`, folds, pattern matching, guards, and comprehensions when they reveal the shape of the transformation. Point-free composition is welcome when its data flow is immediately visible; introduce names or explicit arguments when nesting or operator density obscures it.
+Prefer idiomatic Functor, Applicative, and Monad operators when they make transformations, sequencing, and dependencies clear. Readability is judged for an experienced Haskell reader. Choose notation by the structure of the computation, without expanding familiar operator expressions solely for explicitness.
+
+Use applicative composition for computations whose inputs do not depend on earlier results, and monadic composition for dependent steps. Use `do` notation when named intermediate results, branching, or longer sequences make it clearer. Preserve effects, sequencing, and failure behavior when changing notation.
+
+Point-free composition, traversal, folds, pattern matching, guards, and comprehensions are welcome where they reveal the data flow. Introduce names or explicit arguments when precedence, nesting, or changes in operator direction obscure it. Favor familiar idioms and clarity over operator density or unnecessary custom operators.
 
 Do not introduce `State` for a simple `a -> a` transformation. Conversely, do not prohibit `ST`, local mutable vectors, or explicit recursion when a measured algorithm or a recursive structure calls for them. Do not add lens machinery for a small record update or an effect stack for a pure helper.
 

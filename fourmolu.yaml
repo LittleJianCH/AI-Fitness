@@ -1,0 +1,6 @@
+indentation: 4
+column-limit: 100
+comma-style: leading
+import-export-style: leading
+function-arrows: leading
+record-brace-space: true
