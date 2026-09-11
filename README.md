@@ -3,6 +3,8 @@
 A personal fitness and training data system managed as a monorepo.
 The current backend is a minimal Servant API using IHP configuration and logging.
 The `web/` directory contains a minimal Svelte 5 / SvelteKit frontend with strict TypeScript.
+Canonical workout/import models and a generated API contract are available;
+product endpoints are not mounted yet.
 
 ## Run the backend
 
@@ -53,6 +55,26 @@ are not implemented. `make` continues to build the existing hello API.
 `fourmolu.yaml`. The formatter and HLint are provided by the pinned Nix environment;
 `format-check` checks without editing. Tests are separated by workout validation,
 import-state decisions and import-output refresh behavior.
+
+## API contract
+
+The [API contract guide](docs/api-contract.md) defines authentication, workouts,
+groups, imports and exports for web/iOS development. Servant definitions reuse
+the canonical model and generate OpenAPI 3.1, TypeScript and Swift clients.
+Feature handlers, authentication and persistence are subsequent work.
+
+From the root inside `nix develop`:
+
+```sh
+make -C backend contract contract-test
+cd contracts
+npm ci --ignore-scripts
+npm run generate
+npm run check
+```
+
+The guide also includes the macOS Swift check. Generated outputs are ignored;
+generator configuration and dependency locks are maintained in `contracts/`.
 
 ## Local FIT parsing
 

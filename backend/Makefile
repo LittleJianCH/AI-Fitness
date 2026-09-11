@@ -1,11 +1,13 @@
-.PHONY: all run check test format format-check lint
+.PHONY: all run check test format format-check lint contract contract-test
 
 DOMAIN_SOURCES := $(wildcard Workout/*.hs Workout/*/*.hs Import/*.hs Import/Fit/*.hs)
+API_SOURCES := $(wildcard Api/*.hs Api/*/*.hs Api/*/*/*.hs)
+CONTRACT_SOURCES := $(wildcard contract/*.hs)
 TEST_SOURCES := $(wildcard test/*.hs)
 FIT_CFLAGS = $(subst -I,-isystem ,$(shell pkg-config --cflags fitsdk))
 FIT_LIBS = $(shell pkg-config --libs fitsdk)
 NATIVE_FLAGS = -std=c++17 -Wall -Wextra -Werror -O2
-HASKELL_SOURCES := Main.hs Api.hs Config.hs $(DOMAIN_SOURCES) $(TEST_SOURCES) test/fit/Main.hs
+HASKELL_SOURCES := Main.hs Api.hs Config.hs $(DOMAIN_SOURCES) $(API_SOURCES) $(TEST_SOURCES) $(CONTRACT_SOURCES) test/fit/Main.hs
 
 all: build/backend
 
@@ -17,7 +19,7 @@ run: build/backend
 	./build/backend
 
 check:
-	ghc -fno-code -Wall -Werror -i. $(DOMAIN_SOURCES)
+	ghc -fno-code -Wall -Werror -i. $(DOMAIN_SOURCES) $(API_SOURCES)
 
 build/domain-tests: $(DOMAIN_SOURCES) $(TEST_SOURCES) Makefile
 	mkdir -p build/test
@@ -25,6 +27,22 @@ build/domain-tests: $(DOMAIN_SOURCES) $(TEST_SOURCES) Makefile
 
 test: build/domain-tests
 	./build/domain-tests
+
+build/export-openapi: $(API_SOURCES) $(DOMAIN_SOURCES) contract/Main.hs Makefile
+	mkdir -p build/contract
+	ghc --make -Wall -Werror -i. -outputdir build/contract contract/Main.hs -o $@
+
+build/openapi-3.0.json: build/export-openapi
+	./build/export-openapi > $@
+
+contract: build/openapi-3.0.json
+
+build/contract-tests: $(API_SOURCES) $(DOMAIN_SOURCES) $(CONTRACT_SOURCES) test/Fixtures.hs Makefile
+	mkdir -p build/contract-test
+	ghc --make -Wall -Werror -i. -icontract -itest -outputdir build/contract-test contract/Check.hs -o $@
+
+contract-test: build/contract-tests
+	./build/contract-tests
 
 format:
 	fourmolu --mode inplace $(HASKELL_SOURCES)

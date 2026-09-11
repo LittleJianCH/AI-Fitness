@@ -1,9 +1,12 @@
+{-# LANGUAGE DeriveGeneric #-}
+
 module Workout.Common.Types
     ( MotionData (..)
     , EnvironmentData (..)
     , CommonSummary (..)
     ) where
 
+import GHC.Generics (Generic)
 import Workout.Measurement.Types
 
 -- Shared structure stays inside Sport. Operations are defined in Workout.Sport.
@@ -18,7 +21,7 @@ data MotionData = MotionData
     , motionEnergy :: TimeSeries Energy -- cumulative metabolic energy, not mechanical work
     , motionEnvironment :: EnvironmentData
     }
-    deriving (Eq, Show)
+    deriving (Eq, Show, Generic)
 
 data EnvironmentData = EnvironmentData
     { ambientTemperature :: TimeSeries Temperature
@@ -26,7 +29,7 @@ data EnvironmentData = EnvironmentData
     , windFrom :: TimeSeries Bearing
     , relativeHumidity :: TimeSeries Percentage
     }
-    deriving (Eq, Show)
+    deriving (Eq, Show, Generic)
 
 data CommonSummary = CommonSummary
     { summaryElapsedTime :: Maybe Duration
@@ -47,4 +50,4 @@ data CommonSummary = CommonSummary
     , summaryIntensityFactor :: Maybe IntensityFactor
     , summaryTrainingStress :: Maybe TrainingStress
     }
-    deriving (Eq, Show)
+    deriving (Eq, Show, Generic)

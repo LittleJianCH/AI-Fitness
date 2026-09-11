@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveGeneric #-}
+
 module Workout.Running.Types
     ( RunningData (..)
     , RunningDynamics (..)
@@ -5,6 +7,7 @@ module Workout.Running.Types
     ) where
 
 import Data.Vector (Vector)
+import GHC.Generics (Generic)
 import Workout.Common.Types
 import Workout.Measurement.Types
 
@@ -18,14 +21,14 @@ data RunningData = RunningData
     , runningSummary :: Summaries RunningSummary
     , runningLaps :: Vector (Lap RunningSummary)
     }
-    deriving (Eq, Show)
+    deriving (Eq, Show, Generic)
 
 data RunningDynamics = RunningDynamics
     { stepLength :: TimeSeries Distance -- distance per step, not per two-step stride
     , verticalOscillation :: TimeSeries Distance
     , groundContactTime :: TimeSeries Duration
     }
-    deriving (Eq, Show)
+    deriving (Eq, Show, Generic)
 
 data RunningSummary = RunningSummary
     { runningCommonSummary :: CommonSummary
@@ -34,4 +37,4 @@ data RunningSummary = RunningSummary
     , summaryVerticalOscillation :: Statistics Distance
     , summaryGroundContactTime :: Statistics Duration
     }
-    deriving (Eq, Show)
+    deriving (Eq, Show, Generic)

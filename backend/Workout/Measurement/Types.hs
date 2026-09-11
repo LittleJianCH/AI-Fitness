@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveGeneric #-}
+
 -- Unit-bearing measurements. Constructors describe data; validation is separate.
 module Workout.Measurement.Types
     ( HeartRate (..)
@@ -31,6 +33,7 @@ module Workout.Measurement.Types
 import Data.Text (Text)
 import Data.Time (UTCTime)
 import Data.Vector (Vector)
+import GHC.Generics (Generic)
 import Workout.Identity.Types (WorkoutRevision)
 
 newtype HeartRate = HeartRate Double deriving (Eq, Ord, Show) -- bpm
@@ -55,13 +58,13 @@ data Position = Position
     { latitude :: Double
     , longitude :: Double
     }
-    deriving (Eq, Show)
+    deriving (Eq, Show, Generic)
 
 data Timed a = Timed
     { timestamp :: UTCTime
     , value :: a
     }
-    deriving (Eq, Show)
+    deriving (Eq, Show, Generic)
 
 -- Canonical measurements have strictly increasing timestamps; events may tie.
 -- Empty means no samples. Gaps are not filled or interpreted as zeroes.
@@ -71,14 +74,14 @@ data TimeRange = TimeRange
     { rangeStart :: UTCTime
     , rangeEnd :: UTCTime
     }
-    deriving (Eq, Show)
+    deriving (Eq, Show, Generic)
 
 data Statistics a = Statistics
     { minimumValue :: Maybe a
     , averageValue :: Maybe a
     , maximumValue :: Maybe a
     }
-    deriving (Eq, Show)
+    deriving (Eq, Show, Generic)
 
 -- Recorded values may be the only available facts (e.g. manual input).
 -- Recalculation must not silently overwrite them.
@@ -86,7 +89,7 @@ data Summaries a = Summaries
     { recordedSummary :: a
     , calculatedSummary :: Maybe (Calculated a)
     }
-    deriving (Eq, Show)
+    deriving (Eq, Show, Generic)
 
 data Calculated a = Calculated
     { calculationInputRevision :: WorkoutRevision
@@ -95,7 +98,7 @@ data Calculated a = Calculated
     , calculatedAt :: UTCTime
     , calculationValue :: a
     }
-    deriving (Eq, Show)
+    deriving (Eq, Show, Generic)
 
 -- A namespaced canonical key, not a FIT field number or binary encoding.
 -- An empty stream can retain a definition without inventing observations.
@@ -104,13 +107,23 @@ data ExtensionField = ExtensionField
     , extensionLabel :: Text
     , extensionData :: ExtensionData
     }
-    deriving (Eq, Show)
+    deriving (Eq, Show, Generic)
 
 data ExtensionData
-    = NumericExtension (Maybe Text) (TimeSeries Double) (Statistics Double)
-    | TextExtension (TimeSeries Text) (Maybe Text)
-    | BooleanExtension (TimeSeries Bool) (Maybe Bool)
-    deriving (Eq, Show)
+    = NumericExtension
+        { numericUnit :: Maybe Text
+        , numericSamples :: TimeSeries Double
+        , numericSummary :: Statistics Double
+        }
+    | TextExtension
+        { textSamples :: TimeSeries Text
+        , textSummary :: Maybe Text
+        }
+    | BooleanExtension
+        { booleanSamples :: TimeSeries Bool
+        , booleanSummary :: Maybe Bool
+        }
+    deriving (Eq, Show, Generic)
 
 data Lap summary = Lap
     { lapRange :: TimeRange
@@ -118,4 +131,4 @@ data Lap summary = Lap
     , lapSummary :: Summaries summary
     , lapExtensions :: Vector ExtensionField
     }
-    deriving (Eq, Show)
+    deriving (Eq, Show, Generic)

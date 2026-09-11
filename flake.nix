@@ -60,7 +60,9 @@
           default = stable.mkShell {
             packages = [
               (haskell.ghc.withPackages (p: [
-                p.bytestring p.ihp p.servant p.servant-server p.text p.time p.uuid-types p.vector p.wai p.warp
+                p.ihp p.servant p.servant-server p.text p.time p.uuid-types p.vector p.wai p.warp
+                p.aeson p.bytestring p.http-api-data p.http-types p.lens
+                p.openapi3 p.servant-openapi3 p.wai-extra
               ]))
               haskell.cabal-install
               haskell.hlint

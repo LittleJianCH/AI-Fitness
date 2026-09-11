@@ -3,9 +3,17 @@ name: ai-fitness-backend
 version: 0.1.0.0
 build-type: Simple
 
-executable ai-fitness-backend
-  main-is: Main.hs
-  other-modules: Api, Config,
+common backend-settings
+  hs-source-dirs: .
+  build-depends: base, ihp, servant, servant-server, text, time, uuid-types, vector, wai, warp, aeson, bytestring, http-api-data, http-types, lens, openapi3, servant-openapi3, wai-extra
+  cxx-sources: native/fit_adapter.cpp
+  include-dirs: native
+  cxx-options: -std=c++17 -Wall -Wextra
+  pkgconfig-depends: fitsdk == 21.214.0
+  default-language: Haskell2010
+  ghc-options: -Wall -threaded -rtsopts
+  other-modules: Api,
+                 Config,
                  Workout.Common.Empty,
                  Workout.Common.Types,
                  Workout.Common.Validation,
@@ -35,12 +43,43 @@ executable ai-fitness-backend
                  Import.Fit.Types,
                  Import.Output,
                  Import.State,
-                 Import.Types
-  hs-source-dirs: .
-  build-depends: base, bytestring, ihp, servant, servant-server, text, time, uuid-types, vector, wai, warp
-  cxx-sources: native/fit_adapter.cpp
-  include-dirs: native
-  cxx-options: -std=c++17 -Wall -Wextra
-  pkgconfig-depends: fitsdk == 21.214.0
-  default-language: Haskell2010
-  ghc-options: -Wall -threaded -rtsopts
+                 Import.Types,
+                 Api.Auth.Context,
+                 Api.Auth.Routes,
+                 Api.Auth.Types,
+                 Api.Binary,
+                 Api.Codec,
+                 Api.Common.Routes,
+                 Api.Common.Types,
+                 Api.Export.Routes,
+                 Api.Export.Types,
+                 Api.Import.Routes,
+                 Api.Import.Types,
+                 Api.OpenApi,
+                 Api.Scalar,
+                 Api.Types,
+                 Api.Workout.Codec,
+                 Api.Workout.Common.Codec,
+                 Api.Workout.Cycling.Codec,
+                 Api.Workout.Identity.Codec,
+                 Api.Workout.Measurement.Codec,
+                 Api.Workout.Routes,
+                 Api.Workout.Running.Codec,
+                 Api.Workout.Types,
+                 Api.WorkoutGroup.Routes,
+                 Api.WorkoutGroup.Types
+
+executable ai-fitness-backend
+  import: backend-settings
+  main-is: Main.hs
+
+executable export-openapi
+  import: backend-settings
+  main-is: contract/Main.hs
+
+test-suite api-contract
+  import: backend-settings
+  type: exitcode-stdio-1.0
+  hs-source-dirs: contract, test
+  main-is: Check.hs
+  other-modules: ContractFixtures, Fixtures

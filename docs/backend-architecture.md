@@ -21,8 +21,10 @@ request logging, Servant serves `GET /api/v1/hello` as plain text (`hello world`
 and Warp runs the application on localhost. The backend does not initialize a
 database, create a connection pool, generate schema types, or start PostgreSQL.
 The MVC welcome page, sessions, development UI, and background workers are not
-part of this entry point. Database integration, domain operations, authentication,
-OpenAPI generation, and clients below describe future work.
+part of this entry point. Pure workout/import operations and the API contract
+pipeline exist separately. The contract generates OpenAPI 3.1 and TypeScript/Swift
+consumers; product handlers, authentication and database integration remain future
+work. See the [API contract guide](api-contract.md) for exact scope and commands.
 
 ## System overview
 
@@ -36,7 +38,8 @@ Go MCP ────┘                               Domain operations
                                   Infrastructure / PostgreSQL
 
 IHP supplies the backend runtime, configuration, lifecycle, database
-infrastructure, sessions, and required WAI middleware around this flow.
+infrastructure and required WAI middleware around this flow. The API's explicit
+session model owns authentication independently of IHP MVC sessions.
 ```
 
 | Component | Responsibility |
@@ -57,7 +60,7 @@ Use IHP for the infrastructure needed by the backend:
 - Connection pooling.
 - Schema management and migrations.
 - Application lifecycle and configuration.
-- Web sessions.
+- Session persistence infrastructure where compatible with the API session model.
 - Nix development environment support.
 - Required WAI middleware.
 
@@ -98,9 +101,17 @@ OpenAPI 3.1
 
 Do not maintain independent handwritten API definitions for each client.
 Derive the specification and client types where possible. OpenAPI 3.1 is the
-target contract version; generator compatibility and any conversion needed
-must be verified when implementing that pipeline. This document does not
-assume that the installed libraries already provide it.
+target contract version. The implemented pipeline derives 3.0 from the pinned
+Servant library, converts Schema Objects to 3.1, and verifies encoded canonical
+responses against the specification and generated TypeScript/Swift consumers.
+The [contract guide](api-contract.md#generation-and-verification) documents the
+tested compatibility corrections and the checks still required for other clients.
+
+`Api/<feature>/Types` declares request/response projections, while
+`Api/<feature>/Routes` declares HTTP operations. Canonical workout records are
+shared directly and their JSON/schema instances live in `Api/Workout/*/Codec`.
+`Api.Types` composes public authentication and session-protected product routes;
+it is not mounted by the current hello application.
 
 ## Domain: workout data and operations
 
@@ -347,12 +358,19 @@ data integrity.
 
 ## Authentication
 
-Web username/password registration and login are required. The authentication,
-session and token architecture remains to be redesigned; the previous
-web-session/iOS-token/MCP-token table is superseded and is not an implementation
-requirement. Authentication is not implemented by the current hello API or pure
-workout model. Keep credential handling and server-side authorization at the
-appropriate application and API boundaries when that work begins.
+The agreed contract uses username/password login and one opaque database-session
+model per device. Browsers use a Secure/HttpOnly cookie with CSRF and Origin
+checks; native clients use a Bearer credential stored in Keychain. Sessions have
+idle/absolute expiry and explicit revocation, and passwords use maintained
+Argon2id verification. No JWT access/refresh pair or MCP credential policy is
+implicitly introduced.
+
+`AuthProtect SessionAuth` supplies a server-only `Principal` to owned-resource
+handlers; request bodies do not establish user identity. Every persistence query
+must enforce ownership. The [API contract](api-contract.md#authentication-and-ownership)
+defines login/bootstrap, expiry, logout, registration and authorization behavior.
+These are implementation requirements; no authentication handler or session
+storage is mounted in the hello API yet.
 
 ## FIT parsing
 
