@@ -51,8 +51,8 @@ make check test format-check lint
 ```
 
 This checks all workout/import modules and runs pure validation and update
-scenarios. FIT integration has separate checks below. Persistence and platform sync
-are not implemented. `make` continues to build the existing hello API.
+scenarios. FIT and PostgreSQL integration have separate checks below. Platform sync
+and product handlers are not implemented. `make` continues to build the existing hello API.
 
 `make format` applies Fourmolu to backend sources and tests using the root
 `fourmolu.yaml`. The formatter and HLint are provided by the pinned Nix environment;
@@ -78,6 +78,34 @@ npm run check
 
 The guide also includes the macOS Swift check. Generated outputs are ignored;
 generator configuration and dependency locks are maintained in `contracts/`.
+
+## PostgreSQL storage
+
+The backend has user, session and canonical Workout storage operations, separate
+from the running HTTP server. PostgreSQL and IHP's migration executable are in
+the default Nix shell. Apply migrations to an explicitly configured database:
+
+```sh
+export DATABASE_URL='host=localhost dbname=ai_fitness user=ai_fitness'
+make -C backend migrate
+```
+
+The database and its role must already exist. Supply credentials using the local
+PostgreSQL authentication setup; do not put secrets in source files. Run one
+migration process at a time. SQL files in `backend/Application/Migration/` are the
+authoritative history; IHP records applied revisions in `schema_migrations`.
+
+Run isolated integration tests from the repository root inside `nix develop`:
+
+```sh
+make -C backend storage-test
+```
+
+This creates a private temporary PostgreSQL cluster with no TCP listener, tests
+migrations, rollback, ownership and concurrent updates, then restarts PostgreSQL
+to verify durability. It never uses an existing `DATABASE_URL` and removes its
+temporary cluster afterwards. See [storage boundaries](docs/backend-architecture.md#database-and-integrity)
+for the schema, transaction interface and implementation limits.
 
 ## Local FIT parsing
 

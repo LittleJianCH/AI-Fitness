@@ -63,11 +63,14 @@
                 p.ihp p.servant p.servant-server p.text p.time p.uuid-types p.vector p.wai p.warp
                 p.aeson p.bytestring p.http-api-data p.http-types p.lens
                 p.openapi3 p.servant-openapi3 p.wai-extra
+                p.hasql p.hasql-transaction p.contravariant p.transformers p.async
               ]))
               haskell.cabal-install
               haskell.hlint
               haskell.fourmolu
               haskell.haskell-language-server
+              haskell.ihp-migrate
+              stable.postgresql
               fitSdk
               stable.pkg-config
               stable.clang-tools

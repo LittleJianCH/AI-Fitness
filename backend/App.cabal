@@ -5,7 +5,7 @@ build-type: Simple
 
 common backend-settings
   hs-source-dirs: .
-  build-depends: base, ihp, servant, servant-server, text, time, uuid-types, vector, wai, warp, aeson, bytestring, http-api-data, http-types, lens, openapi3, servant-openapi3, wai-extra
+  build-depends: base, ihp, servant, servant-server, text, time, uuid-types, vector, wai, warp, aeson, bytestring, http-api-data, http-types, lens, openapi3, servant-openapi3, wai-extra, hasql, hasql-transaction, contravariant, transformers
   cxx-sources: native/fit_adapter.cpp
   include-dirs: native
   cxx-options: -std=c++17 -Wall -Wextra
@@ -67,7 +67,15 @@ common backend-settings
                  Api.Workout.Running.Codec,
                  Api.Workout.Types,
                  Api.WorkoutGroup.Routes,
-                 Api.WorkoutGroup.Types
+                 Api.WorkoutGroup.Types,
+                 Storage.Codec,
+                 Storage.Database,
+                 Storage.Types,
+                 Storage.User,
+                 Storage.User.Types,
+                 Storage.Session,
+                 Storage.Session.Types,
+                 Storage.Workout
 
 executable ai-fitness-backend
   import: backend-settings
@@ -83,3 +91,11 @@ test-suite api-contract
   hs-source-dirs: contract, test
   main-is: Check.hs
   other-modules: ContractFixtures, Fixtures
+
+test-suite storage
+  import: backend-settings
+  type: exitcode-stdio-1.0
+  hs-source-dirs: test
+  main-is: storage/Main.hs
+  build-depends: async
+  other-modules: Fixtures

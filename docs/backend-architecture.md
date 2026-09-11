@@ -23,8 +23,9 @@ database, create a connection pool, generate schema types, or start PostgreSQL.
 The MVC welcome page, sessions, development UI, and background workers are not
 part of this entry point. Pure workout/import operations and the API contract
 pipeline exist separately. The contract generates OpenAPI 3.1 and TypeScript/Swift
-consumers; product handlers, authentication and database integration remain future
-work. See the [API contract guide](api-contract.md) for exact scope and commands.
+consumers. PostgreSQL migrations and user/session/workout storage operations exist
+separately and have real database tests; product handlers and authentication are
+future work. See the [API contract guide](api-contract.md) for exact scope and commands.
 
 ## System overview
 
@@ -344,17 +345,67 @@ precedence, including suppression before active attempts.
 
 ## Database and integrity
 
-PostgreSQL is the primary persistent database. Use the Hasql-based
-infrastructure supplied by the selected IHP version.
+PostgreSQL is the primary persistent database. `Storage.*` uses the Hasql version
+supplied by IHP. Its operations compose as `ExceptT StorageError Transaction`.
+`Storage.Database.transaction` converts that composition into a Hasql `Session`
+that can run in IHP's pool; `withConnection`/`runTransaction` supply a bracketed
+connection for CLI and integration tests. The HTTP server does not acquire a
+database pool yet. Time, IDs, password hashes and token digests are explicit
+inputs; storage transactions do not generate secrets or run SDK/network work.
 
-Database design must explicitly use primary keys, foreign keys, unique
-constraints, check constraints, indexes, and transactions as appropriate.
-Haskell types alone do not guarantee the integrity of stored data.
+| Table | Durable contents and constraints |
+| --- | --- |
+| `users` | UUID, exact case-sensitive unique username, Argon2id PHC password hash, creation/disabled timestamps. Password verification belongs to the subsequent auth service; the SQL prefix check does not prove a hash is valid. |
+| `sessions` | UUID, optional user FK, unique 32-byte token digest, transport, optional CSRF digest, device name, creation/activity/expiry/revocation timestamps. Anonymous sessions are allowed only for browser CSRF bootstrap; native sessions require a user. |
+| `workouts` | UUID, owner FK, positive integral `NUMERIC` revision, storage version, canonical observation and user data in separate JSONB columns. Owner/ID indexes support scoped retrieval. |
 
-For operations that perform multiple related changes, make the transaction
-boundary explicit. Important invariants belong in database constraints as well
-as application validation. PostgreSQL is the final enforcement layer for stored
-data integrity.
+There are no separate tables per sensor or sport. Storage version 1 reuses the
+existing canonical JSON codec in `Api.Workout.Codec`, without duplicating cycling
+or running models. It stores the complete supported observation, including
+independent sample times, events, laps, extensions and reported/calculated
+summaries. The split columns preserve field ownership; JSONB is not an untyped
+public update interface. Sample/range timestamps remain in canonical JSON and
+retain their precision; account/session `TIMESTAMPTZ` metadata uses PostgreSQL's
+microsecond precision. Revisions pass through decimal text and PostgreSQL NUMERIC,
+so values above int64 round-trip without a narrowing conversion.
+
+The database enforces identity, uniqueness, foreign keys, expiry ordering and
+basic JSON shape. `Storage.Workout` applies canonical validation before writing
+and after decoding stored payloads. Unknown storage versions and invalid stored
+workouts fail explicitly. Changing a required field or JSON codec requires a
+deliberate storage migration/version decision; importer reprocessing is separate.
+The persistence boundary rejects U+0000 in canonical text with field validation
+errors before writing JSONB; it never strips user content to fit PostgreSQL.
+
+Every workout read/update takes an owner and includes it in SQL. Other users get
+the same absence result as a missing workout. Updates lock the owned row, apply
+the existing pure `Workout.Update` rules, and write with owner, ID and expected
+revision predicates. They preserve the other field owner's content, increment
+the revision and invalidate calculated summaries. These checks are application
+query isolation, not PostgreSQL RLS: future handlers must derive the owner from
+an authenticated `Principal`, never from a request's claimed user ID.
+
+The transaction boundary uses Read Committed and explicitly condemns a transaction
+on `Left`, rolling back earlier writes in a composed operation. SQL failures also
+roll back; public storage errors contain neither SQL parameter dumps nor health
+payloads. Session lookup enforces creation time, idle/absolute expiry, revocation
+and account status. A returned anonymous bootstrap session is not a Principal.
+Credential generation/verification, login rotation and extending idle expiry
+remain auth-service work.
+
+`backend/Application/Migration/` is the authoritative schema history. `make migrate`
+runs the pinned IHP migration tool against `DATABASE_URL`, applying each
+file and its `schema_migrations` revision in a transaction. Run a single migration
+process before serving traffic. Do not maintain a second hand-edited Schema.sql
+or automatically migrate on HTTP startup. [IHP migration behavior](https://ihp.digitallyinduced.com/Guide/database-migrations.html)
+was checked against the pinned implementation.
+
+`make storage-test` starts a private disposable PostgreSQL instance, applies the
+migration twice, checks failed-migration rollback, exercises actual Hasql queries,
+constraints, ownership and simultaneous revision updates, then restarts PostgreSQL
+and reads durable data again. It does not touch a configured development database.
+Workout listing/filtering, manual-submission idempotency, groups, import indexes,
+export receipts, deletion policy and HTTP handlers are subsequent feature work.
 
 ## Authentication
 
@@ -369,8 +420,8 @@ implicitly introduced.
 handlers; request bodies do not establish user identity. Every persistence query
 must enforce ownership. The [API contract](api-contract.md#authentication-and-ownership)
 defines login/bootstrap, expiry, logout, registration and authorization behavior.
-These are implementation requirements; no authentication handler or session
-storage is mounted in the hello API yet.
+Session storage now implements the persistence subset above; no authentication
+handler or session lookup is mounted in the hello API yet.
 
 ## FIT parsing
 

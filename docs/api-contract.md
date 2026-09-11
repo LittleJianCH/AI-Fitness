@@ -6,9 +6,11 @@ for parallel web and iOS development. Its source is
 grouped by feature. The generated OpenAPI document is a build artifact.
 
 **These are contract definitions, not deployed features.** The production
-application still serves only `/api/v1/hello`. There are no authentication
+application still serves only `/api/v1/hello`. These routes do not invoke authentication
 handlers, database writes, FIT upload/export handlers or HealthKit synchronization
-services in this change. Local FIT parsing and the SvelteKit skeleton were merged
+services yet. The separate `Storage.*` foundation has PostgreSQL migrations and
+user/session/workout operations; HTTP integration remains subsequent work.
+Local FIT parsing and the SvelteKit skeleton were merged
 independently and are present; this contract does not connect their feature flows. The test router serves synthetic canonical responses only. The
 rules below are obligations for the subsequent implementations.
 

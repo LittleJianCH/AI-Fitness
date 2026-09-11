@@ -2,12 +2,13 @@
 
 DOMAIN_SOURCES := $(wildcard Workout/*.hs Workout/*/*.hs Import/*.hs Import/Fit/*.hs)
 API_SOURCES := $(wildcard Api/*.hs Api/*/*.hs Api/*/*/*.hs)
+STORAGE_SOURCES := $(wildcard Storage/*.hs Storage/*/*.hs)
 CONTRACT_SOURCES := $(wildcard contract/*.hs)
 TEST_SOURCES := $(wildcard test/*.hs)
 FIT_CFLAGS = $(subst -I,-isystem ,$(shell pkg-config --cflags fitsdk))
 FIT_LIBS = $(shell pkg-config --libs fitsdk)
 NATIVE_FLAGS = -std=c++17 -Wall -Wextra -Werror -O2
-HASKELL_SOURCES := Main.hs Api.hs Config.hs $(DOMAIN_SOURCES) $(API_SOURCES) $(TEST_SOURCES) $(CONTRACT_SOURCES) test/fit/Main.hs
+HASKELL_SOURCES := Main.hs Api.hs Config.hs $(DOMAIN_SOURCES) $(API_SOURCES) $(STORAGE_SOURCES) $(TEST_SOURCES) $(CONTRACT_SOURCES) test/fit/Main.hs test/storage/Main.hs
 
 all: build/backend
 
@@ -19,7 +20,7 @@ run: build/backend
 	./build/backend
 
 check:
-	ghc -fno-code -Wall -Werror -i. $(DOMAIN_SOURCES) $(API_SOURCES)
+	ghc -fno-code -Wall -Werror -i. $(DOMAIN_SOURCES) $(API_SOURCES) $(STORAGE_SOURCES)
 
 build/domain-tests: $(DOMAIN_SOURCES) $(TEST_SOURCES) Makefile
 	mkdir -p build/test
@@ -43,6 +44,17 @@ build/contract-tests: $(API_SOURCES) $(DOMAIN_SOURCES) $(CONTRACT_SOURCES) test/
 
 contract-test: build/contract-tests
 	./build/contract-tests
+
+.PHONY: migrate storage-test
+migrate:
+	IHP_MIGRATION_DIR=Application/Migration/ migrate
+
+build/storage-tests: $(STORAGE_SOURCES) $(DOMAIN_SOURCES) $(API_SOURCES) test/storage/Main.hs test/Fixtures.hs Makefile
+	mkdir -p build/storage-test
+	ghc --make -Wall -Werror -threaded -i. -itest -outputdir build/storage-test test/storage/Main.hs -o $@
+
+storage-test: build/storage-tests
+	bash test/storage/run.sh
 
 format:
 	fourmolu --mode inplace $(HASKELL_SOURCES)
