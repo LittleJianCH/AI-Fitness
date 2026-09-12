@@ -30,7 +30,7 @@ The backend implements authentication and manual Workout persistence, including
 owned list and detail reads. The web demo still uses fixture transport and focuses
 on list → overview → metric/route detail. Authentication, upload, persistence,
 editing, training-load calculations and AI analysis are not simulated as success.
-Login and manual-entry forms are available only in ordinary connected mode.
+Login, workout write forms and account settings are available only in connected mode.
 
 `pnpm dev` uses the ordinary environment without fixture endpoints. It needs
 an authenticated browser session and same-origin routing to the backend before
@@ -103,10 +103,40 @@ Drafts remain in memory and leaving a dirty form asks for confirmation. Saving
 opens the returned record and invalidates the owner's list. If a success response
 is lost, the form retains the same submission ID and body for explicit retry,
 preventing duplicate creation. An uncertain attempt locks its fields until the
-result is resolved; after a definitive input rejection they can be corrected.
+result is resolved. A definitive input rejection permits correction only when no
+earlier response for that attempt left publication uncertain.
 A late response updates the cache without taking over a page the user navigated to.
 Reloading discards the in-memory draft/attempt; check the list before recording the
 same activity again after an uncertain save.
+
+## Editing and deletion
+
+Connected workout details link to a metadata editor. The editor captures the current
+revision as a string. Editing changes title, notes and tags; the user-data request
+also preserves the existing statistics inclusion policy. Background reads do not replace an open draft.
+On a revision conflict, the draft remains visible and writes stay blocked until the
+user explicitly loads the latest version. Leaving an unsaved draft requires confirmation.
+Deletion requires confirmation and the captured revision. The backend currently
+supports deletion of manual records only; other records display its rejection.
+Drafts stay in memory and are cleared on account changes. Demo routes expose no editor.
+
+## Filters and account settings
+
+The workout URL stores optional `sport`, local calendar `from` and `through` dates,
+and an exact `tag`. The date range includes both selected days in the browser's
+local timezone and is converted to API `from` (inclusive) and `before` (exclusive)
+instants. It selects workout start times; switching filters starts pagination again.
+Invalid URL dates remain visible as validation errors. Invalid cursors, including
+after a backend restart, offer a retry from the first page.
+
+Account settings list browser/native sessions with current-device identification,
+pagination, explicit refresh and individual/all revocation. Revoking the current
+session, revoking all sessions, and a successful password change end the current
+login and clear private caches. Password limits come from deployment policy.
+Because the password endpoint also returns `unauthenticated` for an incorrect
+current password, the client verifies `/me` before distinguishing that error from
+an expired session. Password form values remain in component memory only.
+Demo mode supports workout filters but exposes no account-management forms.
 
 ## What to try
 
@@ -179,14 +209,3 @@ Zod is the default boundary validator. Effect remains approved for complex futur
 workflows but is not installed. Tailwind and shadcn/Bits UI remain available
 choices for later features; this demo uses local CSS and semantic native controls.
 Tabler Icons supplies the shared outline icon family through per-icon Svelte imports.
-
-### Editing and deletion
-
-Connected workout details link to a metadata editor. The editor captures the current
-revision as a string and preserves statistics inclusion; only title, notes and tags
-are sent to the user-data endpoint. Background reads do not replace an open draft.
-On a revision conflict, the draft remains visible and writes stay blocked until the
-user explicitly loads the latest version. Leaving an unsaved draft requires confirmation.
-Deletion requires confirmation and the captured revision. The backend currently
-supports deletion of manual records only; other records display its rejection.
-Drafts stay in memory and are cleared on account changes. Demo routes expose no editor.

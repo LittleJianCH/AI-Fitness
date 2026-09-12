@@ -55,6 +55,8 @@ export function errorText(error: Error | null): string {
 			return import.meta.env.MODE === 'demo'
 				? '当前会话不可用，请重新登录。演示模式可切回正常场景继续体验。'
 				: '登录已失效，请重新登录。';
+		case 'invalid_current_password':
+			return '当前密码不正确，请重试。';
 		case 'invalid_credentials':
 			return '用户名或密码不正确，请重试。';
 		case 'registration_closed':

@@ -72,6 +72,11 @@
 			aria-current={page.url.pathname.includes('/workouts') ? 'page' : undefined}
 			href={resolve(`/workouts${suffix}`)}><Icon /><span>训练</span></a
 		>
+		{#if !demo}<a
+				class:active={page.url.pathname.includes('/settings')}
+				aria-current={page.url.pathname.includes('/settings') ? 'page' : undefined}
+				href={resolve('/settings')}><Icon kind="settings" /><span>账号</span></a
+			>{/if}
 	</nav>
 	{#if demo}<a class="bottom-link" href={resolve('/demo')}
 			><Icon kind="info" /><span>关于演示</span></a
@@ -248,6 +253,10 @@
 			align-items: center;
 			justify-content: space-around;
 			background: #fff;
+		}
+		nav {
+			display: flex;
+			gap: 24px;
 		}
 		.brand,
 		.nav-caption {

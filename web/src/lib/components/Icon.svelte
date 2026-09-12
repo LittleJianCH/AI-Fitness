@@ -6,6 +6,7 @@
 	import IconInfoCircle from '@tabler/icons-svelte/icons/info-circle';
 	import IconRoute from '@tabler/icons-svelte/icons/route';
 	import IconRun from '@tabler/icons-svelte/icons/run';
+	import IconSettings from '@tabler/icons-svelte/icons/settings';
 
 	const icons = {
 		activity: IconActivity,
@@ -14,7 +15,8 @@
 		cycling: IconBike,
 		running: IconRun,
 		info: IconInfoCircle,
-		route: IconRoute
+		route: IconRoute,
+		settings: IconSettings
 	};
 	let { kind = 'activity', size = 20 }: { kind?: keyof typeof icons; size?: number } = $props();
 	const Glyph = $derived(icons[kind]);

@@ -255,5 +255,8 @@ test('demo keeps account and workout write forms unavailable', async ({ page }) 
 	await page.goto('/workouts/00000000-0000-4000-8000-000000000001/edit');
 	await expect(page.getByText('编辑与删除需要登录真实账号，演示模式仅供查看。')).toBeVisible();
 	await expect(page.getByRole('button', { name: '保存修改', exact: true })).toHaveCount(0);
+	await page.goto('/settings');
+	await expect(page.getByText('账号设置需要登录真实账号，演示模式仅供查看。')).toBeVisible();
+	await expect(page.getByLabel('当前密码', { exact: true })).toHaveCount(0);
 	expect(authenticationRequests).toEqual([]);
 });

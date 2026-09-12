@@ -18,10 +18,15 @@ export async function login(page: Page, username: string, secret = password) {
 	await page.getByRole('button', { name: '登录', exact: true }).click();
 	await expect(page.getByRole('button', { name: '退出登录', exact: true })).toBeVisible();
 }
-export async function seedWorkout(page: Page, title: string, index = 2) {
+export async function seedWorkout(
+	page: Page,
+	title: string,
+	index = 2,
+	filters?: { start: string; tags: string[] }
+) {
 	const workout = workouts[index];
 	return page.evaluate(
-		async ({ observation, title, submissionId }) => {
+		async ({ observation, title, submissionId, filters }) => {
 			const csrfResponse = await fetch('/api/v1/auth/web/csrf');
 			const csrf: { csrfToken: string } = await csrfResponse.json();
 			const response = await fetch('/api/v1/workouts', {
@@ -29,10 +34,18 @@ export async function seedWorkout(page: Page, title: string, index = 2) {
 				headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf.csrfToken },
 				body: JSON.stringify({
 					submissionId,
-					observation,
+					observation: filters
+						? {
+								...observation,
+								observationRange: {
+									rangeStart: filters.start,
+									rangeEnd: new Date(Date.parse(filters.start) + 3_600_000).toISOString()
+								}
+							}
+						: observation,
 					userData: {
 						workoutTitle: title,
-						workoutTags: ['synthetic'],
+						workoutTags: filters?.tags ?? ['synthetic'],
 						statisticsInclusion: 'includeInStatistics'
 					}
 				})
@@ -42,6 +55,6 @@ export async function seedWorkout(page: Page, title: string, index = 2) {
 			const saved: { workoutId: string } = await response.json();
 			return saved.workoutId;
 		},
-		{ observation: workout.workoutObservation, title, submissionId: randomUUID() }
+		{ observation: workout.workoutObservation, title, submissionId: randomUUID(), filters }
 	);
 }

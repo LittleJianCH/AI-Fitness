@@ -17,8 +17,17 @@
 	const restoreFocus = focus.restoreFocus;
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { createInfiniteQuery } from '@tanstack/svelte-query';
-	import { loadWorkouts, readScenario, sportSchema } from '$lib/api/read';
+	import { createInfiniteQuery, useQueryClient } from '@tanstack/svelte-query';
+	import { browser } from '$app/environment';
+	import { filtersFromUrl } from '$lib/workouts/filters';
+	import { ApiError } from '$lib/api/request';
+	const client = useQueryClient();
+	let validation = $state('');
+	// Editable derived values follow URL navigation and allow an explicit draft reset.
+	let fromDate = $derived(page.url.searchParams.get('from') ?? '');
+	let throughDate = $derived(page.url.searchParams.get('through') ?? '');
+	let tagDraft = $derived(page.url.searchParams.get('tag') ?? '');
+	import { loadWorkouts, readScenario } from '$lib/api/read';
 	import {
 		commonCard,
 		groupCards,
@@ -28,13 +37,28 @@
 	} from '$lib/workouts/presentation';
 	import Icon from '$lib/components/Icon.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
-	const sport = $derived(sportSchema.safeParse(page.url.searchParams.get('sport')));
-	const selectedSport = $derived(sport.success ? sport.data : undefined);
+	const filters = $derived(filtersFromUrl(page.url.searchParams));
+	const selectedSport = $derived(filters.success ? filters.data.sport : undefined);
+	const filterError = $derived(
+		validation || (!filters.success ? filters.error.issues[0]?.message : '')
+	);
+	const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 	const scenario = $derived(readScenario(page.url.searchParams.get('scenario')));
+	const queryKey = $derived([
+		'workouts',
+		session.user?.id ?? 'demo',
+		filters.success ? filters.data : null,
+		scenario
+	]);
 	const query = createInfiniteQuery(() => ({
-		queryKey: ['workouts', session.user?.id ?? 'demo', selectedSport, scenario],
+		queryKey,
+		enabled: browser && filters.success,
 		queryFn: ({ signal, pageParam }) =>
-			loadWorkouts({ sport: selectedSport, cursor: pageParam, limit: 3 }, signal, scenario),
+			loadWorkouts(
+				{ ...(filters.success ? filters.data : {}), cursor: pageParam, limit: 3 },
+				signal,
+				scenario
+			),
 		initialPageParam: undefined as string | undefined,
 		getNextPageParam: (last) => last.nextCursor
 	}));
@@ -64,7 +88,42 @@
 		...new Map((query.data?.pages.flatMap((p) => p.items) ?? []).map((w) => [w.id, w])).values()
 	]);
 	const groups = $derived(groupCards(items));
+	async function retry() {
+		if (query.error instanceof ApiError && query.error.code === 'invalid_cursor') {
+			restoration = null;
+			await client.resetQueries({ queryKey, exact: true });
+		} else if (query.isFetchNextPageError) await query.fetchNextPage();
+		else await query.refetch();
+	}
+	async function applyFilters(event: SubmitEvent) {
+		event.preventDefault();
+		if (!(event.currentTarget instanceof HTMLFormElement)) return;
+		const values = new FormData(event.currentTarget);
+		const url = new URL(page.url);
+		for (const key of ['from', 'through', 'tag']) {
+			const value = values.get(key);
+			if (typeof value === 'string' && value !== '') url.searchParams.set(key, value);
+			else url.searchParams.delete(key);
+		}
+		const result = filtersFromUrl(url.searchParams);
+		if (!result.success) {
+			validation = result.error.issues[0]?.message ?? '请检查筛选条件。';
+			return;
+		}
+		validation = '';
+		await goto(resolve(`/workouts?${url.searchParams}`), { noScroll: true, keepFocus: true });
+	}
+	async function clearFilters() {
+		fromDate = '';
+		throughDate = '';
+		tagDraft = '';
+		const url = new URL(page.url);
+		for (const key of ['sport', 'from', 'through', 'tag']) url.searchParams.delete(key);
+		validation = '';
+		await goto(resolve(`/workouts?${url.searchParams}`), { noScroll: true, keepFocus: true });
+	}
 	async function filter(value: string) {
+		validation = '';
 		const url = new URL(page.url);
 		if (value) url.searchParams.set('sport', value);
 		else url.searchParams.delete('sport');
@@ -101,11 +160,25 @@
 	</div>
 	<span class="small subtle">按开始时间排序 · 本地时区</span>
 </div>
-{#if query.isPending}<div class="status" role="status">正在读取训练记录…</div>
-{:else if query.isError && !query.data}<Feedback
-		error={query.error}
-		retry={() => query.refetch()}
-	/>
+<form class="surface form-stack filter-form" onsubmit={applyFilters}>
+	<div class="filter-fields">
+		<label>开始日期<input type="date" name="from" bind:value={fromDate} /></label>
+		<label>结束日期（含当天）<input type="date" name="through" bind:value={throughDate} /></label>
+		<label>标签（精确匹配）<input name="tag" bind:value={tagDraft} /></label>
+	</div>
+	<div class="form-actions">
+		<button class="button primary">应用筛选</button><button
+			type="button"
+			class="button"
+			onclick={clearFilters}>清除筛选</button
+		>
+	</div>
+	<p class="small subtle">按训练开始时间筛选 · {timezone}</p>
+	{#if filterError}<p class="form-error" role="alert">{filterError}</p>{/if}
+</form>
+{#if !filters.success}<div class="status">请修正筛选条件后再查看训练。</div>
+{:else if query.isPending}<div class="status" role="status">正在读取训练记录…</div>
+{:else if query.isError && !query.data}<Feedback error={query.error} {retry} />
 {:else if !items.length}<div class="feedback">
 		<Icon size={32} />
 		<h2>还没有训练记录</h2>
@@ -114,7 +187,7 @@
 				? '当前筛选下没有训练。可以切换运动类型，或在演示场景中选择正常数据。'
 				: '当前筛选下没有训练记录。可以切换运动类型，或手动录入一次训练。'}
 		</p>
-		<button class="button" onclick={() => filter('')}>查看全部训练</button>
+		<button class="button" onclick={clearFilters}>查看全部训练</button>
 	</div>
 {:else}
 	{#each groups as [day, activities] (day)}<section class="activity-group">
@@ -158,21 +231,34 @@
 				{/each}
 			</div>
 		</section>{/each}
-	{#if query.isError}<Feedback
-			error={query.error}
-			retry={() => (query.isFetchNextPageError ? query.fetchNextPage() : query.refetch())}
-		/>{/if}
+	{#if query.isError}<Feedback error={query.error} {retry} />{/if}
 	<div class="list-footer">
 		{#if query.hasNextPage}<button
 				class="button"
-				disabled={query.isFetchingNextPage}
-				onclick={() => query.fetchNextPage()}
+				disabled={query.isFetching}
+				onclick={() =>
+					query.error instanceof ApiError && query.error.code === 'invalid_cursor'
+						? retry()
+						: query.fetchNextPage()}
 				>{query.isFetchingNextPage ? '正在读取…' : '加载更多训练'}</button
 			>{:else}<span class="small subtle">已显示全部 {items.length} 条训练</span>{/if}
 	</div>
 {/if}
 
 <style>
+	.filter-form {
+		margin-bottom: 28px;
+	}
+	.filter-fields {
+		display: grid;
+		grid-template-columns: 1fr 1fr 1.2fr;
+		gap: 16px;
+	}
+	@media (max-width: 850px) {
+		.filter-fields {
+			grid-template-columns: 1fr;
+		}
+	}
 	.list-toolbar {
 		display: flex;
 		justify-content: space-between;
