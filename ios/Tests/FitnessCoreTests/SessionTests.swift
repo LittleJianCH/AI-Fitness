@@ -87,6 +87,25 @@ final class SessionTests: XCTestCase {
         XCTAssertEqual(store.phase, .signedOut)
         XCTAssertEqual(store.message, "用户名或密码不正确。")
     }
+
+    @MainActor
+    func testCancelledLoginRevokesLateServerSession() async {
+        let service = TestAuth()
+        await service.pauseLogin()
+        let vault = MemoryVault()
+        let store = SessionStore(service: service, vault: vault)
+        let task = Task { await store.login(username: "alice", password: "synthetic", deviceName: "Test") }
+        await service.waitForLogin()
+        task.cancel()
+        await service.resumeLogin()
+        await task.value
+        let revoked = await service.revokedTokens
+        XCTAssertEqual(revoked, ["synthetic-token"])
+        XCTAssertEqual(store.phase, .signedOut)
+        XCTAssertNil(store.message)
+        XCTAssertNil(store.token)
+        XCTAssertNil(vault.token)
+    }
 }
 
 @MainActor
@@ -104,6 +123,10 @@ actor TestAuth: AuthService {
     var paused = false
     var restoreContinuation: CheckedContinuation<Void, Never>?
     var observer: CheckedContinuation<Void, Never>?
+    var loginPaused = false
+    var loginContinuation: CheckedContinuation<Void, Never>?
+    var loginObserver: CheckedContinuation<Void, Never>?
+    var revokedTokens: [String] = []
     let user = FitnessUser(createdAt: Date(timeIntervalSince1970: 0), id: "00000000-0000-0000-0000-000000000001", username: "alice")
 
     func setFailure(_ value: Failure?) { failure = value }
@@ -113,6 +136,12 @@ actor TestAuth: AuthService {
         await withCheckedContinuation { observer = $0 }
     }
     func resumeRestore() { restoreContinuation?.resume(); restoreContinuation = nil }
+    func pauseLogin() { loginPaused = true }
+    func waitForLogin() async {
+        if loginContinuation != nil { return }
+        await withCheckedContinuation { loginObserver = $0 }
+    }
+    func resumeLogin() { loginContinuation?.resume(); loginContinuation = nil }
 
     func check() throws {
         switch failure {
@@ -122,6 +151,14 @@ actor TestAuth: AuthService {
         }
     }
     func login(username: String, password: String, deviceName: String) async throws -> Components.Schemas.NativeSession {
+        if loginPaused {
+            // Model a server success racing with local task cancellation.
+            await withCheckedContinuation { continuation in
+                loginContinuation = continuation
+                loginObserver?.resume()
+                loginObserver = nil
+            }
+        }
         try check()
         let now = Date(timeIntervalSince1970: 0)
         return .init(session: .init(absoluteExpiresAt: now, createdAt: now, current: true, id: "session", idleExpiresAt: now, lastSeenAt: now, transport: .native), token: "synthetic-token", user: user)
@@ -137,5 +174,9 @@ actor TestAuth: AuthService {
         try check()
         return user
     }
-    func logout(token: String) async throws { try check() }
+    func logout(token: String) async throws {
+        try Task.checkCancellation()
+        try check()
+        revokedTokens.append(token)
+    }
 }

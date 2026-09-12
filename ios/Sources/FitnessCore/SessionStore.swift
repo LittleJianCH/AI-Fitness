@@ -135,7 +135,13 @@ public final class SessionStore {
     }
 
     private func revokeAbandonedLogin(_ credential: String) async -> Bool {
-        do { try await service.logout(token: credential); return true }
-        catch { return (error as? APIResponseError)?.status == 401 }
+        // Revocation must reach the server even if its caller was cancelled.
+        // This unstructured task is deliberately cancellation-independent and
+        // remains owned/awaited here; the transport bounds its network lifetime.
+        let cleanup = Task { [service] in
+            do { try await service.logout(token: credential); return true }
+            catch { return (error as? APIResponseError)?.status == 401 }
+        }
+        return await cleanup.value
     }
 }
