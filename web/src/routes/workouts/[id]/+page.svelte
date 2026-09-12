@@ -136,7 +136,7 @@
 {#snippet previews(workout: Workout)}
 	<div class="metric-stack">
 		{#if !metrics(workout).length}<div class="surface subtle">
-				这条训练暂无可分析的指标汇总或曲线。
+				这条训练缺少逐点采样，暂时无法计算指标平均值或最大值。
 			</div>{/if}
 		{#each metrics(workout) as metric (metric.key)}{@const range =
 				workout.workoutObservation.observationRange}
@@ -155,7 +155,7 @@
 						metric.average ?? metric.maximum,
 						metric.factor,
 						metric.key === 'speed' ? 1 : 0
-					)}<span>{metric.unit} · {metric.average !== undefined ? '记录平均' : '记录最大'}</span>
+					)}<span>{metric.unit} · {metric.average !== undefined ? '计算平均' : '计算最大'}</span>
 				</div>
 				{#if metric.samples.length}<TimeChart
 						{metric}

@@ -1,4 +1,5 @@
 <script lang="ts">
+	const demo = import.meta.env.MODE === 'demo';
 	import type { Workout } from '$lib/api/generated/client';
 	import { dateText, duration, valueText, type Metric } from '$lib/workouts/presentation';
 	import TimeChart from './TimeChart.svelte';
@@ -18,9 +19,12 @@
 		</p>
 	</div>
 </header>
+<p class="small subtle">
+	平均值包含真实零值，按相邻样本线性变化做时间加权；超过 2 分钟的空档不计入。最大值取所有真实样本。
+</p>
 <div class="summary-strip">
 	<div>
-		<div class="summary-label">记录平均</div>
+		<div class="summary-label">计算平均</div>
 		<div class="summary-number">
 			{valueText(metric.average, metric.factor, metric.key === 'speed' ? 1 : 0)}<small
 				>{metric.unit}</small
@@ -28,7 +32,7 @@
 		</div>
 	</div>
 	<div>
-		<div class="summary-label">记录最大</div>
+		<div class="summary-label">计算最大</div>
 		<div class="summary-number">
 			{valueText(metric.maximum, metric.factor, metric.key === 'speed' ? 1 : 0)}<small
 				>{metric.unit}</small
@@ -87,13 +91,13 @@
 		</details>
 	</section>{:else}<div class="status">
 		<h2>这次训练仅包含汇总数据</h2>
-		<p>没有逐点样本，因此不展示曲线。上方保留已记录的统计值。</p>
+		<p>没有逐点样本，因此不展示曲线。上方统计值来自后端计算结果。</p>
 	</div>{/if}
 <section class="section">
 	<h2>如何阅读这些数据</h2>
 	<div class="surface">
 		<p>
-			平均与最大值来自同一修订的记录汇总。曲线按原始采样时间排列，保留真实零值；显示中的断线与抽样不会参与统计计算。
+			平均与最大值由后端根据当前修订的完整采样计算。曲线按原始采样时间排列，保留真实零值；显示中的断线与抽样不会参与统计计算。
 		</p>
 		{#if metric.key === 'heart-rate'}<p>
 				当前接口没有提供已配置的心率分区或运动后恢复计算，因此这里展示心率记录本身。
@@ -101,7 +105,9 @@
 			>
 				跑步步频使用双脚总步数（步/分钟）。
 			</p>{/if}
-		<p class="small subtle">数据来源：合成演示响应 · 时间显示使用本地时区</p>
+		<p class="small subtle">
+			数据来源：{demo ? '合成演示响应' : '当前账号的训练记录'} · 时间显示使用本地时区
+		</p>
 	</div>
 </section>
 

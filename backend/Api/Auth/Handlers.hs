@@ -23,6 +23,7 @@ import Data.Char (isAlphaNum, isAscii)
 import Data.Maybe (isNothing)
 import qualified Data.Text as Text
 import qualified Data.UUID.V4 as UUID
+import Import.Fit.Decode (maxFitBytes)
 import Servant
 import qualified Storage.Codec as Storage
 import qualified Storage.Session as Sessions
@@ -41,7 +42,7 @@ publicServer environment context = policy :<|> csrf :<|> webLogin :<|> nativeLog
                     (if registrationOpen (settings environment) then OpenRegistration else ClosedRegistration)
                     8
                     128
-                    (64 * 1024 * 1024)
+                    (fromIntegral maxFitBytes)
                 )
             )
     csrf = do

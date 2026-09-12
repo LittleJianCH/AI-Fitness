@@ -27,6 +27,7 @@ import qualified Storage.Export as Export
 import Storage.Types
 import Storage.User.Types (UserId (..))
 import qualified Storage.Workout as Workouts
+import qualified Storage.Workout.Statistics as Statistics
 import qualified Storage.Workout.Submission as Manual
 import qualified Workout.Sport as Sport
 import Workout.Types
@@ -128,6 +129,7 @@ submit uid freshImport freshWorkout now submission@(Api.HealthKitSubmission obje
                 case revision of
                     Nothing -> Workouts.createWorkout uid candidate
                     Just expected -> void (Workouts.replaceObservation uid wid expected observation)
+                void (Statistics.refresh now uid wid)
                 let output =
                         Api.ImportOutput
                             (Api.ImportedPart partKey wid :| [])

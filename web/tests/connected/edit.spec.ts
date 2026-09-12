@@ -69,7 +69,23 @@ test('metadata editing preserves observations and statistics policy with an unsa
 		page.getByRole('heading', { level: 1, name: 'Synthetic edited title' })
 	).toBeVisible();
 	const after = await saved(page, id);
-	expect(after.workoutObservation).toEqual(before.workoutObservation);
+	const beforeSport = before.workoutObservation.observationSport;
+	const afterSport = after.workoutObservation.observationSport;
+	if (beforeSport.type !== 'cycling' || afterSport.type !== 'cycling')
+		throw new Error('Expected cycling fixture');
+	expect(afterSport.data.cyclingSummary.calculatedSummary?.calculationInputRevision).toBe(
+		after.workoutRevision
+	);
+	expect(afterSport.data.cyclingSummary.calculatedSummary?.calculationValue).toEqual(
+		beforeSport.data.cyclingSummary.calculatedSummary?.calculationValue
+	);
+	const beforeSource = structuredClone(before.workoutObservation);
+	const afterSource = structuredClone(after.workoutObservation);
+	if (beforeSource.observationSport.type === 'cycling')
+		delete beforeSource.observationSport.data.cyclingSummary.calculatedSummary;
+	if (afterSource.observationSport.type === 'cycling')
+		delete afterSource.observationSport.data.cyclingSummary.calculatedSummary;
+	expect(afterSource).toEqual(beforeSource);
 	expect(after.workoutUserData).toEqual({
 		statisticsInclusion: 'excludeFromStatistics',
 		workoutTitle: 'Synthetic edited title',

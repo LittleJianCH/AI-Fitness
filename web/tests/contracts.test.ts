@@ -112,9 +112,38 @@ describe('read boundary', () => {
 	});
 });
 describe('presentation semantics', () => {
+	it('uses only current backend calculations, never recorded statistics or chart samples', () => {
+		const workout = structuredClone(workouts[0]);
+		const sport = workout.workoutObservation.observationSport;
+		if (sport.type !== 'cycling') throw new Error('Expected cycling fixture');
+		sport.data.cyclingSummary.calculatedSummary = undefined;
+		const missing = metrics(workout).find((m) => m.key === 'heart-rate');
+		expect(missing?.average).toBeUndefined();
+		expect(missing?.maximum).toBeUndefined();
+		const calculated = structuredClone(sport.data.cyclingSummary.recordedSummary);
+		calculated.cyclingCommonSummary.summaryHeartRate = { averageValue: 80, maximumValue: 120 };
+		sport.data.cyclingSummary.calculatedSummary = {
+			calculationInputRevision: workout.workoutRevision,
+			calculationConfig: 'synthetic-test',
+			calculationMethod: 'synthetic-test',
+			calculatedAt: '2026-09-12T00:00:00Z',
+			calculationValue: calculated
+		};
+		expect(metrics(workout).find((m) => m.key === 'heart-rate')).toMatchObject({
+			average: 80,
+			maximum: 120
+		});
+		calculated.cyclingCommonSummary.summaryHeartRate = { averageValue: 0, maximumValue: 0 };
+		expect(metrics(workout).find((m) => m.key === 'heart-rate')).toMatchObject({
+			average: 0,
+			maximum: 0
+		});
+		sport.data.cyclingSummary.calculatedSummary.calculationInputRevision = '999999';
+		expect(metrics(workout).find((m) => m.key === 'heart-rate')?.maximum).toBeUndefined();
+	});
 	it('distinguishes sensor absence, summary-only records and sport cadences', () => {
 		expect(metrics(workouts[3]).find((m) => m.key === 'heart-rate')).toBeUndefined();
-		expect(metrics(workouts[2]).find((m) => m.key === 'power')?.samples).toHaveLength(0);
+		expect(metrics(workouts[2]).find((m) => m.key === 'power')).toBeUndefined();
 		expect(metrics(workouts[0]).find((m) => m.key === 'cadence')?.unit).toBe('rpm');
 		expect(metrics(workouts[1]).find((m) => m.key === 'cadence')?.unit).toBe('步/分钟');
 		expect(timeSummary(common(workouts[0])).label).toBe('计时时长');

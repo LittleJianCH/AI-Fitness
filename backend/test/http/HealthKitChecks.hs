@@ -26,6 +26,8 @@ import HttpSupport
 import Network.Wai.Test (simpleHeaders)
 import Web.HttpApiData (toUrlPiece)
 import Workout.Empty (emptyUserData)
+import qualified Workout.Sport as Sport
+import qualified Workout.Statistics as Statistics
 import Workout.Types
 
 checks :: Environment -> IO ()
@@ -45,7 +47,9 @@ checks env = do
         (first == duplicate && status first == Api.Succeeded)
     let wid = publishedWorkout first
     initial <- get token wid
-    assert "HealthKit preserves canonical observation" (workoutObservation initial == F.observation)
+    assert
+        "HealthKit preserves canonical observation"
+        (sourceObservation initial == F.observation && Statistics.isCurrent initial)
     otherImport <- post other request
     assert "Source identity is owner-scoped" (publishedWorkout otherImport /= wid)
     void (rawCall env "GET" (importPath first) (bearer other) "" 404)
@@ -87,7 +91,10 @@ checks env = do
         (publishedWorkout refreshed == wid && workoutUserData current == userData)
     assert
         "Explicit refresh updates only observation and revision"
-        (workoutObservation current == changedObservation && workoutRevision current == WorkoutRevision 3)
+        ( sourceObservation current == changedObservation
+            && Statistics.isCurrent current
+            && workoutRevision current == WorkoutRevision 3
+        )
     let changedKey =
             Api.HealthKitSubmission
                 source
@@ -280,3 +287,8 @@ importPath record = case record of
 
 workoutPath :: WorkoutId -> ByteString
 workoutPath wid = "/api/v1/workouts/" <> Text.encodeUtf8 (toUrlPiece wid)
+
+sourceObservation :: Workout -> WorkoutObservation
+sourceObservation workout =
+    let observation = workoutObservation workout
+     in observation {observationSport = Sport.invalidateCalculated (observationSport observation)}

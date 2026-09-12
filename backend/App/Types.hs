@@ -23,6 +23,7 @@ data Settings = Settings
     , nativeAbsolute :: NominalDiffTime
     , authRequestsPerMinute :: Int
     , importRequestsPerMinute :: Int
+    , fitArchiveRoot :: FilePath
     , maxJsonBytes :: Int
     }
 
@@ -31,6 +32,7 @@ data Environment = Environment
     , databasePool :: Pool
     , currentTime :: IO UTCTime
     , dummyPasswordHash :: PasswordHash
+    , fitWorkers :: QSem
     , passwordWorkers :: QSem
     , cursorKey :: ByteString
     , authRateWindows :: MVar (Map ByteString (UTCTime, Int))

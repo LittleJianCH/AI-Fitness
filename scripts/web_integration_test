@@ -8,6 +8,7 @@ fi
 unset PGHOSTADDR PGSERVICE PGSERVICEFILE PGOPTIONS MINIMUM_REVISION
 # Ignore existing database/session settings. Every run owns a disposable cluster.
 test_root=$(mktemp -d /tmp/ai-fitness-web.XXXXXX)
+export FIT_ARCHIVE_ROOT="$test_root/fit-archive"
 cleanup() {
     pg_ctl -D "$test_root/data" -m immediate -w stop >/dev/null 2>&1 || true
     rm -rf -- "$test_root"
@@ -16,7 +17,9 @@ trap cleanup EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
 cd "$repo_root"
-make -C backend all >"$test_root/build.log" 2>&1 || { cat "$test_root/build.log"; exit 1; }
+make -C backend all build/fit-fixtures >"$test_root/build.log" 2>&1 || { cat "$test_root/build.log"; exit 1; }
+mkdir -p backend/build/fit-fixtures-data
+backend/build/fit-fixtures backend/build/fit-fixtures-data
 node --input-type=module - <<'JS'
 import net from 'node:net';
 for (const [port, host] of [[8181, '127.0.0.1'], [5181, 'localhost']]) {

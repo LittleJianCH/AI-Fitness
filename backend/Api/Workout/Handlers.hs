@@ -14,7 +14,6 @@ import App.Types
 import Auth.Session (owned)
 import Control.Monad (unless)
 import Control.Monad.IO.Class (liftIO)
-import Control.Monad.Trans.Except (throwE)
 import Data.Aeson (toJSON)
 import Data.Maybe (fromMaybe, isJust)
 import Data.Text (Text)
@@ -23,11 +22,11 @@ import qualified Data.UUID.V4 as UUID
 import qualified Data.Vector as V
 import Servant
 import qualified Storage.Codec as Storage
-import qualified Storage.HealthKit as HealthKit
-import Storage.Types
+import qualified Storage.Fit as Fit
 import Storage.User.Types (userId)
 import qualified Storage.Workout as Workouts
 import qualified Storage.Workout.Query as Query
+import qualified Storage.Workout.Statistics as Statistics
 import qualified Storage.Workout.Submission as Submission
 import Storage.Workout.Types (WorkoutFilter (..))
 import Workout.Types
@@ -58,23 +57,31 @@ server environment context principal = list :<|> create :<|> details
         unless (submission /= UUID.nil) $
             problem context 422 "validation_failed" "submissionId must not be nil"
         wid <- WorkoutId <$> liftIO UUID.nextRandom
+        now <- liftIO (currentTime environment)
         workout <- owned environment context principal $ \auth ->
             Submission.createManual
+                now
                 (userId (authenticatedUser auth))
                 submission
                 (Workout wid (WorkoutRevision 1) observation userData)
         respond (WithStatus @200 workout)
     details wid = get wid :<|> edit wid :<|> delete wid
     get wid = do
+        now <- liftIO (currentTime environment)
         workout <- owned environment context principal $ \auth ->
-            Workouts.loadWorkout (userId (authenticatedUser auth)) wid >>= maybe (throwE WorkoutNotFound) pure
+            Statistics.load now (userId (authenticatedUser auth)) wid
         respond (WithStatus @200 workout)
     edit wid (Api.EditWorkout expected userData) = do
-        workout <- owned environment context principal $ \auth -> Workouts.replaceUserData (userId (authenticatedUser auth)) wid expected userData
+        now <- liftIO (currentTime environment)
+        workout <- owned environment context principal $ \auth -> do
+            let uid = userId (authenticatedUser auth)
+            _ <- Workouts.replaceUserData uid wid expected userData
+            Statistics.refresh now uid wid
         respond (WithStatus @200 workout)
     delete wid expected _deleteEmptyGroups = do
         now <- liftIO (currentTime environment)
-        owned environment context principal $ \auth -> HealthKit.deleteWorkout (userId (authenticatedUser auth)) wid expected now
+        owned environment context principal $ \auth ->
+            Fit.deleteWorkout (userId (authenticatedUser auth)) wid expected now
         respond (WithStatus @204 NoContent)
     unwrap (Timestamp value) = value
     sportName Api.Cycling = "cycling"

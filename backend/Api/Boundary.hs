@@ -12,6 +12,7 @@ import Data.IORef (atomicModifyIORef', newIORef)
 import qualified Data.Text.Encoding as Text
 import qualified Data.UUID as UUID
 import qualified Data.UUID.V4 as UUID
+import Import.Fit.Decode (maxFitBytes)
 import Network.HTTP.Types
 import Network.Wai
 import Network.Wai.Internal (ResponseReceived (..))
@@ -24,7 +25,10 @@ withRequest environment route original respond = do
         limit =
             if take 3 (pathInfo original) == ["api", "v1", "auth"]
                 then 16384
-                else maxJsonBytes (settings environment)
+                else
+                    if pathInfo original == ["api", "v1", "imports", "fit"]
+                        then maxFitBytes
+                        else maxJsonBytes (settings environment)
         failure status code message =
             responseLBS
                 status

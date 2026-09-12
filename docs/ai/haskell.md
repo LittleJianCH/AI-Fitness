@@ -20,6 +20,17 @@ Prefer `Text` for application text and `ByteString` for binary input. Prefer `Ma
 
 ## Composition and failures
 
+Prefer `maybe` and `either` for simple optional/result branches. Use `traverse` when the intent is to perform an action for each present value while preserving the structure. Keep `case` or function-pattern matching for constructor-specific behavior, meaningful destructuring, and guards; choose the form that makes the branches easiest to read.
+
+For a substantial fallback action, give it a local name and keep the selection concise:
+
+```haskell
+existing <- findImport owner digest
+maybe publishNew pure existing
+```
+
+Here `publishNew` is an action defined with `let` or `where`, executed only when the record is absent. `pure` explicitly lifts an existing value into the surrounding effect and is appropriate in this idiom. Use `>>=` or `=<<` to connect dependent actions when that clarifies the flow; introduce helpers or transformers for a concrete responsibility, rather than merely to hide `pure` or eliminate every `case`. Refactoring must preserve which effects run, their order, errors, cancellation, and resource lifetimes.
+
 Use `traverse`, folds, and standard combinators when they express the operation more directly than hand-written recursion. `Either` ordinarily stops at the first failure; applicative syntax alone does not accumulate errors or run work concurrently. Adopt error accumulation only when the product behavior needs it.
 
 Expected domain failures SHOULD have domain-specific error types, not HTTP status codes or arbitrary strings. Map them to transport errors at the boundary. An `IO (Either e a)` signature does not automatically convert every exception into `Left`: explicitly handle intended operational failures, preserve asynchronous cancellation, and use `bracket` or equivalent resource combinators for cleanup.
@@ -31,6 +42,8 @@ If `effectful` is introduced, limit it to operations that need capabilities such
 Use straightforward aggregation first. For large streams, review retention and strictness with representative data; choose streaming or stricter fields because measurements justify them, not by defaulting the whole project to strict evaluation.
 
 Keep extensions deliberate and compatible with the pinned compiler. The current language baseline and enabled extensions are defined by executable configuration, not newer examples on the web. Fourmolu is the adopted formatter and HLint is review input rather than an instruction to make code point-free. Use the current Make targets for formatting/linting and relevant checks instead of duplicating a command matrix here. [repo-cabal] [repo-makefile] [ghc-warnings]
+
+Follow the configured 100-column target in `fourmolu.yaml`. A successful formatter check does not guarantee that every expression fits: explicitly break long applications, `$`/lambda/`do` chains, and record updates into readable lines, then rerun Fourmolu and its check. Name useful intermediate values to reduce deep nesting. Review the formatted result as well as the check status; avoid unrelated file-wide formatting churn.
 
 [ghc-warnings]: references.md#ghc-warnings
 [repo-cabal]: references.md#repo-cabal

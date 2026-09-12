@@ -47,7 +47,7 @@ test('metric navigation, keyboard samples, table and route selection', async ({ 
 	const errors: string[] = [];
 	page.on('pageerror', (e) => errors.push(e.message));
 	await page.goto(`/workouts/${ride}`);
-	await page.getByRole('link', { name: /心率.*记录平均/ }).click();
+	await page.getByRole('link', { name: /心率.*计算/ }).click();
 	await expect(page.getByRole('heading', { name: '心率分析', exact: true })).toBeVisible();
 	const slider = page.getByRole('slider', { name: /选择真实样本/ });
 	await slider.focus();
@@ -74,13 +74,15 @@ test('summary-only and unavailable metrics keep their meaning', async ({ page })
 	await page.goto(`/workouts/${indoor}`);
 	await expect(page.getByRole('heading', { name: '室内骑行 · 仅汇总' })).toBeVisible();
 	await expect(page.getByRole('link', { name: '查看完整轨迹' })).toHaveCount(0);
-	await page.getByRole('link', { name: /功率.*记录平均/ }).click();
-	await expect(page.getByRole('heading', { name: '这次训练仅包含汇总数据' })).toBeVisible();
+	await expect(
+		page.getByText('这条训练缺少逐点采样，暂时无法计算指标平均值或最大值。')
+	).toBeVisible();
+	await expect(page.getByRole('link', { name: /功率/ })).toHaveCount(0);
 	await expect(page.getByRole('slider')).toHaveCount(0);
 	await page.goto(`/workouts/${noHr}`);
 	await expect(page.getByRole('heading', { name: '午后慢跑 · 无心率' })).toBeVisible();
-	await expect(page.getByRole('link', { name: /心率.*记录平均/ })).toHaveCount(0);
-	await page.getByRole('link', { name: /步频.*记录平均/ }).click();
+	await expect(page.getByRole('link', { name: /心率.*计算/ })).toHaveCount(0);
+	await page.getByRole('link', { name: /步频.*计算/ }).click();
 	await expect(page.getByText('跑步步频使用双脚总步数（步/分钟）。')).toBeVisible();
 	await page.goto(`/workouts/${noHr}/metrics/heart-rate`);
 	await expect(page.getByRole('heading', { name: '这项指标没有可用数据' })).toBeVisible();
@@ -159,7 +161,7 @@ test('responsive grid and review screenshots', async ({ page }, info) => {
 	await expect(page.locator('.time-chart svg').first()).toBeVisible();
 	await expect.poll(() => page.evaluate(() => window.visualViewport?.scale)).toBe(1);
 	await page.screenshot({ path: `test-results/screenshots/${info.project.name}-overview.png` });
-	await page.getByRole('link', { name: /心率.*记录平均/ }).click();
+	await page.getByRole('link', { name: /心率.*计算/ }).click();
 	await expect(page.getByRole('heading', { name: '心率分析', exact: true })).toBeVisible();
 	await expect(page.locator('.time-chart svg')).toBeVisible();
 	await page.screenshot({ path: `test-results/screenshots/${info.project.name}-heart-rate.png` });
@@ -167,7 +169,7 @@ test('responsive grid and review screenshots', async ({ page }, info) => {
 
 test('browser back restores metric and route focus without changing scroll', async ({ page }) => {
 	await page.goto(`/workouts/${ride}`);
-	const metric = page.getByRole('link', { name: /海拔.*记录/ });
+	const metric = page.getByRole('link', { name: /海拔.*计算/ });
 	await metric.focus();
 	const scroll = await page.evaluate(() => window.scrollY);
 	await metric.press('Enter');

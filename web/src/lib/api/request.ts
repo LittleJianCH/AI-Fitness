@@ -85,6 +85,8 @@ export function errorText(error: Error | null): string {
 			return error instanceof ApiError && error.retryAfter
 				? `操作过于频繁，请等待 ${error.retryAfter} 秒后重试。`
 				: '操作过于频繁，请稍后重试。';
+		case 'payload_too_large':
+			return '文件超过服务器允许的大小，请选择较小的 FIT 文件。';
 		case 'invalid_response':
 			return '收到的数据不符合接口约定，暂时无法展示。';
 		case 'internal_error':

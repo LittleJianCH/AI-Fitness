@@ -29,6 +29,8 @@ import qualified Storage.User.Types as U
 import qualified Storage.Workout as Workouts
 import Web.HttpApiData (toUrlPiece)
 import Workout.Empty
+import qualified Workout.Sport as Sport
+import qualified Workout.Statistics as Statistics
 import Workout.Types
 
 checks :: Environment -> IO ()
@@ -49,9 +51,11 @@ checks env = do
         (workoutId first /= F.wid && workoutRevision first == WorkoutRevision 1)
     assert
         "Cycling preserves complete canonical content"
-        (workoutObservation first == F.observation && workoutUserData first == userData)
+        (sourceObservation first == F.observation && workoutUserData first == userData)
     fetched <- getWorkout token (workoutId first)
-    assert "Detail preserves sensor streams" (fetched == first)
+    assert
+        "Detail preserves sensor streams and reuses calculated cache"
+        (fetched == first && Statistics.isCurrent first)
     void (rawCall env "GET" (workoutPath (workoutId first)) (bearer bobToken) "" 404)
     void
         ( call
@@ -74,7 +78,10 @@ checks env = do
             >>= decoded
     assert
         "Editing increments revision and preserves observations"
-        (workoutRevision edited == WorkoutRevision 2 && workoutObservation edited == workoutObservation first)
+        ( workoutRevision edited == WorkoutRevision 2
+            && sourceObservation edited == sourceObservation first
+            && Statistics.isCurrent edited
+        )
     void
         ( call
             env
@@ -108,7 +115,7 @@ checks env = do
     running <- create token runRequest
     assert
         "Running preserves complete canonical content"
-        (workoutObservation running == workoutObservation F.runningWorkout)
+        (sourceObservation running == workoutObservation F.runningWorkout)
     -- An invalid first attempt must roll back the claim as well as the workout.
     retrySubmission <- Id <$> UUID.nextRandom
     let invalidObservation = F.observation {observationRange = TimeRange (F.at 100) F.start}
@@ -257,11 +264,35 @@ checks env = do
     user <- db env (Users.findUserByUsername "workout.alice") >>= maybe (fail "Missing account") pure
     unmappedId <- WorkoutId <$> UUID.nextRandom
     db env (Workouts.createWorkout (U.userId user) (F.workout {workoutId = unmappedId}))
+    legacy <- getWorkout token unmappedId
+    assert
+        "Legacy detail backfills without changing source or revision"
+        ( Statistics.isCurrent legacy
+            && workoutRevision legacy == WorkoutRevision 1
+            && sourceObservation legacy == F.observation
+        )
+    stored <- db env (Workouts.loadWorkout (U.userId user) unmappedId)
+    assert "Backfill is persisted" (stored == Just legacy)
+    cached <- getWorkout token unmappedId
+    assert "Repeated detail preserves calculation timestamp" (cached == legacy)
+    void
+        (db env (Workouts.replaceUserData (U.userId user) unmappedId (WorkoutRevision 1) emptyUserData))
+    invalidated <- db env (Workouts.loadWorkout (U.userId user) unmappedId)
+    assert
+        "Revision change clears old calculation"
+        (maybe False (not . Statistics.isCurrent) invalidated)
+    refreshed <- getWorkout token unmappedId
+    assert
+        "Stale cache is regenerated for the new revision"
+        ( Statistics.isCurrent refreshed
+            && workoutRevision refreshed == WorkoutRevision 2
+            && sourceObservation refreshed == F.observation
+        )
     void
         ( rawCall
             env
             "DELETE"
-            (workoutPath unmappedId <> "?expectedRevision=1&deleteEmptyGroups=true")
+            (workoutPath unmappedId <> "?expectedRevision=2&deleteEmptyGroups=true")
             (bearer token)
             ""
             409
@@ -299,3 +330,8 @@ checks env = do
 
 workoutPath :: WorkoutId -> BS.ByteString
 workoutPath (WorkoutId wid) = "/api/v1/workouts/" <> Text.encodeUtf8 (UUID.toText wid)
+
+sourceObservation :: Workout -> WorkoutObservation
+sourceObservation workout =
+    let observation = workoutObservation workout
+     in observation {observationSport = Sport.invalidateCalculated (observationSport observation)}

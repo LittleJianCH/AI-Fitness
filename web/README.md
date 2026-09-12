@@ -198,7 +198,14 @@ Each root layout owns its QueryClient. Query owns remote data and request
 cancellation; Svelte owns filters, local selection and responsive presentation.
 Errors expose safe user-facing messages rather than payloads. Revisions stay as
 strings. DTOs are generated; presentation projections retain canonical field and
-unit meaning. Recorded statistics come from the response, not chart points.
+unit meaning. Metric averages and maxima come exclusively from the backend's
+`calculatedSummary` for the current workout revision; device aggregates and chart
+samples are never display fallbacks. The backend includes real zeros and computes
+a time-weighted mean of linear segments between samples, excluding intervals over
+120 seconds and performing no extrapolation. Extrema use all real samples.
+A singleton has extrema but no mean; absent samples leave statistics unavailable.
+Recorded time and distance remain available for manual and summary-only workouts.
+Demo fixtures without calculated results deliberately show missing statistics.
 
 ECharts draws elapsed-time samples without smoothing or bridging display gaps
 over two minutes. This is an explicit rendering rule, not a pause detector or a
@@ -209,3 +216,25 @@ Zod is the default boundary validator. Effect remains approved for complex futur
 workflows but is not installed. Tailwind and shadcn/Bits UI remain available
 choices for later features; this demo uses local CSS and semantic native controls.
 Tabler Icons supplies the shared outline icon family through per-icon Svelte imports.
+
+## FIT uploads
+
+In connected mode, choose **上传 FIT** beside manual entry in the workout list.
+Select one FIT activity and submit it; the server supports single-session cycling
+and running files up to the limit advertised by `/auth/policy` (currently 16 MiB).
+File bytes are sent directly through the same-origin API proxy with session/CSRF
+protection. The server validates content; filename and browser MIME hints are not
+trusted. Empty/oversized files are rejected locally as an early usability check.
+
+The result distinguishes success, recorded parser failure, suppression and pending
+processing. A successful result links to the workout. If a response is lost, the
+selected file stays fixed for an explicit retry; owner-scoped byte deduplication
+prevents duplicate publication. Leaving the page does not undo a committed import.
+Imported workouts support the existing metadata editor and source-aware deletion.
+Raw files are retained privately by the backend, never in browser persistence.
+Demo mode has no upload form. Server archive setup is documented in
+[backend architecture](../docs/backend-architecture.md#fit-upload-persistence).
+
+Run `./scripts/web_integration_test import.spec.ts` from the repository root for
+real HTTPS/backend/PostgreSQL upload checks at desktop and mobile widths. The
+harness generates synthetic FIT fixtures and isolates both the database and archive.

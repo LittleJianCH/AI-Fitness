@@ -142,7 +142,12 @@
 		<p class="subtle">记录你的节奏，读懂每一段努力。</p>
 	</div>
 	{#if demo}<a class="button" href={resolve('/demo')}>演示说明 <Icon kind="arrow" size={16} /></a
-		>{:else}<a class="button primary" href={resolve('/workouts/new')}>手动录入</a>{/if}
+		>{:else}<div class="form-actions">
+			<a class="button primary" href={resolve('/workouts/import')}>上传 FIT</a><a
+				class="button"
+				href={resolve('/workouts/new')}>手动录入</a
+			>
+		</div>{/if}
 </header>
 <div class="list-toolbar">
 	<div class="filters" aria-label="运动类型">

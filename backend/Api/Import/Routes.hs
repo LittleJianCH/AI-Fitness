@@ -1,13 +1,20 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TypeOperators #-}
 
-module Api.Import.Routes (ImportAPI, HealthKitSubmissionAPI, ImportDetailAPI) where
+module Api.Import.Routes (ImportAPI, FitUploadAPI, HealthKitSubmissionAPI, ImportDetailAPI) where
 
 import Api.Binary (FitFile)
 import Api.Common.Routes
 import Api.Common.Types
 import Api.Import.Types
 import Servant
+
+type FitUploadAPI =
+    "fit"
+        :> Summary
+            "Import one FIT file; the server hashes actual bytes and deduplicates within the current user"
+        :> ReqBody '[OctetStream] FitFile
+        :> Response 'POST 200 ImportRecord
 
 type HealthKitSubmissionAPI =
     "healthkit"
@@ -20,11 +27,7 @@ type ImportDetailAPI = Response 'GET 200 ImportRecord
 type ImportAPI =
     "imports"
         :> ( Pagination (Response 'GET 200 (Page ImportRecord))
-                :<|> "fit"
-                    :> Summary
-                        "Import one FIT file; the server hashes actual bytes and deduplicates within the current user"
-                    :> ReqBody '[OctetStream] FitFile
-                    :> Response 'POST 200 ImportRecord
+                :<|> FitUploadAPI
                 :<|> HealthKitSubmissionAPI
                 :<|> Capture "importId" (Id "Import")
                     :> ( ImportDetailAPI

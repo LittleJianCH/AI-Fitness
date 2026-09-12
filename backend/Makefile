@@ -60,12 +60,14 @@ build/storage-tests: $(STORAGE_SOURCES) $(DOMAIN_SOURCES) $(API_SOURCES) test/st
 storage-test: build/storage-tests
 	bash test/storage/run.sh
 
-build/http-tests: Api.hs $(API_SOURCES) $(DOMAIN_SOURCES) $(STORAGE_SOURCES) $(RUNTIME_SOURCES) $(wildcard test/http/*.hs) test/Fixtures.hs Makefile
+build/http-tests: build/native/fit_adapter.o Api.hs $(API_SOURCES) $(DOMAIN_SOURCES) $(STORAGE_SOURCES) $(RUNTIME_SOURCES) $(wildcard test/http/*.hs) test/Fixtures.hs Makefile
 	mkdir -p build/http-test
-	ghc --make -Wall -Werror -threaded -i. -itest -itest/http -outputdir build/http-test test/http/Main.hs -o $@
+	ghc --make -Wall -Werror -threaded -i. -itest -itest/http -outputdir build/http-test test/http/Main.hs build/native/fit_adapter.o $(FIT_GHC_LIBS) -o $@
 
 .PHONY: http-test
-http-test: build/http-tests
+http-test: build/http-tests build/fit-fixtures
+	mkdir -p build/fit-fixtures-data
+	./build/fit-fixtures build/fit-fixtures-data
 	bash test/storage/run.sh http
 
 format:

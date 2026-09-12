@@ -10,6 +10,8 @@ const operations = {
   '/auth/sessions': ['get', 'delete'],
   '/auth/sessions/{sessionId}': ['delete'],
   '/auth/password': ['put'],
+  '/imports/fit': ['post'],
+  '/imports/{importId}': ['get'],
   '/workouts': ['get', 'post'],
   '/workouts/{workoutId}': ['get', 'delete'],
   '/workouts/{workoutId}/user-data': ['put'],

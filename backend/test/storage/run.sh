@@ -5,6 +5,7 @@ unset PGHOSTADDR PGSERVICE PGSERVICEFILE PGOPTIONS
 
 # Always use a new private cluster; never consume a developer's DATABASE_URL.
 test_root=$(mktemp -d /tmp/ai-fitness-storage.XXXXXX)
+export FIT_ARCHIVE_ROOT="$test_root/fit-archive"
 cleanup() {
     pg_ctl -D "$test_root/data" -m immediate -w stop >/dev/null 2>&1 || true
     rm -rf -- "$test_root"

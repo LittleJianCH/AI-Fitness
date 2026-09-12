@@ -17,11 +17,16 @@ source-aware workout deletion are durable.
 HealthKit submissions have a per-process limit of 60 requests per owner per minute
 and 600 total, returning `429` with `Retry-After: 60`. Authentication has a separate
 budget. Horizontal deployment also needs a shared upstream rate limit.
+FIT upload and shared import-detail reads are mounted for one cycling or running
+activity per file. Files are limited to 16 MiB, parsed synchronously, retained
+privately, and deduplicated by owner and SHA-256 of actual input bytes. Invalid
+or unsupported files return a durable `failed` import with no published workout.
+Normal reupload returns the recorded state; explicit FIT retry/refresh and archive
+management routes remain contracts. Source-aware deletion suppresses FIT imports.
 Export receipt creation and listing are mounted with durable owner-scoped identity
 and import-loop suppression. Other import routes, group routes and file export
 routes remain contracts. Group filters currently have no matching memberships
-and group cleanup is not implemented. Local FIT parsing and
-the SvelteKit skeleton exist independently. Contract tests use synthetic responses;
+and group cleanup is not implemented. The web client supports authenticated FIT upload. Contract tests use synthetic responses;
 `make -C backend http-test` separately exercises actual authentication and Workout handlers
 and HealthKit handlers against a fresh private PostgreSQL cluster. The rules below apply to each feature
 as it is implemented.
@@ -87,6 +92,18 @@ running steps/minute. Coordinates are WGS84 latitude/longitude degrees. Grade
 and percentage fields use percentage points, not fractions. Altitude is elevation
 in metres; it can be negative. Recorded and calculated summaries remain separate;
 calculated results carry input revision, method/configuration and calculation time.
+Sport-level metric averages and extrema are calculated by the backend from canonical
+samples, independently of recorded device statistics. Real zeros are included.
+Means use time-weighted linear segments between adjacent samples at most 120 seconds
+apart; longer gaps and extrapolation are excluded. Extrema use every actual sample.
+Empty streams remain absent; a singleton has extrema without an average. This
+calculation covers common sensor statistics, sport cadence and running dynamics,
+not lap summaries, time/distance totals or training-load aggregates.
+Creation, import publication/refresh and metadata edits persist current calculations.
+Detail GET also persists missing or outdated calculations without advancing the
+workout revision; repeated reads reuse the cache. List GET does not force backfill.
+Clients display current calculated metric statistics and retain recorded time and
+distance for manual or summary-only workouts.
 
 ## Authentication and ownership
 

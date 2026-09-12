@@ -26,21 +26,30 @@ export function motion(workout: Workout) {
 	return sport.type === 'cycling' ? sport.data.cyclingMotion : sport.data.runningMotion;
 }
 export function metrics(workout: Workout): Metric[] {
-	const s = common(workout),
-		m = motion(workout),
+	const m = motion(workout),
 		sport = workout.workoutObservation.observationSport;
-	const cadence =
-		sport.type === 'cycling'
-			? sport.data.cyclingSummary.recordedSummary.summaryCyclingCadence
-			: sport.data.runningSummary.recordedSummary.summaryRunningCadence;
+	const cycling =
+		sport.type === 'cycling' ? sport.data.cyclingSummary.calculatedSummary : undefined;
+	const running =
+		sport.type === 'running' ? sport.data.runningSummary.calculatedSummary : undefined;
+	const currentCycling =
+		cycling?.calculationInputRevision === workout.workoutRevision
+			? cycling.calculationValue
+			: undefined;
+	const currentRunning =
+		running?.calculationInputRevision === workout.workoutRevision
+			? running.calculationValue
+			: undefined;
+	const s = currentCycling?.cyclingCommonSummary ?? currentRunning?.runningCommonSummary;
+	const cadence = currentCycling?.summaryCyclingCadence ?? currentRunning?.summaryRunningCadence;
 	const result: Metric[] = [
 		{
 			key: 'power',
 			title: '功率',
 			unit: 'W',
 			color: '#7350C7',
-			average: s.summaryPower.averageValue,
-			maximum: s.summaryPower.maximumValue,
+			average: s?.summaryPower.averageValue,
+			maximum: s?.summaryPower.maximumValue,
 			samples: m.motionPower,
 			factor: 1
 		},
@@ -49,8 +58,8 @@ export function metrics(workout: Workout): Metric[] {
 			title: '心率',
 			unit: 'bpm',
 			color: '#D43A4A',
-			average: s.summaryHeartRate.averageValue,
-			maximum: s.summaryHeartRate.maximumValue,
+			average: s?.summaryHeartRate.averageValue,
+			maximum: s?.summaryHeartRate.maximumValue,
 			samples: m.motionHeartRate,
 			factor: 1
 		},
@@ -59,8 +68,8 @@ export function metrics(workout: Workout): Metric[] {
 			title: sport.type === 'cycling' ? '踏频' : '步频',
 			unit: sport.type === 'cycling' ? 'rpm' : '步/分钟',
 			color: '#9A6300',
-			average: cadence.averageValue,
-			maximum: cadence.maximumValue,
+			average: cadence?.averageValue,
+			maximum: cadence?.maximumValue,
 			samples: sport.type === 'cycling' ? sport.data.cyclingCadence : sport.data.runningCadence,
 			factor: 1
 		},
@@ -69,8 +78,8 @@ export function metrics(workout: Workout): Metric[] {
 			title: '速度',
 			unit: 'km/h',
 			color: '#1769D2',
-			average: s.summarySpeed.averageValue,
-			maximum: s.summarySpeed.maximumValue,
+			average: s?.summarySpeed.averageValue,
+			maximum: s?.summarySpeed.maximumValue,
 			samples: m.motionSpeed,
 			factor: 3.6
 		},
@@ -79,8 +88,8 @@ export function metrics(workout: Workout): Metric[] {
 			title: '海拔',
 			unit: 'm',
 			color: '#586B63',
-			average: s.summaryAltitude.averageValue,
-			maximum: s.summaryAltitude.maximumValue,
+			average: s?.summaryAltitude.averageValue,
+			maximum: s?.summaryAltitude.maximumValue,
 			samples: m.motionAltitude,
 			factor: 1
 		}

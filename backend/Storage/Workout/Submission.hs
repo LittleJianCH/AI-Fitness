@@ -13,6 +13,7 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as LBS
 import Data.Coerce (coerce)
 import Data.Profunctor (lmap)
+import Data.Time (UTCTime)
 import Data.UUID.Types (UUID)
 import qualified Data.UUID.Types as UUID
 import qualified Hasql.TH as TH
@@ -20,11 +21,12 @@ import qualified Hasql.Transaction as T
 import Storage.Types
 import Storage.User.Types (UserId (..))
 import qualified Storage.Workout as Workouts
+import qualified Storage.Workout.Statistics as Statistics
 import Workout.Types
 import "crypton" Crypto.Hash (Digest, SHA256, hash)
 
-createManual :: UserId -> UUID -> Workout -> Store Workout
-createManual uid submission workout = do
+createManual :: UTCTime -> UserId -> UUID -> Workout -> Store Workout
+createManual now uid submission workout = do
     unless (submission /= UUID.nil) (throwE SubmissionConflict)
     let digest =
             convert
@@ -50,7 +52,7 @@ createManual uid submission workout = do
                             UPDATE workout_submissions SET workout_id = $3 :: uuid
                             WHERE user_id = $1 :: uuid AND submission_id = $2 :: uuid
                         |]
-            pure workout
+            Statistics.refresh now uid (workoutId workout)
         else do
             existing <-
                 lift $
@@ -65,7 +67,7 @@ createManual uid submission workout = do
             case existing of
                 Just (original, wid) | original == digest -> do
                     identity <- maybe (throwE WorkoutNotFound) (pure . WorkoutId) wid
-                    Workouts.loadWorkout uid identity >>= maybe (throwE WorkoutNotFound) pure
+                    Statistics.load now uid identity
                 _ -> throwE SubmissionConflict
 
 -- Import/group persistence is not mounted yet. Reject workouts with no manual

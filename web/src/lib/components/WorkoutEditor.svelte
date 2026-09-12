@@ -191,7 +191,9 @@
 	</form>
 	<section class="surface form-stack">
 		<h2>删除训练</h2>
-		<p class="subtle">删除后无法恢复。当前支持删除手动录入的训练。</p>
+		<p class="subtle">
+			删除后无法恢复。从文件或 Apple Health 导入的训练，删除后重复导入也不会自动恢复。
+		</p>
 		<div>
 			<button class="button danger" disabled={busy || conflict} onclick={remove}
 				>删除这条训练</button

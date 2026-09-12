@@ -5,7 +5,7 @@ build-type: Simple
 
 common backend-settings
   hs-source-dirs: .
-  build-depends: base, ihp, servant, servant-server, text, time, uuid-types, vector, wai, warp, aeson, bytestring, http-api-data, http-types, lens, openapi3, servant-openapi3, wai-extra, hasql, hasql-th >=0.5 && <0.6, hasql-transaction, profunctors, transformers, crypton, memory, cookie, hasql-pool, uuid, containers, network, network-uri
+  build-depends: base, ihp, servant, servant-server, text, time, uuid-types, vector, wai, warp, aeson, bytestring, http-api-data, http-types, lens, openapi3, servant-openapi3, wai-extra, hasql, hasql-th >=0.5 && <0.6, hasql-transaction, profunctors, transformers, crypton, memory, cookie, hasql-pool, uuid, containers, network, network-uri, directory, filepath, unix
   cxx-sources: native/fit_adapter.cpp
   include-dirs: native
   cxx-options: -std=c++17 -Wall -Wextra
@@ -24,6 +24,8 @@ common backend-settings
                  Workout.Empty,
                  Workout.Identity.Types,
                  Workout.Measurement.Summary,
+                 Workout.Measurement.Calculate,
+                 Workout.Statistics,
                  Workout.Measurement.Types,
                  Workout.Measurement.Validation,
                  Workout.Running.Empty,
@@ -84,6 +86,8 @@ common backend-settings
                  Storage.Codec,
                  Storage.Database,
                  Storage.HealthKit,
+                 Storage.Fit,
+                 Storage.Fit.Archive,
                  Storage.Export,
                  Storage.Types,
                  Storage.User,
@@ -92,6 +96,7 @@ common backend-settings
                  Storage.Session.Types,
                  Storage.Workout,
                  Storage.Workout.Types,
+                 Storage.Workout.Statistics,
                  Storage.Workout.Query,
                  Storage.Workout.Submission
 
@@ -124,4 +129,4 @@ test-suite http
   hs-source-dirs: test, test/http
   main-is: http/Main.hs
   build-depends: async
-  other-modules: AuthChecks, AuthRaceChecks, InputChecks, HttpSupport, WorkoutChecks, HealthKitChecks, ExportChecks, RestartChecks, Fixtures
+  other-modules: FitChecks, AuthChecks, AuthRaceChecks, InputChecks, HttpSupport, WorkoutChecks, HealthKitChecks, ExportChecks, RestartChecks, Fixtures

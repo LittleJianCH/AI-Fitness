@@ -21,12 +21,16 @@ import qualified Hasql.Pool as Pool
 import qualified Hasql.Pool.Config as Pool
 import qualified Hasql.Session as Session
 import Network.URI (URI (..), URIAuth (..), parseURI)
+import System.Directory (getHomeDirectory)
 import System.Environment (lookupEnv)
+import System.FilePath ((</>))
 import Text.Read (readMaybe)
 
 loadSettings :: IO Settings
 loadSettings = do
     origin <- Text.pack <$> env "APP_ORIGIN" "https://localhost:5173"
+    defaultArchive <- (</> ".local/share/ai-fitness/fit-archive") <$> getHomeDirectory
+    archive <- env "FIT_ARCHIVE_ROOT" defaultArchive
     open <- env "REGISTRATION_OPEN" "false"
     memory <- number "ARGON_MEMORY_KIB" 65536
     iterations <- number "ARGON_ITERATIONS" 3
@@ -50,6 +54,7 @@ loadSettings = do
                     (fromIntegral na)
                     30
                     60
+                    archive
                     (16 * 1024 * 1024)
                 )
         else fail "Invalid session lifetime settings"
@@ -95,10 +100,11 @@ createEnvironment :: Settings -> Pool.Pool -> IO Environment
 createEnvironment config pool = do
     dummy <- Token.newToken >>= Password.hashPassword (passwordOptions config) >>= evaluate
     workers <- newQSem 2
+    fitWorkers <- newQSem 2
     key <- Text.encodeUtf8 <$> Token.newToken
     rate <- newMVar Map.empty
     imports <- newMVar Map.empty
     let now = do
             time <- getCurrentTime
             pure (posixSecondsToUTCTime (fromInteger (floor (utcTimeToPOSIXSeconds time * 1000000)) / 1000000))
-    pure (Environment config pool now dummy workers key rate imports)
+    pure (Environment config pool now dummy fitWorkers workers key rate imports)

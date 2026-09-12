@@ -162,6 +162,32 @@ associate existing workouts for joint analysis. Group membership need not be
 temporally continuous or exclusive to one group, but cannot contain duplicate
 IDs. Resolving member existence remains a persistence/application responsibility.
 
+### Backend sample statistics
+
+`Workout.Measurement.Calculate` calculates extrema and time-weighted means from
+validated, strictly ordered canonical sample streams. Real zeros participate;
+missing samples are not zeros. Means integrate linear segments between adjacent
+samples with gaps at most 120 seconds, divided by covered duration. Longer gaps
+are excluded, and no values are extrapolated to workout boundaries or inferred
+from timer events. Extrema include every actual sample, including isolated points.
+Empty streams have no statistics; a singleton has extrema but no mean.
+
+`Workout.Statistics` populates the sport-level `calculatedSummary` independently of
+device-reported aggregates. It covers heart rate, power, speed, altitude, grade,
+ambient temperature, sport cadence, and running step length, vertical oscillation
+and ground contact time. Lap summaries and unrelated aggregates such as distance,
+energy and normalized power remain outside this calculation. Original recorded
+summaries are preserved as source facts.
+
+Manual creation, FIT publication, HealthKit publication/refresh and metadata edits
+persist these results in the same owner-locked transaction. Detail reads lazily
+backfill existing workouts and refresh stale calculations. A cache is current only
+when its input revision, method (`sample-statistics-v1`) and configuration
+(`linear-time-weighted;include-zero;max-gap-seconds=120;no-extrapolation`) match.
+Derived-cache writes preserve the input revision; repeated reads reuse the stored
+calculation timestamp. List reads return stored summaries without triggering
+backfill. No schema migration or background worker is needed.
+
 ### Modules and validation
 
 | Module | Responsibility |
@@ -451,6 +477,42 @@ must enforce ownership. The [API contract](api-contract.md#authentication-and-ow
 defines login/bootstrap, expiry, logout, registration and authorization behavior.
 All eleven authentication routes are mounted. Runtime configuration and the
 transaction boundaries are described in [Authentication runtime](#authentication-runtime).
+
+## FIT upload persistence
+
+`POST /api/v1/imports/fit` accepts raw `application/octet-stream` bytes through
+browser cookie/CSRF/Origin or native Bearer authentication. The bounded request
+reader and advertised upload policy both use the parser's 16 MiB limit. Import
+rate limits are shared with HealthKit (60 requests per owner per minute, 600 total
+per process); two SDK/archive operations can run at once per process. The safe
+native call is bounded but cannot be interrupted mid-decode.
+
+`Storage.Fit` records owner/SHA-256 identity, a versioned import record, and a
+nullable owned-workout reference in `fit_imports`. A normal duplicate returns the
+existing result, including failed or suppressed states, without reparsing or
+replacing user edits. Single-session cycling and running are supported; multipart
+and unsupported activities fail without partial publication. FIT retry/refresh,
+archive removal and suppression removal are not mounted in this slice.
+
+`FIT_ARCHIVE_ROOT` defaults to `~/.local/share/ai-fitness/fit-archive`, outside
+the source checkout so uploads never become Nix source inputs. Use a dedicated
+persistent private directory outside the checkout in deployment. Paths use
+server-generated owner IDs and hashes; uploaded names are never used. Archive
+files are mode 0600 and owner/root directories are 0700. A temporary file is
+flushed and synced, renamed on the same filesystem, and its directory synced
+before the database publishes a retained import and canonical workout together.
+Parsing and filesystem IO hold no database transaction; publication rechecks the
+active account/session under the account lock. Concurrent duplicate uploads may
+parse twice, but publish only once. Archive failure yields a generic server error
+and no database publication. A crash or revoked session between archival and
+commit can leave an unreferenced file; no automatic archive cleanup is performed.
+Backups must retain both PostgreSQL state and this directory. Out-of-band archive
+deletion is not a supported cleanup mechanism.
+
+GET `/imports/{importId}` reads both FIT and HealthKit records with owner checks.
+Deleting a FIT workout updates its import to suppressed and removes canonical
+data in one transaction; the original archive and historical mapping remain.
+This prevents later identical uploads from resurrecting the workout.
 
 ## FIT parsing
 

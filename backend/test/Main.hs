@@ -5,6 +5,7 @@ import qualified CyclingTests
 import qualified ImportOutputTests
 import qualified ImportStateTests
 import qualified RunningTests
+import qualified StatisticsTests
 import qualified WorkoutTests
 
 main :: IO ()
@@ -13,6 +14,7 @@ main = do
             WorkoutTests.cases
                 ++ CyclingTests.cases
                 ++ RunningTests.cases
+                ++ StatisticsTests.cases
                 ++ ImportStateTests.cases
                 ++ ImportOutputTests.cases
     forM_ cases $ \(name, ok) -> unless ok (fail name)

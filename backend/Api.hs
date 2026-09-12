@@ -30,7 +30,11 @@ type RuntimeAPI =
                 :<|> PublicAuthAPI
                 :<|> AuthProtect SessionAuth
                     :> Header "X-CSRF-Token" Text
-                    :> (PrivateAuthAPI :<|> WorkoutAPI :<|> Import.HealthKitAPI :<|> Export.ReceiptAPI)
+                    :> ( PrivateAuthAPI
+                            :<|> WorkoutAPI
+                            :<|> Import.RuntimeImportAPI
+                            :<|> Export.ReceiptAPI
+                       )
            )
 
 application :: Environment -> Application
