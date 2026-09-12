@@ -23,6 +23,7 @@ import qualified Data.UUID.V4 as UUID
 import qualified Data.Vector as V
 import Servant
 import qualified Storage.Codec as Storage
+import qualified Storage.HealthKit as HealthKit
 import Storage.Types
 import Storage.User.Types (userId)
 import qualified Storage.Workout as Workouts
@@ -72,7 +73,8 @@ server environment context principal = list :<|> create :<|> details
         workout <- owned environment context principal $ \auth -> Workouts.replaceUserData (userId (authenticatedUser auth)) wid expected userData
         respond (WithStatus @200 workout)
     delete wid expected _deleteEmptyGroups = do
-        owned environment context principal $ \auth -> Submission.deleteManual (userId (authenticatedUser auth)) wid expected
+        now <- liftIO (currentTime environment)
+        owned environment context principal $ \auth -> HealthKit.deleteWorkout (userId (authenticatedUser auth)) wid expected now
         respond (WithStatus @204 NoContent)
     unwrap (Timestamp value) = value
     sportName Api.Cycling = "cycling"

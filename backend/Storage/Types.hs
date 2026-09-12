@@ -18,4 +18,11 @@ data StorageError
     | WorkoutNotFound
     | InvalidWorkout [ValidationError]
     | CorruptWorkout
+    | ImportNotFound
+    | ImportConflict
+    | ImportReconciliationRequired
+    | ImportRefreshRequired
+    | ImportRetryRequired
+    | InvalidImport
+    | CorruptImport
     deriving (Eq, Show)

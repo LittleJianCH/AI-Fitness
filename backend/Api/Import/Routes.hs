@@ -1,13 +1,21 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TypeOperators #-}
 
-module Api.Import.Routes (ImportAPI) where
+module Api.Import.Routes (ImportAPI, HealthKitSubmissionAPI, ImportDetailAPI) where
 
 import Api.Binary (FitFile)
 import Api.Common.Routes
 import Api.Common.Types
 import Api.Import.Types
 import Servant
+
+type HealthKitSubmissionAPI =
+    "healthkit"
+        :> Summary "Submit a normalized HealthKit object; acknowledge only after durable commit"
+        :> ReqBody '[JSON] HealthKitSubmission
+        :> Response 'POST 200 ImportRecord
+
+type ImportDetailAPI = Response 'GET 200 ImportRecord
 
 type ImportAPI =
     "imports"
@@ -17,12 +25,9 @@ type ImportAPI =
                         "Import one FIT file; the server hashes actual bytes and deduplicates within the current user"
                     :> ReqBody '[OctetStream] FitFile
                     :> Response 'POST 200 ImportRecord
-                :<|> "healthkit"
-                    :> Summary "Submit a normalized HealthKit object; acknowledge only after durable commit"
-                    :> ReqBody '[JSON] HealthKitSubmission
-                    :> Response 'POST 200 ImportRecord
+                :<|> HealthKitSubmissionAPI
                 :<|> Capture "importId" (Id "Import")
-                    :> ( Response 'GET 200 ImportRecord
+                    :> ( ImportDetailAPI
                             :<|> "retry"
                                 :> Summary "Retry a failed unpublished FIT import from its retained archive"
                                 :> ReqBody '[JSON] RevisionRequest

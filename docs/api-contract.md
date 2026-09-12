@@ -9,12 +9,16 @@ grouped by feature. The generated OpenAPI document is a build artifact.
 including browser/native login, `/me`, session management and password change,
 against PostgreSQL. All five Workout routes support manual cycling/running data:
 creation, list/detail, metadata edits and revision-checked deletion. The hello
-probe remains available. Group/import/export routes remain contracts. Group
-filters currently have no matching memberships; deletion requires a manual
-submission mapping and cannot yet perform source suppression or group cleanup. Local FIT parsing and
+probe remains available. HealthKit submission and import-detail routes are mounted;
+they currently accept one cycling or running part per source object. Multipart
+objects are rejected before publication; batch selection submits distinct objects.
+Import state, owner-scoped UUID deduplication, explicit retry/refresh, and
+source-aware workout deletion are durable. Other import routes, group routes and
+export routes remain contracts. Group filters currently have no matching memberships
+and group cleanup is not implemented. Local FIT parsing and
 the SvelteKit skeleton exist independently. Contract tests use synthetic responses;
 `make -C backend http-test` separately exercises actual authentication and Workout handlers
-against a fresh private PostgreSQL cluster. The rules below apply to each feature
+and HealthKit handlers against a fresh private PostgreSQL cluster. The rules below apply to each feature
 as it is implemented.
 
 ## Module relationships

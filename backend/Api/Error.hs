@@ -52,6 +52,18 @@ storage environment context work = do
                         )
                 }
     translate CorruptWorkout = problem context 500 "internal_error" "Stored workout cannot be read"
+    translate ImportNotFound = problem context 404 "not_found" "Import not found"
+    translate ImportConflict = problem context 409 "revision_conflict" "Import changed; reload before retrying"
+    translate ImportReconciliationRequired = problem context 409 "reconciliation_required" "Source parts or published records changed"
+    translate ImportRefreshRequired = problem context 409 "refresh_required" "Published imports require explicit refresh"
+    translate ImportRetryRequired = problem context 409 "retry_required" "Failed imports require explicit retry"
+    translate InvalidImport =
+        problem
+            context
+            422
+            "validation_failed"
+            "Invalid HealthKit submission; this endpoint currently accepts one cycling or running part per object"
+    translate CorruptImport = problem context 500 "internal_error" "Stored import cannot be read"
 
 errorFormatters :: RequestContext -> ErrorFormatters
 errorFormatters context =

@@ -73,7 +73,9 @@ The [API contract guide](docs/api-contract.md) defines authentication, workouts,
 groups, imports and exports for web/iOS development. Servant definitions reuse
 the canonical model and generate OpenAPI 3.1, TypeScript and Swift clients.
 Authentication, user/session storage and manual Workout CRUD are implemented.
-Group/import/export handlers are added separately. See the guide for the exact mounted routes.
+HealthKit submission/detail handlers support single-part cycling/running imports
+with durable retry identity and explicit refresh. Group, other import, and export
+handlers are added separately. See the guide for the exact mounted routes.
 
 From the root inside `nix develop`:
 

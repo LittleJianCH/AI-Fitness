@@ -10,6 +10,7 @@ import Api.Auth.Routes (PrivateAuthAPI, PublicAuthAPI)
 import Api.Auth.Types (Principal)
 import Api.Boundary (withRequest)
 import qualified Api.Error as Error
+import qualified Api.Import.Handlers as Import
 import qualified Api.Workout.Handlers as Workout
 import Api.Workout.Routes (WorkoutAPI)
 import App.Types
@@ -26,7 +27,9 @@ type RuntimeAPI =
         :> "v1"
         :> ( "hello" :> Get '[PlainText] Text
                 :<|> PublicAuthAPI
-                :<|> AuthProtect SessionAuth :> Header "X-CSRF-Token" Text :> (PrivateAuthAPI :<|> WorkoutAPI)
+                :<|> AuthProtect SessionAuth
+                    :> Header "X-CSRF-Token" Text
+                    :> (PrivateAuthAPI :<|> WorkoutAPI :<|> Import.HealthKitAPI)
            )
 
 application :: Environment -> Application
@@ -35,7 +38,9 @@ application environment = withRequest environment $ \context ->
             pure "hello world"
                 :<|> Auth.publicServer environment context
                 :<|> ( \principal _ ->
-                        Auth.privateServer environment context principal :<|> Workout.server environment context principal
+                        Auth.privateServer environment context principal
+                            :<|> Workout.server environment context principal
+                            :<|> Import.server environment context principal
                      )
         auth :: AuthHandler Request Principal
         auth = mkAuthHandler (const (Session.authenticate environment context))

@@ -312,9 +312,11 @@ canonical data. This supersedes the earlier `raw transient` rule.
 
 HealthKit anchors and export mappings remain adapter state. Advance an anchor
 only after acknowledged durable publication; account for associated sample/route
-refresh and deletion, and prevent import/export loops. These protocols, database
-constraints, archive IO and platform integration are **not implemented** by this
-data-model change. v3's end-to-end sync acceptance cases remain future gates.
+refresh and deletion, and prevent import/export loops. The later persistence
+slice described below implements synchronous single-part HealthKit publication,
+retry/refresh and source suppression. Anchors, archive IO and platform integration
+are not implemented by the pure data model; end-to-end device acceptance remains
+a separate gate.
 
 ### Open-source evidence
 
@@ -416,8 +418,20 @@ migration twice, checks failed-migration rollback, exercises actual Hasql querie
 constraints, ownership and simultaneous revision updates, then restarts PostgreSQL
 and reads durable data again. It does not touch a configured development database.
 The HTTP suite additionally verifies manual-submission idempotency, exact
-pagination, owner isolation, edits and deletion tombstones. Groups, import indexes
-and export receipts remain subsequent work.
+pagination, owner isolation, edits and deletion tombstones. HealthKit imports use
+the same owner-locked transaction boundary: a unique owner/object UUID claims the
+input, and the canonical workout and terminal import record commit together.
+Invalid canonical content commits a fixed failure description without publishing
+the invalid payload. A normal repeat returns the stored record; explicit retries
+and refreshes recheck import/workout revisions. Refresh retains user metadata.
+Deleting an imported workout clears its live foreign key and suppresses its source,
+while keeping the previous-success mapping as history. Database and process restart
+checks cover both successful mappings and suppression tombstones.
+
+The first mounted HealthKit subset supports one cycling or running part per object.
+It rejects multipart inputs rather than publishing a partial source. Batch selection
+can submit multiple independent objects. Group storage, other import operations and
+export receipts remain subsequent work.
 
 ## Authentication
 
