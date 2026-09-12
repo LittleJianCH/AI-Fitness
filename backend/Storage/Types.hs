@@ -25,4 +25,7 @@ data StorageError
     | ImportRetryRequired
     | InvalidImport
     | CorruptImport
+    | ExportReceiptConflict
+    | InvalidExportReceipt
+    | CorruptExportReceipt
     deriving (Eq, Show)

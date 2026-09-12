@@ -23,6 +23,7 @@ import qualified Data.UUID.Types as UUID
 import qualified Hasql.TH as TH
 import qualified Hasql.Transaction as T
 import Storage.Codec (jsonErrors, validText)
+import qualified Storage.Export as Export
 import Storage.Types
 import Storage.User.Types (UserId (..))
 import qualified Storage.Workout as Workouts
@@ -70,21 +71,28 @@ submit uid freshImport freshWorkout now submission@(Api.HealthKitSubmission obje
         |]
     (record, liveWorkout) <- maybe (throwE CorruptImport) decode stored
     let Api.ImportRecord _ revision _ status _ _ _ previous _ = record
-    if status == Api.Suppressed
-        then pure record
-        else case intent of
-            Api.Normal | isJust previous -> pure record
-            Api.Normal | status == Api.Failed -> pure record
-            Api.Normal -> publish record liveWorkout
-            Api.Retry -> do
-                unless (expectedImport == Just revision) (throwE ImportConflict)
-                unless (isNothing previous) (throwE ImportRefreshRequired)
-                unless (status == Api.Failed) (throwE ImportRetryRequired)
-                publish record liveWorkout
-            Api.Refresh -> do
-                unless (expectedImport == Just revision) (throwE ImportConflict)
-                unless (isJust previous) (throwE ImportReconciliationRequired)
-                publish record liveWorkout
+    exported <- Export.isExportedObject uid (coerce object)
+    if exported && status /= Api.Suppressed
+        then do
+            let suppressed = advance now Api.Suppressed previous Nothing record
+            save uid suppressed liveWorkout
+            pure suppressed
+        else
+            if status == Api.Suppressed
+                then pure record
+                else case intent of
+                    Api.Normal | isJust previous -> pure record
+                    Api.Normal | status == Api.Failed -> pure record
+                    Api.Normal -> publish record liveWorkout
+                    Api.Retry -> do
+                        unless (expectedImport == Just revision) (throwE ImportConflict)
+                        unless (isNothing previous) (throwE ImportRefreshRequired)
+                        unless (status == Api.Failed) (throwE ImportRetryRequired)
+                        publish record liveWorkout
+                    Api.Refresh -> do
+                        unless (expectedImport == Just revision) (throwE ImportConflict)
+                        unless (isJust previous) (throwE ImportReconciliationRequired)
+                        publish record liveWorkout
   where
     Api.ImportPart partKey observation initialUserData = NE.head parts
     publish record liveWorkout = do

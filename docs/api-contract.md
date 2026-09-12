@@ -17,7 +17,9 @@ source-aware workout deletion are durable.
 HealthKit submissions have a per-process limit of 60 requests per owner per minute
 and 600 total, returning `429` with `Retry-After: 60`. Authentication has a separate
 budget. Horizontal deployment also needs a shared upstream rate limit.
-Other import routes, group routes and export routes remain contracts. Group filters currently have no matching memberships
+Export receipt creation and listing are mounted with durable owner-scoped identity
+and import-loop suppression. Other import routes, group routes and file export
+routes remain contracts. Group filters currently have no matching memberships
 and group cleanup is not implemented. Local FIT parsing and
 the SvelteKit skeleton exist independently. Contract tests use synthetic responses;
 `make -C backend http-test` separately exercises actual authentication and Workout handlers
@@ -214,6 +216,12 @@ A receipt may describe a revision exported just before a concurrent edit; it
 does not overwrite the current workout. Owner/platform/external-ID identity makes
 retries idempotent; conflicting workout/revision associations return `409`.
 Receipts support loop prevention, but do not implement HealthKit sync themselves.
+The mounted Apple Health receipt endpoint requires a non-nil HealthKit object UUID
+and a positive revision no newer than the current workout. UUID casing is normalized.
+Historical receipt identities survive workout deletion; their owner-scoped source
+objects remain suppressed on import. Receipt listing still requires a live owned
+workout. The server records the client's acknowledgement; it cannot independently
+inspect the device's HealthKit store.
 
 ## Pagination, filtering and errors
 

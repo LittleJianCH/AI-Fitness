@@ -64,6 +64,9 @@ storage environment context work = do
             "validation_failed"
             "Invalid HealthKit submission; this endpoint currently accepts one cycling or running part per object"
     translate CorruptImport = problem context 500 "internal_error" "Stored import cannot be read"
+    translate ExportReceiptConflict = problem context 409 "export_conflict" "Platform object is already associated with another export"
+    translate InvalidExportReceipt = problem context 422 "validation_failed" "Apple Health externalId must be a non-nil object UUID"
+    translate CorruptExportReceipt = problem context 500 "internal_error" "Stored export receipt cannot be read"
 
 errorFormatters :: RequestContext -> ErrorFormatters
 errorFormatters context =

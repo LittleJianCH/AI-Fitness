@@ -430,8 +430,11 @@ checks cover both successful mappings and suppression tombstones.
 
 The first mounted HealthKit subset supports one cycling or running part per object.
 It rejects multipart inputs rather than publishing a partial source. Batch selection
-can submit multiple independent objects. Group storage, other import operations and
-export receipts remain subsequent work.
+can submit multiple independent objects. Export receipts use the same owner lock,
+with unique owner/platform/HealthKit UUID identity and revision validation. Receipt
+history survives canonical deletion through a nullable live-workout foreign key;
+the retained UUID prevents export/import feedback, including after database restart.
+Group storage and other import operations remain subsequent work.
 
 ## Authentication
 
@@ -657,9 +660,8 @@ canonical decimal-second precision for the indexed order, without timestamp
 rounding. Signed cursors carry owner/filter scope and the last position. Group
 persistence is absent, so no memberships can match a `groupId` filter yet.
 
-Manual deletion uses owner, ID and expected revision in SQL and requires a manual
-submission mapping. Unmapped workouts return `409 reconciliation_required`;
-source-aware deletion must be implemented alongside import/group persistence.
-`deleteEmptyGroups` has no effect while no groups can be stored. Group, import and
-export route groups are not mounted. This is an explicit implementation boundary,
-not a claim that source suppression or group reconciliation is already available.
+Deletion uses owner, ID and expected revision in SQL and requires a manual or
+HealthKit mapping. HealthKit deletion suppresses its source in the same transaction.
+Unmapped workouts return `409 reconciliation_required`. `deleteEmptyGroups` has no
+effect while no groups can be stored. HealthKit submission/detail and export receipt
+routes are mounted; group routes, other import routes and file exports remain contracts.

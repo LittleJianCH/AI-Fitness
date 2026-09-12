@@ -6,6 +6,7 @@ import qualified Auth.Password as Password
 import qualified AuthChecks
 import qualified AuthRaceChecks
 import qualified Data.Text as Text
+import qualified ExportChecks
 import qualified HealthKitChecks
 import qualified InputChecks
 import qualified RestartChecks
@@ -23,11 +24,13 @@ main = do
         ["verify-restart", path] -> do
             RestartChecks.verify environment path
             HealthKitChecks.verifyRestart environment
+            ExportChecks.verifyRestart environment
         [path] -> do
             AuthChecks.checks environment
             AuthRaceChecks.checks environment
             InputChecks.checks environment
             WorkoutChecks.checks environment
             HealthKitChecks.checks environment
+            ExportChecks.checks environment
             RestartChecks.prepare environment path
         _ -> fail "Expected a private restart-state path"

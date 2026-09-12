@@ -62,6 +62,7 @@ common backend-settings
                  Api.Common.Routes,
                  Api.Common.Types,
                  Api.Export.Routes,
+                 Api.Export.Handlers,
                  Api.Export.Types,
                  Api.Import.Routes,
                  Api.Import.Handlers,
@@ -83,6 +84,7 @@ common backend-settings
                  Storage.Codec,
                  Storage.Database,
                  Storage.HealthKit,
+                 Storage.Export,
                  Storage.Types,
                  Storage.User,
                  Storage.User.Types,
@@ -122,4 +124,4 @@ test-suite http
   hs-source-dirs: test, test/http
   main-is: http/Main.hs
   build-depends: async
-  other-modules: AuthChecks, AuthRaceChecks, InputChecks, HttpSupport, WorkoutChecks, HealthKitChecks, RestartChecks, Fixtures
+  other-modules: AuthChecks, AuthRaceChecks, InputChecks, HttpSupport, WorkoutChecks, HealthKitChecks, ExportChecks, RestartChecks, Fixtures
