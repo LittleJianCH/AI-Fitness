@@ -602,7 +602,7 @@ validates credential transport, cookies, Origin and CSRF. `Auth.Session` resolve
 the authenticated principal and coordinates account-locked transactions.
 `Api.Auth.Handlers` translates the existing routes into these operations.
 
-Passwords are 15–128 Unicode characters. Usernames are case-sensitive, 3–64 ASCII
+Passwords are 8–128 Unicode characters. Usernames are case-sensitive, 3–64 ASCII
 letters/digits or `_.-`. Production Argon2id defaults to 64 MiB, three iterations,
 one lane; `ARGON_MEMORY_KIB` and `ARGON_ITERATIONS` configure bounded costs. At
 most two password calculations run concurrently. Missing-user login performs the

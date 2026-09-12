@@ -39,7 +39,7 @@ publicServer environment context = policy :<|> csrf :<|> webLogin :<|> nativeLog
             ( WithStatus @200
                 ( AuthPolicy
                     (if registrationOpen (settings environment) then OpenRegistration else ClosedRegistration)
-                    15
+                    8
                     128
                     (64 * 1024 * 1024)
                 )
@@ -184,4 +184,4 @@ validUsername name =
         && Text.all (\c -> isAscii c && (isAlphaNum c || c `elem` ("_.-" :: String))) name
 
 validPassword :: Text.Text -> Bool
-validPassword value = Text.length value >= 15 && Text.length value <= 128
+validPassword value = Text.length value >= 8 && Text.length value <= 128

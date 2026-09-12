@@ -31,9 +31,22 @@ checks env = do
     assert "Argon2 rejects wrong password" (not (Password.verifyPassword hash "incorrect"))
     end <- getCurrentTime
     putStrLn ("Argon2 test-cost hash plus two verifications: " <> show (diffUTCTime end begin))
-    void (rawCall env "GET" "/api/v1/auth/policy" [] "" 200)
+    AuthPolicy _ minimumLength maximumLength _ <-
+        rawCall env "GET" "/api/v1/auth/policy" [] "" 200 >>= decoded
+    assert "Published password limits are 8–128 characters" (minimumLength == 8 && maximumLength == 128)
     void (rawCall env "GET" "/api/v1/me" [] "" 401)
     bootstrapSession@(bootstrapCookie, _) <- bootstrap env
+    forM_ [("1234567", 422), ("12345678", 201)] $ \(password, status) ->
+        void
+            ( call
+                env
+                "POST"
+                "/api/v1/auth/register"
+                (browserHeaders env bootstrapSession)
+                (Registration "auth.minimum" password)
+                status
+            )
+    void (loginNative env "auth.minimum" "12345678")
     void
         ( call
             env
@@ -219,7 +232,16 @@ checks env = do
     NativeSession _ _ secondToken <- loginNative env "auth.alice" testPassword
     let future = env {currentTime = addUTCTime (nativeAbsolute (settings env)) <$> currentTime env}
     void (rawCall future "GET" "/api/v1/me" (bearer secondToken) "" 401)
-    let newPassword = "changed-synthetic-password-456"
+    let newPassword = "12345678"
+    void
+        ( call
+            env
+            "PUT"
+            "/api/v1/auth/password"
+            (bearer secondToken)
+            (PasswordChange testPassword "1234567")
+            422
+        )
     void
         ( call
             env
