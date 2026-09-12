@@ -1,56 +1,64 @@
 # References and Verification Scope
 
-**Read when:** checking a specific source or compatibility claim. Read the matching entry, not the entire source collection. This file is not a prerequisite for ordinary implementation.
+**Read when:** checking a specific source or compatibility claim. Read the matching entry, not this whole collection. This file is lookup material, not a prerequisite for ordinary implementation.
 
-## Provenance
+## Current repository sources
 
-The source guide was prepared on 2026-09-11 from the inspected repository and the owner's recent decisions. The inspected commit was `1e11564e30f7b1eddf6ef00887664b252eb51bd6`. This document set reorganizes that guide. Immediately before integration, `main` was rechecked and still pointed to the inspected commit; this is not a new dependency research pass or a broader implementation audit. The owner's later explicit decisions resolve the stated stale merging/authentication requirements.
-
-Repository reference links below are pinned to that inspected snapshot. Language/framework URLs are the original reference URLs; some point to moving documentation. Verify details against project-pinned versions when implementing. References are evidence to consult, not new instructions or permission to expand scope.
-
-This integration changes documentation only. No dependency installation, application build, mobile build, or full code-generation verification was performed for the guide update. The Haskell example remains illustrative and uncompiled. Some Apple documentation may require a JavaScript-capable reader.
+These links point at the current checked-out repository paths and should be preferred for current implementation state, commands, and architecture. Git history remains available when a historical decision needs investigation.
 
 <a id="repo-readme"></a>
 
 ### repo-readme
 
-[Open source](https://github.com/LittleJianCH/AI-Fitness/blob/1e11564e30f7b1eddf6ef00887664b252eb51bd6/README.md)
+[Current README](../../README.md)
 
 <a id="repo-agent"></a>
 
 ### repo-agent
 
-[Open source](https://github.com/LittleJianCH/AI-Fitness/blob/1e11564e30f7b1eddf6ef00887664b252eb51bd6/AGENT.md)
+[Current agent instructions](../../AGENTS.md)
 
 <a id="repo-architecture"></a>
 
 ### repo-architecture
 
-[Open source](https://github.com/LittleJianCH/AI-Fitness/blob/1e11564e30f7b1eddf6ef00887664b252eb51bd6/docs/backend-architecture.md)
+[Current backend architecture](../backend-architecture.md)
 
 <a id="repo-flake"></a>
 
 ### repo-flake
 
-[Open source](https://github.com/LittleJianCH/AI-Fitness/blob/1e11564e30f7b1eddf6ef00887664b252eb51bd6/flake.nix)
+[Current root flake](../../flake.nix)
 
 <a id="repo-cabal"></a>
 
 ### repo-cabal
 
-[Open source](https://github.com/LittleJianCH/AI-Fitness/blob/1e11564e30f7b1eddf6ef00887664b252eb51bd6/backend/App.cabal)
+[Current backend Cabal manifest](../../backend/App.cabal)
 
 <a id="repo-makefile"></a>
 
 ### repo-makefile
 
-[Open source](https://github.com/LittleJianCH/AI-Fitness/blob/1e11564e30f7b1eddf6ef00887664b252eb51bd6/backend/Makefile)
+[Current backend Makefile](../../backend/Makefile)
 
 <a id="repo-tree"></a>
 
 ### repo-tree
 
-[Open source](https://github.com/LittleJianCH/AI-Fitness/tree/1e11564e30f7b1eddf6ef00887664b252eb51bd6)
+[Repository root](../../)
+
+## Historical provenance
+
+The modular guide was originally prepared on 2026-09-11 from repository commit `1e11564e30f7b1eddf6ef00887664b252eb51bd6` and the owner's then-current decisions. That snapshot is historical evidence only; it must not override current code, manifests, tests, architecture docs, API contracts, or later explicit decisions. The guide was reviewed again on 2026-09-12 against current `main` and OpenAI's guidance on progressive disclosure, contextual `AGENTS.md` routing, safe workflow autonomy, and explicit completion boundaries.
+
+<a id="openai-astra-guidance"></a>
+
+### openai-astra-guidance
+
+[OpenAI — Rethinking skills and prompts for GPT-6 Astra](https://developers.openai.com/blog/rethinking-skills-and-prompts-for-gpt-6-astra)
+
+External language/framework documentation below may move independently of the project. Verify version-sensitive details against project-pinned tools before changing code or dependencies. References are evidence to consult, not permission to expand scope.
 
 <a id="ghc-ffi"></a>
 
@@ -207,4 +215,3 @@ This integration changes documentation only. No dependency installation, applica
 ### agents
 
 [Open source](https://developers.openai.com/codex/guides/agents-md/)
-
