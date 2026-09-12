@@ -82,6 +82,9 @@ struct FitnessApp: App {
                     WorkoutListScreen(api: FitnessAPI(endpoint: endpoint), session: session)
                         .tabItem { Label("运动", systemImage: "figure.run") }
                         .tag("workouts")
+                    HealthImportScreen(api: FitnessAPI(endpoint: endpoint), session: session)
+                        .tabItem { Label("健康", systemImage: "heart") }
+                        .tag("health")
                     authenticationForm
                         .tabItem { Label("账号", systemImage: "person.crop.circle") }
                         .tag("account")

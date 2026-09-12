@@ -2,8 +2,8 @@
 
 The native client uses SwiftUI and the shared Servant-generated Swift API client.
 It implements native login, Keychain-backed session restoration, server-confirmed
-logout, and backend workout browsing. HealthKit integration follows in separate
-reviewed commits.
+logout, backend workout browsing, and explicit HealthKit-to-backend import.
+Backend-to-HealthKit export follows in a separate reviewed slice.
 
 ## Build
 
@@ -101,4 +101,58 @@ used. Logs and Xcode results remain in ignored `ios/build` and `ios/DerivedData`
 Running the UI suite without the harness skips the real-backend scenario; that
 skip is not evidence of successful integration.
 
-No physical-device or HealthKit verification is claimed by these login checks.
+The suite also checks the HealthKit entry screen. It does not authorize, read, or
+write real HealthKit records and is not evidence of physical-device HealthKit behavior.
+
+## Import from Apple Health
+
+The Health tab requests read access when the user presses **Authorize and read**.
+It examines up to 200 recent cycling/running workouts fully within the selected
+date range, excluding this app's exported objects. Users select one or several
+records, preview the available summary/sample counts/route, and explicitly confirm
+upload to the currently signed-in backend. Changing the selection clears previews.
+Empty results cannot distinguish read denial from missing data.
+
+The first projection includes reported duration, distance/active energy, available
+heart-rate/power/speed statistics, associated heart-rate/power/speed samples,
+cycling cadence, running stride/vertical oscillation/ground contact time, distance
+and active-energy increments, and routes/altitude with valid location accuracy.
+Only the workout's own HealthKit source and fully contained associated quantity
+samples are read. There is no cross-source fusion or inferred running cadence.
+Interval measurements are placed at interval end. Non-overlapping distance/energy
+increments form cumulative streams; available sample totals do not replace the
+reported workout totals. Duplicate sample end-times and overlapping cumulative
+increments reject the preview rather than choosing values or double-counting.
+Invalid-accuracy route positions are omitted; altitude is absent when its accuracy
+is invalid. The normalized data includes a projection note and source label.
+Pause/resume events retain timer meaning; other events retain their numeric
+HealthKit kind and interval end as descriptive events. Lap summaries, arbitrary
+source-specific fields and multisport workouts are outside this initial projection.
+The supported sample limit is 50,000 per preview and selection is limited to ten
+workouts per batch to bound in-memory previews.
+
+The reader owns HealthKit objects within each asynchronous operation outside the
+UI actor. Only Sendable value snapshots cross into UI state. Workouts/previews are
+kept in memory; no anchors or automatic background sync are introduced. HealthKit
+read permission may be incomplete, and later associated data may arrive: reselect
+and preview again before explicitly refreshing an existing import.
+
+Uploads use the dedicated `/imports/healthkit` contract and source UUID, never a
+manual workout creation request. Only a `succeeded` record with its matching source
+and complete mapping is presented as confirmed. A normal repeat does not overwrite
+observations. Failed unpublished inputs offer revision-checked retry; published
+inputs offer explicit refresh with current workout revisions while preserving user
+metadata. Suppression remains visible. Lost responses can safely repeat the normal
+request; a batch stops on rate limiting and retains results for later retry.
+Session changes/cancellation cannot publish a late acknowledgement into the new UI.
+
+The Xcode target has the HealthKit entitlement and a read-purpose description.
+Device verification requires a signing team/provisioning profile with HealthKit,
+a reachable HTTPS backend, and test records the owner is willing to read/upload.
+Verify per-type permission choices, empty/partial results, source association,
+route access, cancellation, duplicate imports and explicit refresh on that device.
+Simulator compilation and synthetic core/HTTP tests do not replace these checks.
+
+Platform references: [associated samples](https://developer.apple.com/documentation/healthkit/hkquery/predicateforobjects(from:)-5irg9),
+[workout route queries](https://developer.apple.com/documentation/healthkit/hkworkoutroutequery),
+and [HealthKit queries](https://developer.apple.com/documentation/healthkit/queries).

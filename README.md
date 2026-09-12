@@ -8,7 +8,7 @@ authentication and manual Workout endpoints now use PostgreSQL.
 
 ## Run the iOS app
 
-The `ios/` directory contains the SwiftUI login and workout-browsing application
+The `ios/` directory contains SwiftUI login, workout browsing and explicit Apple Health import
 and its shared Swift API/session core. See [iOS development](ios/README.md) for contract generation,
 Xcode setup, backend connection, and isolated simulator integration tests.
 
