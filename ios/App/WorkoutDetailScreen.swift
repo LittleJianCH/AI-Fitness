@@ -7,11 +7,16 @@ import SwiftUI
 @MainActor
 struct WorkoutDetailScreen: View {
     let id: String
+    let api: FitnessAPI
+    let session: SessionStore
+    @State private var showingExport = false
     @State private var store: WorkoutDetailStore
     @State private var retry: Task<Void, Never>?
 
     init(id: String, api: FitnessAPI, session: SessionStore) {
         self.id = id
+        self.api = api
+        self.session = session
         _store = State(initialValue: WorkoutDetailStore(service: api, session: session))
     }
 
@@ -20,6 +25,8 @@ struct WorkoutDetailScreen: View {
             VStack(alignment: .leading, spacing: 24) {
                 if let workout = store.workout {
                     Text(workout.displayTitle).font(.largeTitle.bold()).accessibilityIdentifier("workoutTitle")
+                    Button("导出到 Apple 健康") { showingExport = true }
+                        .accessibilityIdentifier("openHealthExport")
                     VStack(alignment: .leading, spacing: 8) {
                         Text(workout.sportName).font(.headline)
                         Text(workout.workoutObservation.observationRange.rangeStart.formatted(date: .abbreviated, time: .standard))
@@ -69,6 +76,9 @@ struct WorkoutDetailScreen: View {
         .task(id: id) { await store.load(id: id) }
         .refreshable { await store.load(id: id) }
         .onDisappear { retry?.cancel() }
+        .sheet(isPresented: $showingExport) {
+            if let workout = store.workout { HealthExportScreen(workout: workout, api: api, session: session) }
+        }
     }
 }
 

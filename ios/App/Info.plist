@@ -10,6 +10,7 @@
 <key>CFBundleVersion</key><string>1</string>
 <key>LSRequiresIPhoneOS</key><true/>
 <key>NSHealthShareUsageDescription</key><string>读取你选择的骑行、跑步及相关测量和路线，预览后导入当前登录的 AI Fitness 后端。</string>
+<key>NSHealthUpdateUsageDescription</key><string>将你确认的后端运动、支持的测量和路线写入 Apple 健康，并保存导出回执以便重试。</string>
 <key>UILaunchScreen</key><dict/>
 <key>UISupportedInterfaceOrientations</key><array><string>UIInterfaceOrientationPortrait</string><string>UIInterfaceOrientationLandscapeLeft</string><string>UIInterfaceOrientationLandscapeRight</string></array>
 <key>NSAppTransportSecurity</key><dict><key>NSAllowsLocalNetworking</key><true/></dict>

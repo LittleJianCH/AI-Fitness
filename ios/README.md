@@ -2,8 +2,8 @@
 
 The native client uses SwiftUI and the shared Servant-generated Swift API client.
 It implements native login, Keychain-backed session restoration, server-confirmed
-logout, backend workout browsing, and explicit HealthKit-to-backend import.
-Backend-to-HealthKit export follows in a separate reviewed slice.
+logout, backend workout browsing, explicit HealthKit-to-backend import, and
+user-confirmed backend-to-HealthKit export with durable recovery and receipts.
 
 ## Build
 
@@ -101,8 +101,10 @@ used. Logs and Xcode results remain in ignored `ios/build` and `ios/DerivedData`
 Running the UI suite without the harness skips the real-backend scenario; that
 skip is not evidence of successful integration.
 
-The suite also checks the HealthKit entry screen. It does not authorize, read, or
-write real HealthKit records and is not evidence of physical-device HealthKit behavior.
+The suite also checks the HealthKit import entry screen and exports a synthetic
+running workout through the system Health access sheet. Its disposable simulator
+contains no real health records. Simulator results are not evidence of
+physical-device HealthKit behavior.
 
 ## Import from Apple Health
 
@@ -156,3 +158,59 @@ Simulator compilation and synthetic core/HTTP tests do not replace these checks.
 Platform references: [associated samples](https://developer.apple.com/documentation/healthkit/hkquery/predicateforobjects(from:)-5irg9),
 [workout route queries](https://developer.apple.com/documentation/healthkit/hkworkoutroutequery),
 and [HealthKit queries](https://developer.apple.com/documentation/healthkit/queries).
+
+## Export to Apple Health
+
+Open a backend workout, choose **Export to Apple Health**, read the projection,
+and confirm. The app requests only the write/read types needed by that projection.
+Recorded heart rate, sport-specific power/speed, cycling cadence and supported
+running dynamics become quantities in canonical units. Recorded distance and
+metabolic energy become one total each; cumulative streams are not added again.
+Missing totals are not inferred. Start/end and explicit pause/resume events drive
+HealthKit timing; its derived duration/statistics can differ from recorded summaries.
+Routes retain timestamps and latitude/longitude. Canonical data has no GPS accuracy,
+so the writer uses Core Location's unknown-accuracy sentinel and omits altitude.
+Laps, running cadence, notes, tags, calculated summaries and unsupported extensions
+are not a lossless HealthKit projection. This is an explicit platform copy, not a backup.
+
+A SHA-256 identity scopes each export to origin, authenticated owner, workout and
+revision. Quantities, workout and route carry stable HealthKit sync identifiers;
+a newer backend revision is an explicit separate copy, not an automatic overwrite.
+The process-wide coordinator prevents simultaneous attempts for one identity.
+An atomic JSON journal in Application Support is excluded from backup and uses
+complete file protection on iOS. It contains the confirmed snapshot while pending;
+completion removes the health payload and retains only receipt bookkeeping.
+The detail screen resumes a pending older revision before offering the current one.
+
+HealthKit and HTTP do not form one transaction. `HKWorkoutBuilder.addSamples` may
+save quantities before `finishWorkout`; retries reuse this app's matching quantities.
+A failed or cancelled build can leave those quantities awaiting recovery, rather
+than implying that cancellation undid platform writes. The journal marks an attempt
+before finishing the workout or route. Unknown finish results are queried on retry;
+an empty read never proves that the write failed and never triggers another finish.
+A known workout without a committed route resumes its separate route builder.
+The writer confirms associated quantity identities and route points before returning
+success. Only then does the client record the exact revision and HealthKit UUID
+through the backend receipt endpoint. A failed receipt request resumes HTTP only.
+
+If a write outcome stays unreadable, recovery remains pending instead of risking a
+duplicate. Unlocking and restoring read access may make it recoverable; the app does
+not promise automatic repair of missing/deleted platform objects. Deleting the
+backend workout while a receipt is pending prevents that receipt from being recorded.
+Uninstalling the app removes the local journal. No background sync, source merging,
+or automatic deletion of HealthKit records is introduced.
+
+The import picker excludes this app's source and explicit export metadata. Durable
+backend receipts additionally suppress their owner-scoped HealthKit object UUIDs,
+including after the canonical workout is deleted. These are loop-prevention rules,
+not cross-source workout merging.
+
+Physical acceptance still needs a signed device: grant/deny individual data types,
+export both sports, inspect units and route points, lock during writes, interrupt
+between workout/route/receipt, edit the backend during recovery, relaunch, and check
+that a retry does not create duplicates. The core tests model failure boundaries;
+the simulator exercises synthetic platform writes. Neither replaces those device checks.
+
+Apple references: [workout builder](https://developer.apple.com/documentation/healthkit/hkworkoutbuilder),
+[sync identifiers](https://developer.apple.com/documentation/healthkit/hkmetadatakeysyncidentifier),
+and [workout routes](https://developer.apple.com/documentation/healthkit/creating-a-workout-route).
