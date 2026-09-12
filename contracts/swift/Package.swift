@@ -3,7 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "FitnessContractCheck",
-    platforms: [.macOS(.v13)],
+    platforms: [.macOS(.v13), .iOS(.v17)],
     products: [.library(name: "ContractClient", targets: ["ContractClient"])],
     dependencies: [
         .package(url: "https://github.com/apple/swift-openapi-generator", exact: "1.6.0"),
