@@ -41,6 +41,9 @@ final class AuthenticationUITests: XCTestCase {
         XCTAssertTrue(app.tabBars.buttons["账号"].waitForExistence(timeout: 15))
         XCTAssertTrue(app.staticTexts["Synthetic cycling"].waitForExistence(timeout: 15))
         XCTAssertTrue(app.staticTexts["Synthetic running"].exists)
+        XCTAssertTrue(app.images["跑步"].exists)
+        XCTAssertTrue(app.images["骑行"].exists)
+        capture(app, name: "Workouts")
         app.segmentedControls.buttons["跑步"].tap()
         XCTAssertTrue(app.staticTexts["Synthetic running"].waitForExistence(timeout: 10))
         let cyclingAbsent = NSPredicate(format: "exists == false")
@@ -50,8 +53,18 @@ final class AuthenticationUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["workoutTitle"].waitForExistence(timeout: 10))
         XCTAssertEqual(app.staticTexts["workoutTitle"].label, "Synthetic running")
         XCTAssertTrue(app.staticTexts["记录摘要"].exists)
+        let averageHeartRate = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "平均心率")).firstMatch
+        XCTAssertFalse(averageHeartRate.exists)
+        app.disclosureTriangles["更多摘要指标"].tap()
+        XCTAssertTrue(averageHeartRate.waitForExistence(timeout: 5))
+        app.disclosureTriangles["更多摘要指标"].tap()
+        expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: averageHeartRate)
+        waitForExpectations(timeout: 5)
+        capture(app, name: "Workout detail")
         app.buttons["openHealthExport"].tap()
-        XCTAssertTrue(app.buttons["confirmHealthExport"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.navigationBars["导出到 Apple 健康"].waitForExistence(timeout: 10))
+        capture(app, name: "Health export")
+        reveal(app.buttons["confirmHealthExport"], in: app)
         app.buttons["confirmHealthExport"].tap()
         app.buttons["确认写入"].tap()
         // The harness owns a fresh simulator containing only synthetic workouts.
@@ -65,8 +78,9 @@ final class AuthenticationUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Synthetic running"].waitForExistence(timeout: 10))
         XCTAssertFalse(app.staticTexts["Synthetic cycling"].exists)
         app.tabBars.buttons["健康"].tap()
-        XCTAssertTrue(app.buttons["readHealthWorkouts"].waitForExistence(timeout: 10))
         XCTAssertTrue(app.staticTexts["从苹果健康导入 AI Fitness"].exists)
+        capture(app, name: "Apple Health")
+        reveal(app.buttons["readHealthWorkouts"], in: app)
         app.tabBars.buttons["账号"].tap()
         XCTAssertTrue(app.buttons["logout"].waitForExistence(timeout: 15))
         app.terminate()
@@ -77,11 +91,17 @@ final class AuthenticationUITests: XCTestCase {
         app.staticTexts["Synthetic running"].tap()
         XCTAssertTrue(app.buttons["openHealthExport"].waitForExistence(timeout: 10))
         app.buttons["openHealthExport"].tap()
-        XCTAssertTrue(app.buttons["confirmHealthExport"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.navigationBars["导出到 Apple 健康"].waitForExistence(timeout: 10))
+        reveal(app.buttons["confirmHealthExport"], in: app)
         app.buttons["confirmHealthExport"].tap()
         app.buttons["确认写入"].tap()
         XCTAssertTrue(app.staticTexts["Apple 健康写入与后端回执均已确认。"].waitForExistence(timeout: 10))
         app.buttons["closeHealthExport"].tap()
+        let heartRateChart = app.otherElements["metric-heartRate"].firstMatch
+        XCTAssertTrue(heartRateChart.waitForExistence(timeout: 10))
+        heartRateChart.tap()
+        XCTAssertTrue(heartRateChart.isHittable)
+        capture(app, name: "Heart rate")
         app.tabBars.buttons["账号"].tap()
         XCTAssertTrue(app.buttons["logout"].waitForExistence(timeout: 15))
         app.buttons["logout"].tap()
@@ -89,5 +109,25 @@ final class AuthenticationUITests: XCTestCase {
         app.terminate()
         app.launch()
         XCTAssertTrue(username.waitForExistence(timeout: 10))
+        capture(app, name: "Login")
+    }
+
+    @MainActor
+    private func reveal(_ element: XCUIElement, in app: XCUIApplication) {
+        // Grouped forms create rows as they enter the viewport. Larger text can
+        // place the action several screens below its introductory content.
+        for _ in 0..<8 {
+            if element.exists && element.isHittable { return }
+            app.swipeUp()
+        }
+        XCTAssertTrue(element.exists && element.isHittable, app.debugDescription)
+    }
+
+    @MainActor
+    private func capture(_ app: XCUIApplication, name: String) {
+        let attachment = XCTAttachment(screenshot: app.screenshot())
+        attachment.name = name
+        attachment.lifetime = .keepAlways
+        add(attachment)
     }
 }

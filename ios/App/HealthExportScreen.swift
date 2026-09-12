@@ -21,6 +21,9 @@ struct HealthExportScreen: View {
     var body: some View {
         NavigationStack {
             Form {
+                Section {
+                    FitnessIntro(title: "存入 Apple 健康", subtitle: "确认要导出的版本和数据。中途中断时，可以回到这里继续恢复。", symbol: "heart.fill", color: .pink)
+                }.listRowBackground(Color.clear)
                 Section("导出预览") {
                     Text((plan?.workout ?? workout).displayTitle)
                     Text("版本 \((plan?.workout ?? workout).workoutRevision)")
@@ -30,10 +33,15 @@ struct HealthExportScreen: View {
                     LabeledContent("路线点", value: String((plan?.workout ?? workout).motion.motionPosition.count))
                     LabeledContent("测量样本", value: String(quantityCount))
                     LabeledContent("记录距离", value: WorkoutFormat.distance((plan?.workout ?? workout).recordedCommonSummary.summaryDistance))
-                    Text(HealthExportPlan.projectionNotice).font(.footnote)
+                }
+                Section {
+                    DisclosureGroup("导出包含哪些数据") {
+                        Text(HealthExportPlan.projectionNotice).font(.footnote).foregroundStyle(.secondary)
+                    }
                 }
                 Section {
                     Button(completed ? "已完成导出" : "写入 Apple 健康 / 恢复导出") { confirming = true }
+                        .buttonStyle(.borderedProminent).tint(.pink).controlSize(.large)
                         .disabled(busy || completed || plan == nil)
                         .accessibilityIdentifier("confirmHealthExport")
                     if busy { ProgressView("正在处理导出…") }
@@ -42,7 +50,9 @@ struct HealthExportScreen: View {
                     Text("中途离开后，可从此运动详情重新打开并恢复。仅在平台写入和后端回执都确认后显示完成。")
                 }
             }
+            .scrollContentBackground(.hidden).background(FitnessStyle.background)
             .navigationTitle("导出到 Apple 健康")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("关闭") { dismiss() }.accessibilityIdentifier("closeHealthExport") } }
             .confirmationDialog("确认将预览的数据写入 Apple 健康？", isPresented: $confirming, titleVisibility: .visible) {
                 Button("确认写入") { action = Task { await perform() } }

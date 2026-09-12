@@ -23,16 +23,20 @@ struct HealthImportScreen: View {
         NavigationStack {
             List {
                 Section {
-                    Text("从苹果健康导入 AI Fitness")
-                    Text("你选择的记录会发送到当前登录的后端。首先授权并选择骑行或跑步，再预览内容；确认后才上传。")
-                        .font(.footnote).foregroundStyle(.secondary)
+                    FitnessIntro(title: "从苹果健康导入 AI Fitness", subtitle: "选择骑行或跑步，预览后再确认上传到当前服务器。", symbol: "heart.fill", color: .pink)
+                }.listRowBackground(Color.clear)
+                Section {
                     DatePicker("开始", selection: $from, in: ...to, displayedComponents: .date)
                         .disabled(isBusy)
                     DatePicker("结束", selection: $to, in: from...Date(), displayedComponents: .date)
                         .disabled(isBusy)
-                    Button("授权并读取") { action = Task { await read() } }
+                    Button { action = Task { await read() } } label: {
+                        Text("授权并读取").multilineTextAlignment(.center).frame(maxWidth: .infinity, alignment: .center).padding(.vertical, 4)
+                    }
+                        .buttonStyle(.borderedProminent).tint(.pink).controlSize(.large)
+                        .buttonBorderShape(.roundedRectangle(radius: 14))
                         .disabled(isBusy).accessibilityIdentifier("readHealthWorkouts")
-                }
+                } header: { Text("读取范围") }
                 Section {
                     Text("最多检查此期间最新的 200 条记录，只支持单项骑行和跑步，并排除本应用回写的记录。空列表可能与读取权限有关，并不代表没有运动。")
                         .font(.footnote).foregroundStyle(.secondary)
@@ -68,10 +72,10 @@ struct HealthImportScreen: View {
                                 Text(preview.observation.observationRange.rangeStart.formatted(date: .abbreviated, time: .shortened)).font(.headline)
                                 Text("\(preview.sampleCount) 个样本")
                                 DisclosureGroup("查看摘要及可用数据") {
-                                    SummarySection(title: "苹果健康摘要", summary: preview.summary, isRunning: preview.isRunning)
+                                    SummarySection(title: "苹果健康摘要", summary: preview.summary, isRunning: preview.isRunning, inCard: false)
                                     Text("心率 \(preview.motion.motionHeartRate.count) · 功率 \(preview.motion.motionPower.count) · 速度 \(preview.motion.motionSpeed.count) · 路线 \(preview.motion.motionPosition.count)")
                                         .font(.caption)
-                                    RouteSection(positions: preview.motion.motionPosition)
+                                    RouteSection(positions: preview.motion.motionPosition, inCard: false)
                                 }
                                 if let message = store.messages[preview.id] { Text(message).font(.footnote) }
                                 if let record = store.records[preview.id], record.status != .suppressed {
@@ -101,6 +105,7 @@ struct HealthImportScreen: View {
                 if isBusy { ProgressView("正在处理…") }
                 if let message { Text(message).foregroundStyle(.red) }
             }
+            .listStyle(.insetGrouped).scrollContentBackground(.hidden).background(FitnessStyle.background)
             .navigationTitle("苹果健康")
             .onDisappear { action?.cancel() }
         }

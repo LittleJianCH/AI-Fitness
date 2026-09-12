@@ -214,3 +214,26 @@ the simulator exercises synthetic platform writes. Neither replaces those device
 Apple references: [workout builder](https://developer.apple.com/documentation/healthkit/hkworkoutbuilder),
 [sync identifiers](https://developer.apple.com/documentation/healthkit/hkmetadatakeysyncidentifier),
 and [workout routes](https://developer.apple.com/documentation/healthkit/creating-a-workout-route).
+
+## Native presentation
+
+The iOS interface uses system grouped backgrounds, large continuous cards,
+Dynamic Type, SF Symbols and standard navigation, tabs, pickers and sheets.
+Workout history groups the loaded records by calendar month without additional
+network requests. Its cards show the existing summary; the list API has no route
+preview, so maps remain in workout details.
+
+Details initially show distance and timer duration, then available routes and
+measurement charts. Other recorded summaries, calculated summaries and the list
+of missing measurements expand on demand. Missing values remain explicit and
+are never replaced with zero. Heart rate is red, power purple and speed blue;
+charts retain the actual samples and linear guide lines. Accessibility text sizes
+stack paired values vertically. Import previews reuse the same presentation
+without nesting card backgrounds. Health export keeps its projection limitations
+available in an expandable explanation before the existing explicit confirmation.
+
+The visual direction follows a native health application: fewer fields shown by
+default, comfortable type and spacing, minimal decoration, and platform behavior
+before custom controls. No analytical metrics, source metadata or social features
+are inferred from visual references. Check light/dark appearance, accessibility
+text sizes and the existing isolated UI integration flow when changing presentation.

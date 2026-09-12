@@ -15,6 +15,14 @@ struct WorkoutListScreen: View {
         _store = State(initialValue: WorkoutListStore(service: api, session: session))
     }
 
+    private var months: [(date: Date, items: [WorkoutCard])] {
+        let calendar = Calendar.current
+        let grouped = Dictionary(grouping: store.items) { row in
+            calendar.dateInterval(of: .month, for: row.range.rangeStart)?.start ?? row.range.rangeStart
+        }
+        return grouped.keys.sorted(by: >).map { ($0, grouped[$0] ?? []) }
+    }
+
     var body: some View {
         NavigationStack {
             List {
@@ -25,48 +33,53 @@ struct WorkoutListScreen: View {
                 }
                 .pickerStyle(.segmented)
                 .accessibilityIdentifier("sportFilter")
+                .listRowInsets(EdgeInsets(top: 10, leading: 20, bottom: 14, trailing: 20))
+                .listRowBackground(Color.clear).listRowSeparator(.hidden)
 
                 if store.items.isEmpty, store.isLoading {
-                    ProgressView("正在加载运动…")
+                    ProgressView("正在加载运动…").frame(maxWidth: .infinity).padding(32)
+                        .listRowBackground(Color.clear).listRowSeparator(.hidden)
                 } else if store.items.isEmpty, store.hasLoaded, store.message == nil {
                     ContentUnavailableView("暂无运动记录", systemImage: "figure.run", description: Text("当前筛选下没有记录。"))
+                        .listRowBackground(Color.clear).listRowSeparator(.hidden)
                 }
-                ForEach(store.items, id: \.id) { row in
-                    NavigationLink(value: row.id) {
-                        VStack(alignment: .leading, spacing: 8) {
-                            HStack {
-                                Text(row.displayTitle).font(.headline)
-                                Spacer()
-                                Text(row.summary.sportName).font(.caption).foregroundStyle(.secondary)
-                            }
-                            Text(row.range.rangeStart.formatted(date: .abbreviated, time: .shortened))
-                                .font(.subheadline).foregroundStyle(.secondary)
-                            HStack(spacing: 20) {
-                                Label(WorkoutFormat.distance(row.summary.recordedCommonSummary.summaryDistance), systemImage: "point.topleft.down.to.point.bottomright.curvepath")
-                                Label(WorkoutFormat.duration(row.summary.recordedCommonSummary.summaryTimerTime), systemImage: "stopwatch")
-                            }
-                            .font(.caption).foregroundStyle(.secondary)
+                ForEach(months, id: \.date) { month in
+                    Section {
+                        ForEach(month.items, id: \.id) { row in
+                            NavigationLink(value: row.id) { WorkoutRow(card: row) }
+                                .accessibilityIdentifier("workout-\(row.id)")
+                                .listRowInsets(EdgeInsets(top: 24, leading: 40, bottom: 24, trailing: 34))
+                                .listRowSeparator(.hidden)
+                                .listRowBackground(
+                                    RoundedRectangle(cornerRadius: FitnessStyle.radius, style: .continuous)
+                                        .fill(FitnessStyle.surface).padding(.horizontal, 20).padding(.vertical, 6)
+                                )
                         }
-                        .padding(.vertical, 5)
+                    } header: {
+                        Text(month.date.formatted(.dateTime.year().month(.wide)))
+                            .font(.title2.bold()).foregroundStyle(Color.primary).textCase(nil).padding(.vertical, 6)
                     }
-                    .accessibilityIdentifier("workout-\(row.id)")
                 }
                 if let message = store.message {
-                    Section {
-                        Text(message).foregroundStyle(.red)
-                        Button("重试") { action = Task { await store.refresh(sport: sport) } }
+                    VStack(alignment: .leading, spacing: 12) {
+                        Label(message, systemImage: "exclamationmark.circle").foregroundStyle(.red)
+                        Button("重试") { action = Task { await store.refresh(sport: sport) } }.buttonStyle(.bordered)
                     }
+                    .padding().fitnessCard().listRowBackground(Color.clear).listRowSeparator(.hidden)
                 }
                 if store.nextCursor != nil {
-                    Button {
-                        action = Task { await store.loadMore() }
-                    } label: {
-                        if store.isLoading { ProgressView() } else { Text("加载更多") }
+                    Button { action = Task { await store.loadMore() } } label: {
+                        HStack {
+                            Spacer()
+                            if store.isLoading { ProgressView() } else { Label("加载更多", systemImage: "arrow.down") }
+                            Spacer()
+                        }.padding(10)
                     }
-                    .disabled(store.isLoading)
-                    .accessibilityIdentifier("loadMoreWorkouts")
+                    .disabled(store.isLoading).accessibilityIdentifier("loadMoreWorkouts")
+                    .listRowBackground(Color.clear).listRowSeparator(.hidden)
                 }
             }
+            .listStyle(.plain).scrollContentBackground(.hidden).background(FitnessStyle.background)
             .navigationTitle("运动记录")
             .navigationDestination(for: String.self) { id in
                 WorkoutDetailScreen(id: id, api: api, session: session)
@@ -75,5 +88,34 @@ struct WorkoutListScreen: View {
             .task(id: sport) { await store.loadIfNeeded(sport: sport) }
             .onDisappear { action?.cancel() }
         }
+    }
+}
+
+private struct WorkoutRow: View {
+    let card: WorkoutCard
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    private var running: Bool { card.summary.sportName == "跑步" }
+    private var accent: Color { running ? .orange : .blue }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            HStack(alignment: .top, spacing: 12) {
+                Image(systemName: running ? "figure.run" : "figure.outdoor.cycle")
+                    .font(.title2.weight(.medium)).foregroundStyle(accent).frame(width: 44, height: 44)
+                    .background(accent.opacity(0.10), in: RoundedRectangle(cornerRadius: 14))
+                    .accessibilityLabel(card.summary.sportName)
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(card.displayTitle).font(.headline).foregroundStyle(.primary)
+                    Text(card.range.rangeStart.formatted(.dateTime.day().weekday(.wide).hour().minute()))
+                        .font(.subheadline).foregroundStyle(.secondary)
+                }
+            }
+            let layout = dynamicTypeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 16)) : AnyLayout(HStackLayout(alignment: .top, spacing: 12))
+            layout {
+                FitnessStat(title: "距离", value: WorkoutFormat.distance(card.summary.recordedCommonSummary.summaryDistance), color: accent)
+                FitnessStat(title: "计时时间", value: WorkoutFormat.duration(card.summary.recordedCommonSummary.summaryTimerTime))
+            }
+        }
+        .padding(.trailing, 4)
     }
 }

@@ -25,16 +25,23 @@ struct FitnessApp: App {
                 NavigationStack {
                     Form {
                         Section {
+                            FitnessIntro(title: "连接你的训练记录", subtitle: "连接服务器后，即可查看运动记录并与 Apple 健康交换数据。", symbol: "figure.outdoor.cycle")
+                        }.listRowBackground(Color.clear)
+                        Section {
                             TextField("https://fitness.example.com", text: $origin)
                                 .keyboardType(.URL)
                                 .textInputAutocapitalization(.never)
                                 .autocorrectionDisabled()
                                 .accessibilityIdentifier("serverOrigin")
-                        } header: { Text("连接你的 AI Fitness") }
-                        footer: { Text("请输入后端地址。登录凭据会按地址分别保存在本机。") }
+                        } header: { Text("服务器地址") }
+                        footer: { Text("登录凭据会按服务器地址分别保存在本机。") }
                         if let error { Text(error).foregroundStyle(.red) }
-                        Button("连接", action: connect).accessibilityIdentifier("connectServer")
+                        Button(action: connect) { Text("连接").frame(maxWidth: .infinity).padding(.vertical, 4) }
+                            .buttonStyle(.borderedProminent).controlSize(.large).buttonBorderShape(.roundedRectangle(radius: 16))
+                            .listRowBackground(Color.clear).listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+                            .accessibilityIdentifier("connectServer")
                     }
+                    .scrollContentBackground(.hidden).background(FitnessStyle.background)
                     .navigationTitle("AI Fitness")
                 }
             }
@@ -90,6 +97,7 @@ struct FitnessApp: App {
                         .tag("account")
                 }
                 .id(session.generation)
+                .tint(.blue)
             } else {
                 authenticationForm
             }
@@ -103,6 +111,9 @@ struct FitnessApp: App {
             Form {
                 switch session.phase {
                 case .signedOut, .signingIn:
+                    Section {
+                        FitnessIntro(title: "欢迎回来", subtitle: "登录后，继续查看你的运动与健康记录。", symbol: "figure.run")
+                    }.listRowBackground(Color.clear)
                     Section("账号登录") {
                         TextField("用户名", text: $username)
                             .textContentType(.username)
@@ -112,16 +123,21 @@ struct FitnessApp: App {
                         SecureField("密码", text: $password)
                             .textContentType(.password)
                             .accessibilityIdentifier("password")
-                        Button("登录") {
+                    }
+                    Section {
+                        Button {
                             let secret = password
                             let name = username
                             password = ""
                             action = Task { await session.login(username: name, password: secret, deviceName: UIDevice.current.model) }
+                        } label: {
+                            Text("登录").frame(maxWidth: .infinity).padding(.vertical, 4)
                         }
+                        .buttonStyle(.borderedProminent).controlSize(.large).buttonBorderShape(.roundedRectangle(radius: 16))
                         .disabled(username.isEmpty || password.isEmpty || session.phase == .signingIn)
                         .accessibilityIdentifier("login")
                         if session.phase == .signingIn { ProgressView("正在登录…") }
-                    }
+                    }.listRowBackground(Color.clear).listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
                     Button("更换服务器", action: changeServer).disabled(session.phase == .signingIn)
                 case .restoring:
                     ProgressView("正在恢复登录…")
@@ -132,6 +148,9 @@ struct FitnessApp: App {
                         .font(.footnote).foregroundStyle(.secondary)
                     Button("更换服务器", action: changeServer)
                 case .signedIn(let user), .signingOut(let user):
+                    Section {
+                        FitnessIntro(title: user.username, subtitle: "管理当前服务器的登录会话。", symbol: "person.crop.circle.fill")
+                    }.listRowBackground(Color.clear)
                     Section("当前账号") {
                         LabeledContent("用户名", value: user.username)
                             .accessibilityIdentifier("currentUsername")
@@ -147,7 +166,8 @@ struct FitnessApp: App {
                     Text(message).foregroundStyle(.red).accessibilityIdentifier("sessionError")
                 }
             }
-            .navigationTitle("AI Fitness")
+            .scrollContentBackground(.hidden).background(FitnessStyle.background)
+            .navigationTitle(session.user == nil ? "AI Fitness" : "账号")
         }
     }
 }
