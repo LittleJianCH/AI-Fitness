@@ -36,6 +36,16 @@ final class WorkoutTests: XCTestCase {
         let requests = await service.requests
         XCTAssertEqual(requests.map(\.cursor), [nil, "next", "next"])
         XCTAssertTrue(requests.allSatisfy { $0.sport == .cycling })
+        // The list's appearance task also runs when returning from a detail.
+        await store.loadIfNeeded(sport: .cycling)
+        XCTAssertEqual(store.items, [changed, cards[1]])
+        let afterReturn = await service.requests
+        XCTAssertEqual(afterReturn.count, 3)
+        let filterChange = Task { await store.loadIfNeeded(sport: .running) }
+        await service.waitForRequests(4)
+        await service.respond(3, .success(.init(items: [cards[1]])))
+        await filterChange.value
+        XCTAssertEqual(store.items, [cards[1]])
     }
 
     @MainActor

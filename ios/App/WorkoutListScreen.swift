@@ -72,7 +72,7 @@ struct WorkoutListScreen: View {
                 WorkoutDetailScreen(id: id, api: api, session: session)
             }
             .refreshable { await store.refresh(sport: sport) }
-            .task(id: sport) { await store.refresh(sport: sport) }
+            .task(id: sport) { await store.loadIfNeeded(sport: sport) }
             .onDisappear { action?.cancel() }
         }
     }

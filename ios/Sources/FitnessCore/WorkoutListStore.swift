@@ -28,6 +28,11 @@ public final class WorkoutListStore {
         await load(cursor: nil, request: request, replacing: true)
     }
 
+    public func loadIfNeeded(sport: WorkoutSportFilter?) async {
+        // Navigation reappearance must retain accumulated pages and scroll rows.
+        if !hasLoaded || self.sport != sport { await refresh(sport: sport) }
+    }
+
     public func loadMore() async {
         guard !isLoading, let nextCursor else { return }
         requestGeneration &+= 1
