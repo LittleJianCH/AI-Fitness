@@ -2,16 +2,20 @@
 { archiveVersion = 1; classes = {}; objectVersion = 56; objects = {
 5FCC3AB48A2A835BA5C97789 = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "App/FitnessApp.swift"; sourceTree = "<group>"; };
 4DF0841F2FE2A32416CE80A7 = { isa = PBXBuildFile; fileRef = 5FCC3AB48A2A835BA5C97789; };
+698C6D464BB26F3A07C2D245 = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "App/WorkoutDetailScreen.swift"; sourceTree = "<group>"; };
+0B739B2D2F12F475AEC2998F = { isa = PBXBuildFile; fileRef = 698C6D464BB26F3A07C2D245; };
+7A3E9768B3C3BE167B58B981 = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "App/WorkoutListScreen.swift"; sourceTree = "<group>"; };
+D23109350ED8FA3814D691AC = { isa = PBXBuildFile; fileRef = 7A3E9768B3C3BE167B58B981; };
 7A665CDC8B6BB82F90923CBD = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITests/AuthenticationUITests.swift; sourceTree = "<group>"; };
 746629965A4FF5F5BB45B3B5 = { isa = PBXBuildFile; fileRef = 7A665CDC8B6BB82F90923CBD; };
 681C948D238C526E9E3424E0 = { isa = PBXFileReference; explicitFileType = wrapper.application; path = Fitness.app; sourceTree = BUILT_PRODUCTS_DIR; };
 93E46A602338E07A8524AEF6 = { isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = FitnessUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 0A3E27B8CA818264D75C8D81 = { isa = PBXGroup; children = (681C948D238C526E9E3424E0, 93E46A602338E07A8524AEF6,); name = Products; sourceTree = "<group>"; };
-19F479106CE8C3BA8C106518 = { isa = PBXGroup; children = (5FCC3AB48A2A835BA5C97789, 7A665CDC8B6BB82F90923CBD, 0A3E27B8CA818264D75C8D81,); sourceTree = "<group>"; };
+19F479106CE8C3BA8C106518 = { isa = PBXGroup; children = (5FCC3AB48A2A835BA5C97789, 698C6D464BB26F3A07C2D245, 7A3E9768B3C3BE167B58B981, 7A665CDC8B6BB82F90923CBD, 0A3E27B8CA818264D75C8D81,); sourceTree = "<group>"; };
 BC4A71180870F7945155FBB0 = { isa = XCLocalSwiftPackageReference; relativePath = .; };
 0D45F5FD462B8C70BFFB1002 = { isa = XCSwiftPackageProductDependency; productName = FitnessCore; };
 D932C4868EB80E739DC03A48 = { isa = PBXBuildFile; productRef = 0D45F5FD462B8C70BFFB1002; };
-878A52FC5FF6A57D50B7B870 = { isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (4DF0841F2FE2A32416CE80A7,); runOnlyForDeploymentPostprocessing = 0; };
+878A52FC5FF6A57D50B7B870 = { isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (4DF0841F2FE2A32416CE80A7, 0B739B2D2F12F475AEC2998F, D23109350ED8FA3814D691AC,); runOnlyForDeploymentPostprocessing = 0; };
 E2AA269EB967A8853A258BFA = { isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (D932C4868EB80E739DC03A48,); runOnlyForDeploymentPostprocessing = 0; };
 760DD443C1DF2461277A1FDF = { isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (746629965A4FF5F5BB45B3B5,); runOnlyForDeploymentPostprocessing = 0; };
 2B23A31EEC75B029432F2445 = { isa = XCBuildConfiguration; buildSettings = { CLANG_ENABLE_MODULES = YES; SDKROOT = iphoneos; IPHONEOS_DEPLOYMENT_TARGET = 17.0; SWIFT_VERSION = 5.0; SWIFT_STRICT_CONCURRENCY = complete; SWIFT_OPTIMIZATION_LEVEL = "-Onone"; SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG; ENABLE_TESTABILITY = YES; ONLY_ACTIVE_ARCH = YES; }; name = Debug; };

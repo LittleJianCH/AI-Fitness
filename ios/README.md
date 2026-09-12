@@ -1,9 +1,9 @@
 # AI Fitness for iOS
 
 The native client uses SwiftUI and the shared Servant-generated Swift API client.
-The initial slice implements native login, Keychain-backed session restoration,
-and server-confirmed logout. Workout browsing and HealthKit integration follow
-in separate reviewed commits.
+It implements native login, Keychain-backed session restoration, server-confirmed
+logout, and backend workout browsing. HealthKit integration follows in separate
+reviewed commits.
 
 ## Build
 
@@ -71,14 +71,31 @@ request bodies. User-facing messages are selected from status/error categories.
 
 ## Isolated simulator integration
 
+The workout tab loads owner-scoped backend summaries with cycling/running filters,
+pull-to-refresh, and cursor pagination. Repeated identities across pages update
+the row rather than duplicating it; a failed page can be retried. Filter changes
+and session changes invalidate earlier responses. No workout data is cached on disk.
+
+Details show the recorded summary separately from any backend-calculated summary,
+user metadata, data-quality notes, a WGS84 route, and independent heart-rate,
+power, speed, altitude and sport-specific cadence plots. Display conversions use
+kilometres and km/h; running cadence remains total steps/minute and average pace
+uses min/km. Missing values remain visibly missing. Sample timestamps are retained;
+chart lines are visual guides across samples, not additional measurements.
+
+Core tests consume the synthetic backend contract fixtures generated above. They
+cover pagination retry/deduplication, late filter/session responses, cancellation,
+detail retry and display-unit conversion alongside authentication checks.
+
 ```sh
 nix develop -c bash scripts/ios_integration_test
 ```
 
 The script creates a private PostgreSQL cluster with no TCP listener, migrates it,
 starts the actual backend on a temporary loopback port, registers a synthetic
-account, and creates a dedicated iPhone 15 / iOS 17.5 simulator. It runs the XCUITest
-login, wrong-password, relaunch/restoration and logout scenarios, then removes the
+account with synthetic cycling/running records, and creates a dedicated iPhone 15 /
+iOS 17.5 simulator. It runs the XCUITest login, wrong-password, workout list/filter/
+detail, relaunch/restoration and logout scenarios, then removes the
 server, database and simulator. Existing `DATABASE_URL` values and devices are not
 used. Logs and Xcode results remain in ignored `ios/build` and `ios/DerivedData`.
 Running the UI suite without the harness skips the real-backend scenario; that

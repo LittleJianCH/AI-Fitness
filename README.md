@@ -8,8 +8,8 @@ authentication and manual Workout endpoints now use PostgreSQL.
 
 ## Run the iOS app
 
-The `ios/` directory contains the SwiftUI native login application and its shared
-Swift API/session core. See [iOS development](ios/README.md) for contract generation,
+The `ios/` directory contains the SwiftUI login and workout-browsing application
+and its shared Swift API/session core. See [iOS development](ios/README.md) for contract generation,
 Xcode setup, backend connection, and isolated simulator integration tests.
 
 ## Run the backend

@@ -3,6 +3,7 @@ import XCTest
 final class AuthenticationUITests: XCTestCase {
     override func setUpWithError() throws { continueAfterFailure = false }
 
+    @MainActor
     func testServerValidation() {
         let app = XCUIApplication()
         app.launchArguments = ["-serverOrigin", ""]
@@ -15,6 +16,7 @@ final class AuthenticationUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["后端需要使用 HTTPS；开发模式只允许本机地址使用 HTTP。"].exists)
     }
 
+    @MainActor
     func testLoginRestoreAndLogoutAgainstBackend() throws {
         guard let server = ProcessInfo.processInfo.environment["FITNESS_TEST_SERVER"],
               server.hasPrefix("http://127.0.0.1:") else {
@@ -36,9 +38,24 @@ final class AuthenticationUITests: XCTestCase {
         password.tap()
         password.typeText("synthetic ios fixture password")
         app.buttons["login"].tap()
+        XCTAssertTrue(app.tabBars.buttons["账号"].waitForExistence(timeout: 15))
+        XCTAssertTrue(app.staticTexts["Synthetic cycling"].waitForExistence(timeout: 15))
+        XCTAssertTrue(app.staticTexts["Synthetic running"].exists)
+        app.segmentedControls.buttons["跑步"].tap()
+        XCTAssertTrue(app.staticTexts["Synthetic running"].waitForExistence(timeout: 10))
+        let cyclingAbsent = NSPredicate(format: "exists == false")
+        expectation(for: cyclingAbsent, evaluatedWith: app.staticTexts["Synthetic cycling"])
+        waitForExpectations(timeout: 10)
+        app.staticTexts["Synthetic running"].tap()
+        XCTAssertTrue(app.staticTexts["workoutTitle"].waitForExistence(timeout: 10))
+        XCTAssertEqual(app.staticTexts["workoutTitle"].label, "Synthetic running")
+        XCTAssertTrue(app.staticTexts["记录摘要"].exists)
+        app.tabBars.buttons["账号"].tap()
         XCTAssertTrue(app.buttons["logout"].waitForExistence(timeout: 15))
         app.terminate()
         app.launch()
+        XCTAssertTrue(app.tabBars.buttons["账号"].waitForExistence(timeout: 15))
+        app.tabBars.buttons["账号"].tap()
         XCTAssertTrue(app.buttons["logout"].waitForExistence(timeout: 15))
         app.buttons["logout"].tap()
         XCTAssertTrue(username.waitForExistence(timeout: 10))

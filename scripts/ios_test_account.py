@@ -2,9 +2,11 @@
 import http.cookies
 import json
 import os
+from pathlib import Path
 import time
 import urllib.error
 import urllib.request
+import uuid
 
 base = f"http://127.0.0.1:{int(os.environ['PORT'])}/api/v1"
 for attempt in range(100):
@@ -32,4 +34,29 @@ request = urllib.request.Request(
 )
 with urllib.request.urlopen(request, timeout=10) as response:
     assert response.status == 201
-print('Disposable iOS fixture account created.')
+request = urllib.request.Request(
+    base + '/auth/native/login',
+    data=json.dumps({'username': 'ios_fixture_user', 'password': 'synthetic ios fixture password',
+                     'deviceName': 'Fixture setup'}).encode(),
+    headers={'Content-Type': 'application/json'}, method='POST',
+)
+with urllib.request.urlopen(request, timeout=10) as response:
+    token = json.load(response)['token']
+with (Path(__file__).resolve().parent.parent / 'backend/build/export-response.json').open() as source:
+    workouts = json.load(source)['workouts']
+for workout in workouts:
+    sport = workout['workoutObservation']['observationSport']['type']
+    workout['workoutUserData']['workoutTitle'] = 'Synthetic ' + sport
+    request = urllib.request.Request(
+        base + '/workouts',
+        data=json.dumps({'submissionId': str(uuid.uuid4()), 'observation': workout['workoutObservation'],
+                         'userData': workout['workoutUserData']}).encode(),
+        headers={'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token}, method='POST',
+    )
+    with urllib.request.urlopen(request, timeout=10) as response:
+        assert response.status == 200
+request = urllib.request.Request(base + '/auth/logout',
+                                 headers={'Authorization': 'Bearer ' + token}, method='POST')
+with urllib.request.urlopen(request, timeout=10) as response:
+    assert response.status == 204
+print('Disposable iOS account and synthetic cycling/running fixtures created.')

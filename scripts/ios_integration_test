@@ -37,7 +37,7 @@ initdb -D "$test_root/data" --username=fitness_ios_test --no-locale --encoding=U
 pg_ctl -D "$test_root/data" -l "$test_root/postgres.log" -o "-k $test_root/socket -c listen_addresses=''" -w start >/dev/null
 createdb -h "$test_root/socket" -U fitness_ios_test fitness_ios_test
 export DATABASE_URL="host=$test_root/socket dbname=fitness_ios_test user=fitness_ios_test"
-make -C backend migrate all >ios/build/integration-backend.log 2>&1
+make -C backend migrate all contract-test >ios/build/integration-backend.log 2>&1
 export PORT
 PORT=$(native /usr/bin/python3 - <<'PY'
 import socket

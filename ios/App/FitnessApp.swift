@@ -67,6 +67,7 @@ struct FitnessApp: App {
     @State private var username = ""
     @State private var password = ""
     @State private var action: Task<Void, Never>?
+    @State private var selectedTab = "workouts"
 
     init(endpoint: ServerEndpoint, changeServer: @escaping () -> Void) {
         self.endpoint = endpoint
@@ -75,6 +76,26 @@ struct FitnessApp: App {
     }
 
     var body: some View {
+        Group {
+            if case .signedIn = session.phase {
+                TabView(selection: $selectedTab) {
+                    WorkoutListScreen(api: FitnessAPI(endpoint: endpoint), session: session)
+                        .tabItem { Label("运动", systemImage: "figure.run") }
+                        .tag("workouts")
+                    authenticationForm
+                        .tabItem { Label("账号", systemImage: "person.crop.circle") }
+                        .tag("account")
+                }
+                .id(session.generation)
+            } else {
+                authenticationForm
+            }
+        }
+        .task { await session.restore() }
+        .onDisappear { action?.cancel() }
+    }
+
+    private var authenticationForm: some View {
         NavigationStack {
             Form {
                 switch session.phase {
@@ -125,7 +146,5 @@ struct FitnessApp: App {
             }
             .navigationTitle("AI Fitness")
         }
-        .task { await session.restore() }
-        .onDisappear { action?.cancel() }
     }
 }
