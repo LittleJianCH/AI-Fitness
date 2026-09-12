@@ -132,6 +132,9 @@
 </div>
 {#snippet previews(workout: Workout)}
 	<div class="metric-stack">
+		{#if !metrics(workout).length}<div class="surface subtle">
+				这条训练暂无可分析的指标汇总或曲线。
+			</div>{/if}
 		{#each metrics(workout) as metric (metric.key)}{@const range =
 				workout.workoutObservation.observationRange}
 			<a

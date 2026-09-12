@@ -239,3 +239,18 @@ test('detail refresh then back reloads the visible list pages before restoring f
 			await expect(page.getByText('已显示全部 4 条训练')).toBeVisible();
 	}
 });
+
+test('demo keeps login and manual-entry forms unavailable', async ({ page }) => {
+	const authenticationRequests: string[] = [];
+	page.on('request', (request) => {
+		if (new URL(request.url()).pathname.startsWith('/api/v1/auth'))
+			authenticationRequests.push(request.method());
+	});
+	await page.goto('/login');
+	await expect(page.getByText('登录需要使用真实接入模式，演示模式仅供查看。')).toBeVisible();
+	await expect(page.getByLabel('密码', { exact: true })).toHaveCount(0);
+	await page.goto('/workouts/new');
+	await expect(page.getByText('手动录入需要登录真实账号，演示模式仅供查看。')).toBeVisible();
+	await expect(page.getByRole('button', { name: '保存训练', exact: true })).toHaveCount(0);
+	expect(authenticationRequests).toEqual([]);
+});

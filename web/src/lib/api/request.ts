@@ -64,7 +64,7 @@ export function errorText(error: Error | null): string {
 		case 'session_conflict':
 			return '会话状态已变化，请重试。';
 		case 'csrf_failed':
-			return '会话状态已更新，请重试这次操作。';
+			return '会话校验未通过，请重试；如果仍然失败，请重新登录。';
 		case 'forbidden':
 			return '当前账号无法执行这个操作。';
 		case 'revision_conflict':

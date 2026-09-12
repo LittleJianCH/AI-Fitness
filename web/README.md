@@ -30,6 +30,7 @@ The backend implements authentication and manual Workout persistence, including
 owned list and detail reads. The web demo still uses fixture transport and focuses
 on list → overview → metric/route detail. Authentication, upload, persistence,
 editing, training-load calculations and AI analysis are not simulated as success.
+Login and manual-entry forms are available only in ordinary connected mode.
 
 `pnpm dev` uses the ordinary environment without fixture endpoints. It needs
 an authenticated browser session and same-origin routing to the backend before
@@ -87,6 +88,25 @@ cluster persists for explicit restart checks and is removed on exit. Tests
 accept their temporary self-signed certificate; this does not verify system trust
 for a developer's certificate. Run `pnpm exec playwright install chromium` in the
 Web shell once if Chromium is missing. Artifacts remain in ignored `test-results/`.
+
+## Manual workouts
+
+Use **手动录入** from the real training list. Choose cycling/running, a local start
+instant and elapsed minutes/seconds (including pauses); distance in kilometres,
+title, notes and tags are optional. The browser converts the entered units to
+canonical seconds/metres and UTC instants. Impossible dates/local times are rejected.
+The backend validates and persists the canonical observation. Unentered distances
+stay absent; zero stays zero. Sensor streams and unavailable statistics stay empty;
+no calculated summaries or synthetic measurements are added to manual records.
+
+Drafts remain in memory and leaving a dirty form asks for confirmation. Saving
+opens the returned record and invalidates the owner's list. If a success response
+is lost, the form retains the same submission ID and body for explicit retry,
+preventing duplicate creation. An uncertain attempt locks its fields until the
+result is resolved; after a definitive input rejection they can be corrected.
+A late response updates the cache without taking over a page the user navigated to.
+Reloading discards the in-memory draft/attempt; check the list before recording the
+same activity again after an uncertain save.
 
 ## What to try
 

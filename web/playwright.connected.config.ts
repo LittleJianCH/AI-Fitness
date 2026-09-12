@@ -7,6 +7,7 @@ export default defineConfig({
 	timeout: 30_000,
 	use: {
 		baseURL: 'https://localhost:5181',
+		timezoneId: 'Asia/Shanghai',
 		ignoreHTTPSErrors: true,
 		trace: 'retain-on-failure',
 		screenshot: 'only-on-failure'

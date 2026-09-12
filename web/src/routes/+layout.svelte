@@ -126,6 +126,9 @@
 		background: #fff;
 		padding: 12px;
 	}
+	.skip:not(:focus) {
+		clip-path: inset(50%);
+	}
 	.skip:focus {
 		top: 12px;
 	}

@@ -125,10 +125,22 @@ export class BrowserSession {
 						() => getAuthWebCsrf(requestOptions(signal)),
 						getAuthWebCsrf200Response
 					);
-					this.csrf = token.csrfToken;
-				} catch {
-					/* The next explicit action can retry when the connection recovers. */
+					const user = await request(
+						() => getMe(undefined, requestOptions(signal)),
+						getMe200Response
+					);
+					signal.throwIfAborted();
+					if (user.id !== this.user?.id) await this.restore();
+					else this.csrf = token.csrfToken;
+				} catch (recoveryError) {
+					if (
+						!signal.aborted &&
+						recoveryError instanceof ApiError &&
+						recoveryError.code === 'unauthenticated'
+					)
+						this.expire();
 				}
+				signal.throwIfAborted();
 			}
 			throw error;
 		}

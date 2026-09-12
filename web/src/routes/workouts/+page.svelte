@@ -83,7 +83,7 @@
 		<p class="subtle">记录你的节奏，读懂每一段努力。</p>
 	</div>
 	{#if demo}<a class="button" href={resolve('/demo')}>演示说明 <Icon kind="arrow" size={16} /></a
-		>{/if}
+		>{:else}<a class="button primary" href={resolve('/workouts/new')}>手动录入</a>{/if}
 </header>
 <div class="list-toolbar">
 	<div class="filters" aria-label="运动类型">
@@ -112,7 +112,7 @@
 		<p>
 			{demo
 				? '当前筛选下没有训练。可以切换运动类型，或在演示场景中选择正常数据。'
-				: '当前筛选下没有训练记录。可以切换运动类型查看。'}
+				: '当前筛选下没有训练记录。可以切换运动类型，或手动录入一次训练。'}
 		</p>
 		<button class="button" onclick={() => filter('')}>查看全部训练</button>
 	</div>
