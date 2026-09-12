@@ -7,18 +7,23 @@ import Api.Auth.Types (NativeSession (..))
 import Api.Common.Types (Id (..), Revision (..))
 import qualified Api.Import.Types as Api
 import qualified Api.Workout.Types as WorkoutApi
-import App.Types (Environment)
+import App.Types (Environment (..), Settings (..))
 import Control.Concurrent.Async (concurrently)
+import Control.Concurrent.MVar (newMVar)
 import Control.Monad (void)
 import Data.ByteString (ByteString)
+import Data.IORef (newIORef, readIORef, writeIORef)
 import Data.List.NonEmpty (NonEmpty (..))
+import qualified Data.Map.Strict as Map
 import Data.Maybe (isNothing)
 import qualified Data.Text.Encoding as Text
+import Data.Time (addUTCTime)
 import qualified Data.UUID.Types as UUID
 import qualified Data.UUID.V4 as UUID
 import qualified Data.Vector as V
 import qualified Fixtures as F
 import HttpSupport
+import Network.Wai.Test (simpleHeaders)
 import Web.HttpApiData (toUrlPiece)
 import Workout.Empty (emptyUserData)
 import Workout.Types
@@ -202,6 +207,23 @@ checks env = do
         "Deletion suppresses source without losing historical mapping"
         (status suppressed == Api.Suppressed && publishedWorkout suppressed == wid)
     void (rawCall env "GET" (workoutPath wid) (bearer token) "" 404)
+    windows <- newMVar Map.empty
+    now <- currentTime env
+    clock <- newIORef now
+    let limited =
+            env
+                { settings = (settings env) {importRequestsPerMinute = 1}
+                , importRateWindows = windows
+                , currentTime = readIORef clock
+                }
+    void (call limited "POST" "/api/v1/imports/healthkit" (bearer token) request 200)
+    throttled <- call limited "POST" "/api/v1/imports/healthkit" (bearer token) request 429
+    assert
+        "Import throttling provides Retry-After"
+        (lookup "Retry-After" (simpleHeaders throttled) == Just "60")
+    void (call limited "POST" "/api/v1/imports/healthkit" (bearer other) request 200)
+    writeIORef clock (addUTCTime 61 now)
+    void (call limited "POST" "/api/v1/imports/healthkit" (bearer token) request 200)
     putStrLn "HealthKit HTTP identity, refresh, retry, ownership and suppression checks passed"
 
 verifyRestart :: Environment -> IO ()

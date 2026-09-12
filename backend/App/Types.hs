@@ -7,6 +7,7 @@ import Data.ByteString (ByteString)
 import Data.Map.Strict (Map)
 import Data.Text (Text)
 import Data.Time (NominalDiffTime, UTCTime)
+import Data.UUID.Types (UUID)
 import Hasql.Pool (Pool)
 import Network.Wai (Request)
 import Storage.Session.Types (StoredSession)
@@ -21,6 +22,7 @@ data Settings = Settings
     , nativeIdle :: NominalDiffTime
     , nativeAbsolute :: NominalDiffTime
     , authRequestsPerMinute :: Int
+    , importRequestsPerMinute :: Int
     , maxJsonBytes :: Int
     }
 
@@ -32,6 +34,7 @@ data Environment = Environment
     , passwordWorkers :: QSem
     , cursorKey :: ByteString
     , authRateWindows :: MVar (Map ByteString (UTCTime, Int))
+    , importRateWindows :: MVar (Map UUID (UTCTime, Int))
     }
 
 data RequestContext = RequestContext

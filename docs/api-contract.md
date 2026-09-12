@@ -13,8 +13,11 @@ probe remains available. HealthKit submission and import-detail routes are mount
 they currently accept one cycling or running part per source object. Multipart
 objects are rejected before publication; batch selection submits distinct objects.
 Import state, owner-scoped UUID deduplication, explicit retry/refresh, and
-source-aware workout deletion are durable. Other import routes, group routes and
-export routes remain contracts. Group filters currently have no matching memberships
+source-aware workout deletion are durable.
+HealthKit submissions have a per-process limit of 60 requests per owner per minute
+and 600 total, returning `429` with `Retry-After: 60`. Authentication has a separate
+budget. Horizontal deployment also needs a shared upstream rate limit.
+Other import routes, group routes and export routes remain contracts. Group filters currently have no matching memberships
 and group cleanup is not implemented. Local FIT parsing and
 the SvelteKit skeleton exist independently. Contract tests use synthetic responses;
 `make -C backend http-test` separately exercises actual authentication and Workout handlers

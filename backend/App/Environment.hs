@@ -49,6 +49,7 @@ loadSettings = do
                     (fromIntegral ni)
                     (fromIntegral na)
                     30
+                    60
                     (16 * 1024 * 1024)
                 )
         else fail "Invalid session lifetime settings"
@@ -96,7 +97,8 @@ createEnvironment config pool = do
     workers <- newQSem 2
     key <- Text.encodeUtf8 <$> Token.newToken
     rate <- newMVar Map.empty
+    imports <- newMVar Map.empty
     let now = do
             time <- getCurrentTime
             pure (posixSecondsToUTCTime (fromInteger (floor (utcTimeToPOSIXSeconds time * 1000000)) / 1000000))
-    pure (Environment config pool now dummy workers key rate)
+    pure (Environment config pool now dummy workers key rate imports)
