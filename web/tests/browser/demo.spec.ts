@@ -240,7 +240,7 @@ test('detail refresh then back reloads the visible list pages before restoring f
 	}
 });
 
-test('demo keeps login and manual-entry forms unavailable', async ({ page }) => {
+test('demo keeps account and workout write forms unavailable', async ({ page }) => {
 	const authenticationRequests: string[] = [];
 	page.on('request', (request) => {
 		if (new URL(request.url()).pathname.startsWith('/api/v1/auth'))
@@ -252,5 +252,8 @@ test('demo keeps login and manual-entry forms unavailable', async ({ page }) => 
 	await page.goto('/workouts/new');
 	await expect(page.getByText('手动录入需要登录真实账号，演示模式仅供查看。')).toBeVisible();
 	await expect(page.getByRole('button', { name: '保存训练', exact: true })).toHaveCount(0);
+	await page.goto('/workouts/00000000-0000-4000-8000-000000000001/edit');
+	await expect(page.getByText('编辑与删除需要登录真实账号，演示模式仅供查看。')).toBeVisible();
+	await expect(page.getByRole('button', { name: '保存修改', exact: true })).toHaveCount(0);
 	expect(authenticationRequests).toEqual([]);
 });

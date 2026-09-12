@@ -179,3 +179,14 @@ Zod is the default boundary validator. Effect remains approved for complex futur
 workflows but is not installed. Tailwind and shadcn/Bits UI remain available
 choices for later features; this demo uses local CSS and semantic native controls.
 Tabler Icons supplies the shared outline icon family through per-icon Svelte imports.
+
+### Editing and deletion
+
+Connected workout details link to a metadata editor. The editor captures the current
+revision as a string and preserves statistics inclusion; only title, notes and tags
+are sent to the user-data endpoint. Background reads do not replace an open draft.
+On a revision conflict, the draft remains visible and writes stay blocked until the
+user explicitly loads the latest version. Leaving an unsaved draft requires confirmation.
+Deletion requires confirmation and the captured revision. The backend currently
+supports deletion of manual records only; other records display its rejection.
+Drafts stay in memory and are cleared on account changes. Demo routes expose no editor.

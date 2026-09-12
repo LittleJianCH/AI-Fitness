@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onDestroy } from 'svelte';
+	import { navigating } from '$app/state';
 	import { goto, beforeNavigate } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { useQueryClient } from '@tanstack/svelte-query';
@@ -81,7 +82,7 @@
 			);
 			client.setQueryData(['workout', owner, saved.workoutId, 'normal'], saved);
 			await client.invalidateQueries({ queryKey: ['workouts', owner] });
-			if (!active || session.user?.id !== owner) return;
+			if (!active || navigating.to || session.user?.id !== owner) return;
 			dirty = false;
 			await goto(resolve('/workouts/[id]', { id: saved.workoutId }));
 		} catch (cause) {

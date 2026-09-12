@@ -1,6 +1,9 @@
 <script lang="ts">
-	let { tags = $bindable(), disabled = false }: { tags: string[]; disabled?: boolean } = $props();
-	let pending = $state('');
+	let {
+		tags = $bindable(),
+		pending = $bindable(''),
+		disabled = false
+	}: { tags: string[]; pending?: string; disabled?: boolean } = $props();
 	export function flush() {
 		const value = pending.trim();
 		if (value && !tags.includes(value)) tags = [...tags, value];

@@ -65,7 +65,10 @@
 						{dateText(workout.workoutObservation.observationRange.rangeStart)} · 本地时区
 					</p>
 				</div>
-				{#if demo}<span class="tag">合成训练</span>{/if}
+				{#if demo}<span class="tag">合成训练</span>{:else}<a
+						class="button"
+						href={resolve('/workouts/[id]/edit', { id })}>编辑训练</a
+					>{/if}
 			</header>
 			<div class="summary-strip">
 				<div>
@@ -267,6 +270,7 @@
 	}
 	.tags {
 		display: flex;
+		flex-wrap: wrap;
 		gap: 8px;
 		margin: 18px 0;
 	}

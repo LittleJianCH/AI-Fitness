@@ -352,3 +352,8 @@ select {
 	gap: 12px;
 	flex-wrap: wrap;
 }
+
+.button.danger {
+	color: #a32435;
+	border-color: #d6a2aa;
+}
