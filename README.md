@@ -8,8 +8,8 @@ authentication and manual Workout endpoints now use PostgreSQL.
 
 ## Run the iOS app
 
-The `ios/` directory contains SwiftUI login, workout browsing and explicit Apple Health import
-and its shared Swift API/session core. See [iOS development](ios/README.md) for contract generation,
+The `ios/` directory contains SwiftUI login, workout browsing, explicit Apple Health
+import/export and its shared Swift API/session core. See [iOS development](ios/README.md) for contract generation,
 Xcode setup, backend connection, and isolated simulator integration tests.
 
 ## Run the backend
@@ -74,8 +74,9 @@ groups, imports and exports for web/iOS development. Servant definitions reuse
 the canonical model and generate OpenAPI 3.1, TypeScript and Swift clients.
 Authentication, user/session storage and manual Workout CRUD are implemented.
 HealthKit submission/detail handlers support single-part cycling/running imports
-with durable retry identity and explicit refresh. Group, other import, and export
-handlers are added separately. See the guide for the exact mounted routes.
+with durable retry identity and explicit refresh. Export receipt handlers persist
+platform acknowledgements and prevent import feedback. Group, other import and
+file export handlers are added separately. See the guide for the exact mounted routes.
 
 From the root inside `nix develop`:
 
