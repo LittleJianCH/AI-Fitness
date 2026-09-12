@@ -61,7 +61,7 @@
         in
         {
           web = stable.mkShell {
-            packages = [ stable.nodejs stable.pnpm ];
+            packages = [ stable.nodejs stable.pnpm stable.openssl ];
           };
           default = stable.mkShell {
             packages = [
@@ -85,6 +85,7 @@
               stable.nodejs
               stable.pnpm
               stable.curl
+              stable.openssl
               stable.git
             ];
           };

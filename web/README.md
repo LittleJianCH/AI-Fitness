@@ -33,8 +33,29 @@ editing, training-load calculations and AI analysis are not simulated as success
 
 `pnpm dev` uses the ordinary environment without fixture endpoints. It needs
 an authenticated browser session and same-origin routing to the backend before
-it can show real workouts. Browser login integration and deployment routing remain
-to be connected; the backend enforces the API contract's ownership rules.
+it can show real workouts. Browser login integration remains to be connected; the backend enforces the
+API contract's ownership rules.
+
+## Local HTTPS and API routing
+
+Inside `./scripts/web_dev`, run `../scripts/web_certificate` once, then `pnpm dev`.
+The certificate is self-signed, expires after 90 days and stays in ignored
+`web/.certs/`. Trust that leaf certificate locally in your browser/OS before using
+real credentials, or supply a trusted certificate with `AI_FITNESS_TLS_CERT` and
+`AI_FITNESS_TLS_KEY` (absolute file paths). The script does not install a system CA.
+Remove both generated files explicitly to renew them. Never commit private keys.
+
+Use `https://localhost:5173` consistently. Vite terminates local TLS and proxies
+`/api/` to `http://127.0.0.1:8000`, preserving Origin, Cookie and Set-Cookie.
+`AI_FITNESS_API_TARGET` overrides the backend target. Port conflicts fail instead
+of silently changing the origin. The backend's `APP_ORIGIN` must match the browser
+origin exactly (its default is already `https://localhost:5173`). Start PostgreSQL,
+apply migrations and run the backend as described in the root README. Registration
+is closed by default; enable `REGISTRATION_OPEN=true` when creating an account.
+
+This proxy is for development. Ordinary build/preview does not need local keys
+and does not install a production proxy. Demo mode retains its independent HTTP
+fixture server. Production hosting must supply the same-origin HTTPS entry point.
 
 ## What to try
 
@@ -86,8 +107,8 @@ TanStack Query → generated fetch → same-origin HTTP
                  Svelte views → ECharts / route diagram
 ```
 
-`contracts/web.config.ts` selects the two GET operations used here and reuses the
-existing fetch generator. Its input adapter normalizes JSON media-type parameters
+`contracts/web.config.ts` selects implemented browser authentication and Workout
+operations and reuses the existing fetch generator. Its input adapter normalizes JSON media-type parameters
 for Orval's Zod renderer. A pinned renderer adaptation uses Zod `guid()` to match
 Haskell's UUID codec, which accepts canonical hex groups without restricting the
 version/variant bits. Actual Servant response tests guard both compatibility fixes.

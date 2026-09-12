@@ -8,3 +8,6 @@ result-*
 *.fit
 *.FIT
 backend/build/
+
+# Local TLS material is generated per checkout and never committed.
+web/.certs/

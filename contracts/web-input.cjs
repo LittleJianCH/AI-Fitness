@@ -1,20 +1,37 @@
-// Select only the read operations used by the demo. Orval 7.13's Zod renderer
-// looks up application/json literally and misses Servant's charset suffix.
+// Select implemented browser operations. Orval's Zod renderer looks up
+// application/json literally and misses Servant's charset suffix.
+const operations = {
+  '/auth/policy': ['get'],
+  '/auth/web/csrf': ['get'],
+  '/auth/web/login': ['post'],
+  '/auth/register': ['post'],
+  '/me': ['get'],
+  '/auth/logout': ['post'],
+  '/auth/sessions': ['get', 'delete'],
+  '/auth/sessions/{sessionId}': ['delete'],
+  '/auth/password': ['put'],
+  '/workouts': ['get', 'post'],
+  '/workouts/{workoutId}': ['get', 'delete'],
+  '/workouts/{workoutId}/user-data': ['put'],
+};
+const content = (value) => ({
+  ...value,
+  ...(value.content ? { content: Object.fromEntries(Object.entries(value.content).map(([media, schema]) => [
+    media.split(';')[0].trim(), schema,
+  ])) } : {}),
+});
 module.exports = (document) => ({
   ...document,
-  paths: Object.fromEntries(
-    ['/api/v1/workouts', '/api/v1/workouts/{workoutId}'].map((path) => {
-      const get = document.paths[path]?.get;
-      if (!get) throw new Error(`Missing read contract: ${path}`);
-      return [path, { get: {
-        ...get,
-        responses: Object.fromEntries(Object.entries(get.responses).map(([status, response]) => [status, {
-          ...response,
-          ...(response.content ? { content: Object.fromEntries(Object.entries(response.content).map(([media, schema]) => [
-            media.split(';')[0].trim(), schema,
-          ])) } : {}),
-        }])),
-      } }];
-    }),
-  ),
+  paths: Object.fromEntries(Object.entries(operations).map(([suffix, methods]) => {
+    const path = `/api/v1${suffix}`;
+    return [path, Object.fromEntries(methods.map((method) => {
+      const operation = document.paths[path]?.[method];
+      if (!operation) throw new Error(`Missing browser contract: ${method} ${path}`);
+      return [method, {
+        ...operation,
+        ...(operation.requestBody ? { requestBody: content(operation.requestBody) } : {}),
+        responses: Object.fromEntries(Object.entries(operation.responses).map(([status, response]) => [status, content(response)])),
+      }];
+    }))];
+  })),
 });

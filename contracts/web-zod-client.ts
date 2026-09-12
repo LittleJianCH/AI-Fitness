@@ -8,7 +8,7 @@ export const webZodClient: OutputClientFunc = clients => ({
   ...clients.zod,
   client: async (operation, options, outputClient, output) => {
     const generated = await clients.zod.client(operation, options, outputClient, output);
-    if (!generated.implementation.includes('zod.string().uuid()')) {
+    if (operation.operationName === 'getWorkouts' && !generated.implementation.includes('zod.string().uuid()')) {
       throw new Error('Pinned Web Zod UUID template changed');
     }
     return { ...generated, implementation: generated.implementation.replaceAll('zod.string().uuid()', 'zod.guid()') };

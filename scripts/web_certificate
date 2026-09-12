@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -euo pipefail
+repo_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+certificate_dir="$repo_root/web/.certs"
+umask 077
+mkdir -p "$certificate_dir"
+if [[ -e "$certificate_dir/localhost.pem" || -e "$certificate_dir/localhost-key.pem" ]]; then
+    echo 'Local certificate already exists; remove both files explicitly to replace it.'
+    exit 0
+fi
+openssl req -x509 -newkey rsa:2048 -nodes -days 90 \
+    -keyout "$certificate_dir/localhost-key.pem" \
+    -out "$certificate_dir/localhost.pem" \
+    -subj '/CN=localhost' \
+    -addext 'subjectAltName=DNS:localhost,IP:127.0.0.1,IP:::1' \
+    -addext 'basicConstraints=critical,CA:FALSE' 2>/dev/null
+echo 'Created a local, self-signed HTTPS certificate (90 days).'
+echo 'Trust this certificate locally in your browser/OS, or supply an already trusted certificate.'

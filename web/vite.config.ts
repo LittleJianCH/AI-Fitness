@@ -1,9 +1,13 @@
 import { demoPlugin } from './demo/server.ts';
+import { developmentServer } from './dev/server.ts';
 import adapter from '@sveltejs/adapter-auto';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
 
-export default defineConfig(({ mode }) => ({
+export default defineConfig(({ mode, command, isPreview }) => ({
+	...(command === 'serve' && !isPreview && mode === 'connected'
+		? { server: developmentServer(process.env) }
+		: {}),
 	plugins: [
 		...(mode === 'demo' ? [demoPlugin()] : []),
 		sveltekit({
