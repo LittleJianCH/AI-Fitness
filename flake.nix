@@ -20,6 +20,12 @@
             overlays = [ ihp.overlays.default ];
           };
           haskell = ihpPkgs.ghc;
+          # The package set still has hasql-th 0.4, which excludes Hasql 1.10.
+          hasqlTh = haskell.callHackageDirect {
+            pkg = "hasql-th";
+            ver = "0.5";
+            sha256 = "0vr1x1d1i07xapv8xmwyc2gxn9nxrcf0pab7cx7wmh4366b52gx8";
+          } {};
           fitSdk = stable.stdenv.mkDerivation {
             pname = "garmin-fit-cpp-sdk";
             version = "21.214.0";
@@ -63,7 +69,7 @@
                 p.ihp p.servant p.servant-server p.text p.time p.uuid-types p.vector p.wai p.warp
                 p.aeson p.bytestring p.http-api-data p.http-types p.lens
                 p.openapi3 p.servant-openapi3 p.wai-extra
-                p.hasql p.hasql-transaction p.contravariant p.transformers p.async
+                p.hasql hasqlTh p.hasql-transaction p.profunctors p.transformers p.async
                 p.crypton p.memory p.cookie p.hasql-pool p.uuid p.containers p.network p.network-uri
               ]))
               haskell.cabal-install

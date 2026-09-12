@@ -5,7 +5,7 @@ build-type: Simple
 
 common backend-settings
   hs-source-dirs: .
-  build-depends: base, ihp, servant, servant-server, text, time, uuid-types, vector, wai, warp, aeson, bytestring, http-api-data, http-types, lens, openapi3, servant-openapi3, wai-extra, hasql, hasql-transaction, contravariant, transformers, crypton, memory, cookie, hasql-pool, uuid, containers, network, network-uri
+  build-depends: base, ihp, servant, servant-server, text, time, uuid-types, vector, wai, warp, aeson, bytestring, http-api-data, http-types, lens, openapi3, servant-openapi3, wai-extra, hasql, hasql-th >=0.5 && <0.6, hasql-transaction, profunctors, transformers, crypton, memory, cookie, hasql-pool, uuid, containers, network, network-uri
   cxx-sources: native/fit_adapter.cpp
   include-dirs: native
   cxx-options: -std=c++17 -Wall -Wextra

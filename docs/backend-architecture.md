@@ -346,6 +346,16 @@ precedence, including suppression before active attempts.
 
 PostgreSQL is the primary persistent database. `Storage.*` uses the Hasql version
 supplied by IHP. Its operations compose as `ExceptT StorageError Transaction`.
+Queries are declared with `hasql-th` quasiquoters, which check SQL syntax at
+compile time and generate parameter/result codecs from explicit PostgreSQL type
+and nullability annotations. Pure profunctor mappings adapt those codecs to
+application types. `maybeStatement`, `singletonStatement`, `vectorStatement`,
+`resultlessStatement` and `rowsAffectedStatement` preserve the intended result
+cardinality. This does not check the live database schema or replace PostgreSQL
+integration tests.
+The root flake pins `hasql-th` 0.5 by source hash because the package set's older
+0.4 release excludes the existing Hasql 1.10 API; the toolchain and flake lock
+remain unchanged.
 `Storage.Database.transaction` converts that composition into a Hasql `Session`
 that can run in IHP's pool; `withConnection`/`runTransaction` supply a bracketed
 connection for CLI and integration tests. `App.Environment` owns the HTTP pool. Time, IDs, password hashes and token digests are explicit
@@ -450,6 +460,9 @@ The [official Garmin C++ SDK](https://github.com/garmin/fit-cpp-sdk) is pinned t
 hash in the root flake. Nix builds a static library and retains upstream license
 text; the project does not vendor or modify SDK code. `pkg-config` supplies SDK
 headers and platform-specific C++ runtime linkage to Make and Cabal.
+The current Make build passes SDK libraries through GHC's `-optl` flags so they
+participate only in final linking: storage query Template Haskell does not need
+FIT symbols, and the macOS GHC interpreter cannot load the static SDK archive.
 
 The C ABI owns an opaque result and exposes borrowed fixed-width numeric rows.
 The header documents units, missing-value representation and allocation/free

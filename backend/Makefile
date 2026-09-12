@@ -8,6 +8,8 @@ CONTRACT_SOURCES := $(wildcard contract/*.hs)
 TEST_SOURCES := $(wildcard test/*.hs)
 FIT_CFLAGS = $(subst -I,-isystem ,$(shell pkg-config --cflags fitsdk))
 FIT_LIBS = $(shell pkg-config --libs fitsdk)
+# Template Haskell needs no FIT symbols; pass the static SDK only to the final linker.
+FIT_GHC_LIBS = $(addprefix -optl,$(FIT_LIBS))
 NATIVE_FLAGS = -std=c++17 -Wall -Wextra -Werror -O2
 HASKELL_SOURCES := Main.hs Api.hs Config.hs $(DOMAIN_SOURCES) $(API_SOURCES) $(STORAGE_SOURCES) $(RUNTIME_SOURCES) $(TEST_SOURCES) $(CONTRACT_SOURCES) test/fit/Main.hs test/storage/Main.hs
 HASKELL_SOURCES += $(wildcard test/http/*.hs)
@@ -16,7 +18,7 @@ all: build/backend
 
 build/backend: Main.hs Api.hs Config.hs $(DOMAIN_SOURCES) $(API_SOURCES) $(STORAGE_SOURCES) $(RUNTIME_SOURCES) build/native/fit_adapter.o Makefile
 	mkdir -p build
-	ghc --make -Wall -Werror -threaded -rtsopts -outputdir build Main.hs build/native/fit_adapter.o $(FIT_LIBS) -o $@
+	ghc --make -Wall -Werror -threaded -rtsopts -outputdir build Main.hs build/native/fit_adapter.o $(FIT_GHC_LIBS) -o $@
 
 run: build/backend
 	./build/backend
@@ -86,7 +88,7 @@ build/fit-fixtures: test/fit/fixtures.cpp
 
 build/fit-tests: $(DOMAIN_SOURCES) test/fit/Main.hs build/native/fit_adapter.o
 	mkdir -p build/fit-test
-	ghc --make -Wall -Werror -threaded -i. -outputdir build/fit-test test/fit/Main.hs build/native/fit_adapter.o $(FIT_LIBS) -o $@
+	ghc --make -Wall -Werror -threaded -i. -outputdir build/fit-test test/fit/Main.hs build/native/fit_adapter.o $(FIT_GHC_LIBS) -o $@
 
 .PHONY: fit-test native-format native-format-check
 fit-test: build/fit-fixtures build/fit-tests

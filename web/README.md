@@ -26,14 +26,15 @@ server failure, invalid payload and unauthenticated scenarios. No credentials,
 FIT files or personal data are read, written or transmitted. Route diagrams use
 synthetic WGS84 points without a basemap or external provider requests.
 
-The main application still serves only the hello endpoint; the new API routes
-are contracts, not implemented backend features. The demo therefore focuses on
-list → overview → metric/route detail. Authentication, upload, persistence,
+The backend implements authentication and manual Workout persistence, including
+owned list and detail reads. The web demo still uses fixture transport and focuses
+on list → overview → metric/route detail. Authentication, upload, persistence,
 editing, training-load calculations and AI analysis are not simulated as success.
 
 `pnpm dev` uses the ordinary environment without fixture endpoints. It needs
-real same-origin read handlers before it can show workouts. A future deployment
-must provide the authentication and ownership rules in the API contract.
+an authenticated browser session and same-origin routing to the backend before
+it can show real workouts. Browser login integration and deployment routing remain
+to be connected; the backend enforces the API contract's ownership rules.
 
 ## What to try
 

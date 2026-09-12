@@ -16,7 +16,8 @@ acceptance remains part of the same feature.
 This document owns the Web visual and interaction design. Page descriptions are
 design targets, not an implementation checklist for the current task. The current
 Web app is a synthetic training-review demo implementing a subset of these
-design targets; real product handlers remain future work. Source code and
+design targets; connecting it to the implemented backend authentication and
+manual Workout handlers remains future work. Source code and
 manifests establish available capabilities. The numerical values below are working design defaults to validate
 in real layouts, rather than individually approved pixel-level requirements.
 
