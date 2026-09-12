@@ -36,7 +36,9 @@
 		</header>
 		{#if samples.length && sample}<section class="surface">
 				<RoutePlot {samples} {selected} />
-				<p class="subtle small">合成轨迹示意 · 无地图底图 · WGS84</p>
+				<p class="subtle small">
+					{import.meta.env.MODE === 'demo' ? '合成轨迹示意' : '轨迹示意'} · 无地图底图 · WGS84
+				</p>
 				<label for="route-sample"
 					>经过时间：{duration(
 						(Date.parse(sample.timestamp) -

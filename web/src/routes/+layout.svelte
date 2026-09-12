@@ -1,6 +1,10 @@
 <script lang="ts">
 	import '../app.css';
-	import { QueryClient, QueryClientProvider } from '@tanstack/svelte-query';
+	import { onMount } from 'svelte';
+	import { provideSession } from '$lib/auth/session.svelte';
+	import { ApiError, errorText } from '$lib/api/request';
+	import AuthGate from '$lib/components/AuthGate.svelte';
+	import { QueryCache, QueryClient, QueryClientProvider } from '@tanstack/svelte-query';
 	import { browser } from '$app/environment';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
@@ -10,10 +14,33 @@
 	let { children } = $props();
 	const demo = import.meta.env.MODE === 'demo';
 	const client = new QueryClient({
+		queryCache: new QueryCache({
+			onError: (error) => {
+				if (!demo && error instanceof ApiError && error.status === 401) session.expire();
+			}
+		}),
 		defaultOptions: {
 			queries: { enabled: browser, retry: false, staleTime: 30_000, refetchOnWindowFocus: false }
 		}
 	});
+	const session = provideSession(client);
+	onMount(() => {
+		if (!demo) return session.mount();
+	});
+	let logoutError = $state<Error | null>(null);
+	let loggingOut = $state(false);
+	async function logout() {
+		if (loggingOut) return;
+		loggingOut = true;
+		logoutError = null;
+		try {
+			await session.logout();
+		} catch (error) {
+			if (error instanceof Error && error.name !== 'AbortError') logoutError = error;
+		} finally {
+			loggingOut = false;
+		}
+	}
 	const scenario = $derived(readScenario(page.url.searchParams.get('scenario')));
 	const suffix: '' | `?scenario=${string}` = $derived(
 		demo && scenario !== 'normal' ? (`?scenario=${scenario}` as const) : ''
@@ -66,12 +93,31 @@
 						></label
 					>
 				</div>{/if}
-			{@render children()}
+			{#if !demo && session.user}<div class="account-bar">
+					<span class="small subtle">{session.user.username}</span><button
+						class="button"
+						disabled={loggingOut}
+						onclick={logout}>{loggingOut ? '正在退出…' : '退出登录'}</button
+					>
+				</div>{/if}
+			{#if logoutError && session.user}<p class="form-error" role="alert">
+					{errorText(logoutError)}
+				</p>{/if}
+			<AuthGate>{@render children()}</AuthGate>
 		</div>
 	</main>
 </QueryClientProvider>
 
 <style>
+	.account-bar {
+		display: flex;
+		justify-content: flex-end;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 12px;
+		margin-bottom: 16px;
+		overflow-wrap: anywhere;
+	}
 	.skip {
 		position: fixed;
 		top: -80px;

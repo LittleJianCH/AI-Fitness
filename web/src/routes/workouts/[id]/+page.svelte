@@ -1,4 +1,5 @@
 <script lang="ts">
+	const demo = import.meta.env.MODE === 'demo';
 	import { page } from '$app/state';
 	import { createFocusSnapshot } from '$lib/focus-snapshot.svelte';
 	const focus = createFocusSnapshot();
@@ -64,7 +65,7 @@
 						{dateText(workout.workoutObservation.observationRange.rangeStart)} · 本地时区
 					</p>
 				</div>
-				<span class="tag">合成训练</span>
+				{#if demo}<span class="tag">合成训练</span>{/if}
 			</header>
 			<div class="summary-strip">
 				<div>
@@ -99,7 +100,7 @@
 						<dl class="stats-rows">
 							<div>
 								<dt>数据来源</dt>
-								<dd>合成演示响应</dd>
+								<dd>{demo ? '合成演示响应' : '当前账号的训练记录'}</dd>
 							</div>
 							<div>
 								<dt>统计口径</dt>
@@ -172,7 +173,7 @@
 				<Icon kind="route" size={18} />
 			</div>
 			<RoutePlot samples={motion(workout).motionPosition} />
-			<p class="small subtle">合成轨迹示意 · 无地图底图</p>
+			<p class="small subtle">{demo ? '合成轨迹示意' : '轨迹示意'} · 无地图底图</p>
 			<a
 				class="route-link"
 				data-return-focus="route"

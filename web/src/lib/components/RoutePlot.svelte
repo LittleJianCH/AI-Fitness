@@ -18,7 +18,12 @@
 	const active = $derived(points[selected]);
 </script>
 
-<svg viewBox="0 0 360 280" role="img" aria-label="合成轨迹示意，无地图底图" class="route-plot">
+<svg
+	viewBox="0 0 360 280"
+	role="img"
+	aria-label={import.meta.env.MODE === 'demo' ? '合成轨迹示意，无地图底图' : '轨迹示意，无地图底图'}
+	class="route-plot"
+>
 	<rect width="360" height="280" fill="#f2f5f3" />
 	<path
 		d="M0 70H360M0 140H360M0 210H360M90 0V280M180 0V280M270 0V280"

@@ -1,6 +1,6 @@
 # AI Fitness Web
 
-A Svelte 5 / SvelteKit training-review demo with strict TypeScript. It follows
+A Svelte 5 / SvelteKit training-review application with strict TypeScript. It follows
 [Web UI Design](../docs/web-design.md): desktop is primary and the same workflow
 is developed and checked at mobile widths.
 
@@ -33,8 +33,8 @@ editing, training-load calculations and AI analysis are not simulated as success
 
 `pnpm dev` uses the ordinary environment without fixture endpoints. It needs
 an authenticated browser session and same-origin routing to the backend before
-it can show real workouts. Browser login integration remains to be connected; the backend enforces the
-API contract's ownership rules.
+it can show real workouts. The browser restores its session before mounting private pages. The backend
+enforces the API contract's ownership rules.
 
 ## Local HTTPS and API routing
 
@@ -56,6 +56,37 @@ is closed by default; enable `REGISTRATION_OPEN=true` when creating an account.
 This proxy is for development. Ordinary build/preview does not need local keys
 and does not install a production proxy. Demo mode retains its independent HTTP
 fixture server. Production hosting must supply the same-origin HTTPS entry point.
+
+## Browser login and real records
+
+Ordinary mode supports policy-controlled registration, separate login, session
+restoration and logout. A direct private-page visit returns to that destination
+after login. Expired/revoked sessions return to login. The session cookie remains
+HttpOnly; CSRF tokens and form drafts stay in memory. The root layout owns the
+browser session and its QueryClient. Private query keys include the current user;
+logout, expiry and account changes abort requests, remove private queries and
+unmount private views. Cross-tab session changes carry only an invalidation message.
+Focus/visibility checks detect an expired or externally changed browser session.
+
+The existing list, overview and metric/route pages read the authenticated user's
+real records. Empty sensor streams retain their missing-data presentation. Demo
+labels are only shown in explicit demo mode. Network failures preserve a retry
+path and server error codes map to safe local messages.
+
+From the repository root, after installing/generating Web dependencies, run:
+
+```sh
+./scripts/web_integration_test
+```
+
+This builds the real backend and creates a disposable PostgreSQL cluster with
+synthetic accounts and records, ignoring any developer `DATABASE_URL`. Desktop
+and mobile Chromium use the HTTPS proxy on port 5181 and the backend on 8181.
+Each test gets a fresh backend process (isolating its rate-limit window); the
+cluster persists for explicit restart checks and is removed on exit. Tests
+accept their temporary self-signed certificate; this does not verify system trust
+for a developer's certificate. Run `pnpm exec playwright install chromium` in the
+Web shell once if Chromium is missing. Artifacts remain in ignored `test-results/`.
 
 ## What to try
 
@@ -102,7 +133,7 @@ Servant types → OpenAPI → Orval client + Zod response schemas
                                   ↓
 TanStack Query → generated fetch → same-origin HTTP
                      ↑              ↓
-                 validated response ← demo fixture transport (demo mode only)
+                 validated response ← backend (or explicit demo fixtures)
                      ↓
                  Svelte views → ECharts / route diagram
 ```

@@ -305,3 +305,39 @@ select {
 		padding: 16px;
 	}
 }
+
+.form-stack {
+	display: grid;
+	gap: 18px;
+}
+.form-stack label {
+	display: grid;
+	gap: 7px;
+	min-width: 0;
+}
+.form-stack input,
+.form-stack textarea,
+.form-stack select {
+	width: 100%;
+	min-width: 0;
+	min-height: 44px;
+	border: 1px solid #8b92a1;
+	border-radius: 9px;
+	padding: 10px 12px;
+	background: white;
+	color: inherit;
+	font: inherit;
+}
+.form-stack textarea {
+	resize: vertical;
+	min-height: 100px;
+}
+.form-error {
+	color: #a32435;
+	overflow-wrap: anywhere;
+}
+.form-actions {
+	display: flex;
+	gap: 12px;
+	flex-wrap: wrap;
+}

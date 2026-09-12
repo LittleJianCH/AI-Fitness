@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { useSession } from '$lib/auth/session.svelte';
+	const session = useSession();
+	const demo = import.meta.env.MODE === 'demo';
 	import { page } from '$app/state';
 	import { createFocusSnapshot, type FocusSnapshot } from '$lib/focus-snapshot.svelte';
 	import type { Snapshot } from '@sveltejs/kit';
@@ -29,7 +32,7 @@
 	const selectedSport = $derived(sport.success ? sport.data : undefined);
 	const scenario = $derived(readScenario(page.url.searchParams.get('scenario')));
 	const query = createInfiniteQuery(() => ({
-		queryKey: ['workouts', selectedSport, scenario],
+		queryKey: ['workouts', session.user?.id ?? 'demo', selectedSport, scenario],
 		queryFn: ({ signal, pageParam }) =>
 			loadWorkouts({ sport: selectedSport, cursor: pageParam, limit: 3 }, signal, scenario),
 		initialPageParam: undefined as string | undefined,
@@ -79,7 +82,8 @@
 		<h1>每一次训练，都值得回看</h1>
 		<p class="subtle">记录你的节奏，读懂每一段努力。</p>
 	</div>
-	<a class="button" href={resolve('/demo')}>演示说明 <Icon kind="arrow" size={16} /></a>
+	{#if demo}<a class="button" href={resolve('/demo')}>演示说明 <Icon kind="arrow" size={16} /></a
+		>{/if}
 </header>
 <div class="list-toolbar">
 	<div class="filters" aria-label="运动类型">
@@ -105,7 +109,11 @@
 {:else if !items.length}<div class="feedback">
 		<Icon size={32} />
 		<h2>还没有训练记录</h2>
-		<p>当前筛选下没有训练。可以切换运动类型，或在演示场景中选择正常数据。</p>
+		<p>
+			{demo
+				? '当前筛选下没有训练。可以切换运动类型，或在演示场景中选择正常数据。'
+				: '当前筛选下没有训练记录。可以切换运动类型查看。'}
+		</p>
 		<button class="button" onclick={() => filter('')}>查看全部训练</button>
 	</div>
 {:else}

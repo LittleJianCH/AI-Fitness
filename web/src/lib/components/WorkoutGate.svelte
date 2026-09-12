@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { useSession } from '$lib/auth/session.svelte';
+	const session = useSession();
 	import { createQuery } from '@tanstack/svelte-query';
 	import { loadWorkout, type Scenario } from '$lib/api/read';
 	import type { Workout } from '$lib/api/generated/client';
@@ -7,7 +9,7 @@
 	let { id, scenario, children }: { id: string; scenario: Scenario; children: Snippet<[Workout]> } =
 		$props();
 	const query = createQuery(() => ({
-		queryKey: ['workout', id, scenario],
+		queryKey: ['workout', session.user?.id ?? 'demo', id, scenario],
 		queryFn: ({ signal }) => loadWorkout(id, signal, scenario)
 	}));
 </script>
