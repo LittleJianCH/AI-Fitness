@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Run inside the root Nix development shell. All server data is disposable.
+repo_root=$(cd "$(dirname "$0")/.." && pwd)
+cd "$repo_root"
+apple_developer_dir=$(env -u DEVELOPER_DIR /usr/bin/xcode-select -p)
+native() {
+    env -u SDKROOT -u TOOLCHAINS -u CC -u CXX -u LD -u AR -u AS -u NM \
+        -u RANLIB -u STRIP -u CFLAGS -u CPPFLAGS -u CXXFLAGS -u LDFLAGS \
+        DEVELOPER_DIR="$apple_developer_dir" \
+        PATH="$apple_developer_dir/usr/bin:/usr/bin:/bin:$PATH" "$@"
+}
+test_root=$(mktemp -d /tmp/ai-fitness-ios.XXXXXX)
+server_pid=''
+simulator_id=''
+cleanup() {
+    if [[ -n "$server_pid" ]]; then
+        kill "$server_pid" 2>/dev/null || true
+        wait "$server_pid" 2>/dev/null || true
+    fi
+    if [[ -n "$simulator_id" ]]; then
+        native /usr/bin/xcrun simctl shutdown "$simulator_id" >/dev/null 2>&1 || true
+        native /usr/bin/xcrun simctl delete "$simulator_id" >/dev/null 2>&1 || true
+    fi
+    pg_ctl -D "$test_root/data" -m immediate -w stop >/dev/null 2>&1 || true
+    rm -rf -- "$test_root"
+}
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+unset PGHOSTADDR PGSERVICE PGSERVICEFILE PGOPTIONS
+mkdir "$test_root/socket" -p ios/build
+result_path="$repo_root/ios/build/integration-$(date +%Y%m%d-%H%M%S).xcresult"
+printf '%s\n' "$result_path" >ios/build/current-result-path.txt
+initdb -D "$test_root/data" --username=fitness_ios_test --no-locale --encoding=UTF8 --auth-local=trust --auth-host=reject >"$test_root/init.log"
+pg_ctl -D "$test_root/data" -l "$test_root/postgres.log" -o "-k $test_root/socket -c listen_addresses=''" -w start >/dev/null
+createdb -h "$test_root/socket" -U fitness_ios_test fitness_ios_test
+export DATABASE_URL="host=$test_root/socket dbname=fitness_ios_test user=fitness_ios_test"
+make -C backend migrate all >ios/build/integration-backend.log 2>&1
+export PORT
+PORT=$(native /usr/bin/python3 - <<'PY'
+import socket
+with socket.socket() as s:
+    s.bind(('127.0.0.1', 0))
+    print(s.getsockname()[1])
+PY
+)
+export REGISTRATION_OPEN=true
+export APP_ORIGIN=https://localhost:5173
+export ARGON_MEMORY_KIB=19456 ARGON_ITERATIONS=2
+backend/build/backend >"$test_root/server.log" 2>&1 &
+server_pid=$!
+native /usr/bin/python3 scripts/ios_test_account.py
+simulator_id=$(native /usr/bin/xcrun simctl create 'AI Fitness integration' 'iPhone 15' 'iOS17.5')
+native /usr/bin/xcrun simctl boot "$simulator_id"
+native /usr/bin/xcrun simctl bootstatus "$simulator_id" -b >ios/build/simulator-boot.log 2>&1
+native /usr/bin/xcodebuild -project ios/Fitness.xcodeproj -scheme Fitness -configuration Debug \
+    -destination "platform=iOS Simulator,id=$simulator_id" -derivedDataPath ios/DerivedData \
+    -resultBundlePath "$result_path" \
+    -skipPackagePluginValidation \
+    "FITNESS_TEST_SERVER=http://127.0.0.1:$PORT" test >ios/build/integration-xcode.log 2>&1
+native /usr/bin/xcrun xcresulttool get --path "$result_path" --format json >ios/build/integration-result.json
+native /usr/bin/python3 - <<'PY'
+import json
+with open('ios/build/integration-result.json') as source:
+    metrics = json.load(source)['metrics']
+assert int(metrics['testsCount']['_value']) >= 2, 'Required UI tests did not run'
+assert int(metrics.get('testsSkippedCount', {}).get('_value', '0')) == 0, 'UI integration tests were skipped'
+assert int(metrics.get('testsFailedCount', {}).get('_value', '0')) == 0, 'UI integration tests failed'
+PY
+echo 'iOS simulator integration passed against the disposable PostgreSQL-backed API.'

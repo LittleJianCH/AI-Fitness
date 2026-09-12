@@ -6,6 +6,12 @@ The `web/` directory contains a Svelte 5 / SvelteKit training-review demo with s
 Canonical workout/import models and a generated API contract are available;
 authentication and manual Workout endpoints now use PostgreSQL.
 
+## Run the iOS app
+
+The `ios/` directory contains the SwiftUI native login application and its shared
+Swift API/session core. See [iOS development](ios/README.md) for contract generation,
+Xcode setup, backend connection, and isolated simulator integration tests.
+
 ## Run the backend
 
 With Nix installed and `nix-command` and `flakes` enabled:
