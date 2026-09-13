@@ -2,6 +2,7 @@
 
 module App.Environment (loadSettings, withEnvironment, createEnvironment) where
 
+import App.Admission (newAdmission)
 import App.Types
 import qualified Auth.Password as Password
 import qualified Auth.Token as Token
@@ -13,7 +14,7 @@ import qualified Data.Map.Strict as Map
 import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import qualified Data.Text as Text
-import qualified Data.Text.Encoding as Text
+import qualified Data.Text.Encoding as TextEncoding
 import Data.Time (getCurrentTime)
 import Data.Time.Clock.POSIX (posixSecondsToUTCTime, utcTimeToPOSIXSeconds)
 import qualified Hasql.Connection.Settings as Connection
@@ -31,6 +32,8 @@ loadSettings = do
     origin <- Text.pack <$> env "APP_ORIGIN" "https://localhost:5173"
     defaultArchive <- (</> ".local/share/ai-fitness/fit-archive") <$> getHomeDirectory
     archive <- env "FIT_ARCHIVE_ROOT" defaultArchive
+    uploadSlots <- number "FIT_UPLOAD_SLOTS" 4
+    unless (uploadSlots >= 1 && uploadSlots <= 32) $ fail "FIT_UPLOAD_SLOTS must be between 1 and 32"
     open <- env "REGISTRATION_OPEN" "false"
     memory <- number "ARGON_MEMORY_KIB" 65536
     iterations <- number "ARGON_ITERATIONS" 3
@@ -44,19 +47,20 @@ loadSettings = do
     if all (> 0) [bi, ba, ni, na] && bi <= ba && ni <= na && max ba na <= (31536000 :: Int)
         then
             pure
-                ( Settings
-                    (Text.encodeUtf8 origin)
-                    (open == "true")
-                    config
-                    (fromIntegral bi)
-                    (fromIntegral ba)
-                    (fromIntegral ni)
-                    (fromIntegral na)
-                    30
-                    60
-                    archive
-                    (16 * 1024 * 1024)
-                )
+                Settings
+                    { allowedOrigin = TextEncoding.encodeUtf8 origin
+                    , registrationOpen = open == "true"
+                    , passwordOptions = config
+                    , browserIdle = fromIntegral bi
+                    , browserAbsolute = fromIntegral ba
+                    , nativeIdle = fromIntegral ni
+                    , nativeAbsolute = fromIntegral na
+                    , authRequestsPerMinute = 30
+                    , importRequestsPerMinute = 60
+                    , fitArchiveRoot = archive
+                    , fitUploadSlots = uploadSlots
+                    , maxJsonBytes = 16 * 1024 * 1024
+                    }
         else fail "Invalid session lifetime settings"
   where
     env key fallback = fromMaybe fallback <$> lookupEnv key
@@ -100,11 +104,24 @@ createEnvironment :: Settings -> Pool.Pool -> IO Environment
 createEnvironment config pool = do
     dummy <- Token.newToken >>= Password.hashPassword (passwordOptions config) >>= evaluate
     workers <- newQSem 2
-    fitWorkers <- newQSem 2
-    key <- Text.encodeUtf8 <$> Token.newToken
+    parsers <- newQSem 2
+    uploads <- newAdmission (fitUploadSlots config)
+    key <- TextEncoding.encodeUtf8 <$> Token.newToken
     rate <- newMVar Map.empty
     imports <- newMVar Map.empty
     let now = do
             time <- getCurrentTime
             pure (posixSecondsToUTCTime (fromInteger (floor (utcTimeToPOSIXSeconds time * 1000000)) / 1000000))
-    pure (Environment config pool now dummy fitWorkers workers key rate imports)
+    pure
+        Environment
+            { settings = config
+            , databasePool = pool
+            , currentTime = now
+            , dummyPasswordHash = dummy
+            , fitWorkers = parsers
+            , fitUploads = uploads
+            , passwordWorkers = workers
+            , cursorKey = key
+            , authRateWindows = rate
+            , importRateWindows = imports
+            }

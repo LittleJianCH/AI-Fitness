@@ -1,4 +1,5 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
 
@@ -19,7 +20,6 @@ import Data.Time (UTCTime)
 import Data.UUID.Types (UUID)
 import qualified Hasql.TH as TH
 import qualified Hasql.Transaction as T
-import qualified Storage.HealthKit as HealthKit
 import Storage.Types
 import Storage.User.Types (UserId (..))
 import qualified Storage.Workout as Workouts
@@ -46,15 +46,16 @@ publish uid iid wid sha now result = do
         output <- either (const (pure Nothing)) publishWorkout result
         let record =
                 Api.ImportRecord
-                    (Id iid)
-                    (Revision 1)
-                    (Api.Fit (Api.FitSource sha))
-                    (either (const Api.Failed) (const Api.Succeeded) result)
-                    Api.Retained
-                    (Timestamp now)
-                    (Timestamp now)
-                    output
-                    (either Just (const Nothing) result)
+                    { Api._id = Id iid
+                    , Api._revision = Revision 1
+                    , Api._source = Api.Fit (Api.FitSource sha)
+                    , Api._status = either (const Api.Failed) (const Api.Succeeded) result
+                    , Api._archive = Api.Retained
+                    , Api._createdAt = Timestamp now
+                    , Api._updatedAt = Timestamp now
+                    , Api._lastSuccess = output
+                    , Api._failure = either Just (const Nothing) result
+                    }
             liveWorkout = either (const Nothing) (const (Just (coerce wid))) result
         void $
             lift $
@@ -66,8 +67,7 @@ publish uid iid wid sha now result = do
             |]
         pure record
     publishWorkout observation = do
-        Workouts.createWorkout uid (Workout wid (WorkoutRevision 1) observation emptyUserData)
-        void (Statistics.refresh now uid wid)
+        void (Statistics.create now uid (Workout wid (WorkoutRevision 1) observation emptyUserData))
         pure $
             Just
                 ( Api.ImportOutput
@@ -103,7 +103,7 @@ loadImport uid iid = do
     traverse decode row
 
 -- Keep the source tombstone so reupload cannot resurrect a deleted workout.
-deleteWorkout :: UserId -> WorkoutId -> WorkoutRevision -> UTCTime -> Store ()
+deleteWorkout :: UserId -> WorkoutId -> WorkoutRevision -> UTCTime -> Store Bool
 deleteWorkout uid wid expected now = do
     row <-
         lift $
@@ -114,24 +114,20 @@ deleteWorkout uid wid expected now = do
             SELECT id :: uuid, sha256 :: text, storage_version :: int2, record :: jsonb
             FROM fit_imports WHERE user_id = $1 :: uuid AND workout_id = $2 :: uuid FOR UPDATE
         |]
-    maybe (HealthKit.deleteWorkout uid wid expected now) suppress row
+    maybe (pure False) (fmap (const True) . suppress) row
   where
     suppress stored = do
-        Api.ImportRecord iid (Revision revision) source _ archive created _ previous _ <-
+        previous@Api.ImportRecord {Api._id = iid, Api._revision = Revision revision} <-
             decode stored
         current <- Workouts.loadWorkout uid wid >>= maybe (throwE WorkoutNotFound) pure
         unless (workoutRevision current == expected) (throwE WorkoutConflict)
         let record =
-                Api.ImportRecord
-                    iid
-                    (Revision (revision + 1))
-                    source
-                    Api.Suppressed
-                    archive
-                    created
-                    (Timestamp now)
-                    previous
-                    Nothing
+                previous
+                    { Api._revision = Revision (revision + 1)
+                    , Api._status = Api.Suppressed
+                    , Api._updatedAt = Timestamp now
+                    , Api._failure = Nothing
+                    }
         void $
             lift $
                 T.statement
@@ -153,16 +149,11 @@ deleteWorkout uid wid expected now = do
 decode :: (UUID, Text, Int16, Value) -> Store Api.ImportRecord
 decode (iid, sha, version, value) = case fromJSON value of
     Success
-        record@( Api.ImportRecord
-                    (Id storedId)
-                    (Revision revision)
-                    (Api.Fit (Api.FitSource storedSha))
-                    _
-                    Api.Retained
-                    _
-                    _
-                    _
-                    _
-                )
+        record@Api.ImportRecord
+            { Api._id = Id storedId
+            , Api._revision = Revision revision
+            , Api._source = Api.Fit (Api.FitSource storedSha)
+            , Api._archive = Api.Retained
+            }
             | version == 1 && iid == storedId && sha == storedSha && revision > 0 -> pure record
     _ -> throwE CorruptImport

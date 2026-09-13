@@ -17,8 +17,8 @@ Discuss material changes in direction with the project owner before implementing
 them; a separate ADR is not required unless requested.
 
 The runtime uses IHP configuration, Warp on localhost, and a bounded Hasql pool.
-Servant mounts authentication, manual Workout CRUD and the existing hello probe. Browser
-and native credentials share PostgreSQL sessions; the API performs ownership,
+Servant mounts authentication, Workout CRUD, FIT/HealthKit imports, export receipts
+and the existing hello probe. Browser and native credentials share PostgreSQL sessions; the API performs ownership,
 CSRF and expiry checks explicitly. Request bodies are bounded and errors use the
 shared `Problem` shape. No request headers, credentials or health payloads are
 logged. The full contract also describes features that are not mounted yet; see
@@ -180,8 +180,12 @@ energy and normalized power remain outside this calculation. Original recorded
 summaries are preserved as source facts.
 
 Manual creation, FIT publication, HealthKit publication/refresh and metadata edits
-persist these results in the same owner-locked transaction. Detail reads lazily
-backfill existing workouts and refresh stale calculations. A cache is current only
+compute against the final revision and persist these results with the canonical
+write in the same owner-locked transaction. HealthKit refresh reuses its reconciled
+workout, while the final SQL still compares owner, ID and expected revision.
+`Storage.Workout.Lifecycle` coordinates FIT, HealthKit and manual deletion in that
+order; each source adapter owns its tombstone and no source calls another source.
+Detail reads lazily backfill existing workouts and refresh stale calculations. A cache is current only
 when its input revision, method (`sample-statistics-v1`) and configuration
 (`linear-time-weighted;include-zero;max-gap-seconds=120;no-extrapolation`) match.
 Derived-cache writes preserve the input revision; repeated reads reuse the stored
@@ -203,7 +207,8 @@ backfill. No schema migration or background worker is needed.
 | `Workout.Empty` | Workout-level initial values and convenience re-exports |
 | `Workout.Validation.Types`, `Workout.Validation` | Error types and workout/group validation orchestration |
 | `Workout.Update` | Revision-checked observation/user updates |
-| `Import.Types`, `Import.State` | Input identities, single/grouped output mappings, latest attempt, prior success and retry planning |
+| `Import.Types`, `Import.State` | Pure import identities/state and retry planning; not the mounted runtime record |
+| `Api.Import.Types` | Runtime wire/import record used by FIT and HealthKit storage; keep distinct from the pure planner until an explicit integration design exists |
 | `Import.Output` | Output validation and revision-checked batch refresh by stable source-local part identity |
 
 Cycling and running modules do not import each other or the aggregate
@@ -216,7 +221,8 @@ Types modules contain declarations only. Operation modules depend on types;
 identity generation and database ownership are not implemented here. Each module
 lists its public exports explicitly. Import identity/output validation returns
 `ImportKeyError`/`ImportOutputError` constructors rather than free-form messages;
-presentation of these failures belongs at the future transport boundary.
+presentation of planner failures belongs at its eventual runtime integration
+boundary; current HTTP imports use their explicit runtime error mapping.
 
 `TimeSeries a` remains a synonym for `Vector (Timed a)`. Each stream preserves its
 own absolute UTC sampling timestamps. Validation requires strictly increasing
@@ -302,19 +308,20 @@ single-source input -> decode / normalize / validate -> Canonical Store
 There is no cross-source sensor fusion or automatic brick composition. Same
 start time is not identity. FIT identity is SHA-256 of actual input FIT bytes;
 HealthKit identity is its owner-scoped object UUID, with explicit refresh support.
-A database unique constraint on owner and source identity is required. The current
-`ImportKey` and planner express that identity but do not implement hashing,
-transactional claims, persistence or concurrency control. A separate minimal FIT
-decoder exists below; it is not yet wired to the import planner or publication.
+Database unique constraints enforce owner/source identity in the mounted FIT and
+HealthKit paths. `ImportKey` and the pure planner express broader import policy,
+including grouped output, without performing hashing, transactional claims or IO.
+The FIT decoder is wired to `Api.Import.Handlers` and `Storage.Fit` publication;
+that runtime uses `Api.Import.Types`, not the separate pure planner.
 
-`ImportRecord` stores an optional archive path, last successful output/version,
+The pure `Import.Types.ImportRecord` stores an optional archive path, last successful output/version,
 latest attempt state, suppression timestamp and device metadata. `recordFailure`
 retains the prior successful mapping/version. `planImport` returns an existing
 successful result for a normal repeated import, allows explicit retry/refresh,
 waits on a processing attempt and respects suppression. Stale processing-attempt
 recovery and clearing suppression require explicit application policies.
 
-An `ImportOutput` maps an input to either one Workout or a WorkoutGroup with
+The pure `Import.Types.ImportOutput` maps an input to either one Workout or a WorkoutGroup with
 multiple Workouts. Each member has a stable `ImportPartKey` scoped to that input;
 adapters must derive it from source-local identity, not sport, start time or a
 fresh enumeration after filtering. A normal repeated import returns the complete
@@ -326,8 +333,9 @@ Changed part sets or group membership require explicit reconciliation. Any
 revision conflict or invalid candidate rejects the entire proposed batch. This
 function prepares pure values only: the application must publish all workouts
 and the successful import mapping in one transaction, rechecking revisions and
-group state at the write boundary. Initial ID/group creation, reconciliation,
-and persistence are not implemented yet.
+group state at the write boundary. Initial grouped ID creation and group reconciliation/publication are not
+implemented for this planner. Mounted single-workout FIT/HealthKit persistence is
+described below and uses the runtime import record.
 
 Archive successful FIT files by default until user deletion or explicit cleanup.
 Store them privately and reliably before publishing database success. Ordinary
@@ -486,6 +494,14 @@ reader and advertised upload policy both use the parser's 16 MiB limit. Import
 rate limits are shared with HealthKit (60 requests per owner per minute, 600 total
 per process); two SDK/archive operations can run at once per process. The safe
 native call is bounded but cannot be interrupted mid-decode.
+
+Before buffering a FIT POST body, `Api.Boundary` acquires a separate non-queuing
+upload slot. `FIT_UPLOAD_SLOTS` defaults to 4 (valid range 1–32); exhausted capacity
+returns `429 rate_limited` with `Retry-After: 1` without reading the body. The slot
+covers buffering through handler completion and is released on success, rejection,
+exceptions and cancellation. This is independent of the two SDK/archive permits.
+It bounds concurrently admitted FIT requests, not total process memory (decoded
+samples, transient buffer copies and other routes also allocate).
 
 `Storage.Fit` records owner/SHA-256 identity, a versioned import record, and a
 nullable owned-workout reference in `fit_imports`. A normal duplicate returns the
@@ -657,7 +673,8 @@ features are available tools, not reasons to expand the current task.
 ## Authentication runtime
 
 `App.Environment` reads deployment settings and owns the Hasql pool, clock,
-password-work semaphore and bounded process-local authentication rate windows.
+password-work semaphore, FIT upload admission slots, SDK/archive permits, and
+bounded process-local authentication/import rate windows.
 `Auth.Password` wraps crypton's Argon2id implementation and PHC encoding;
 `Auth.Token` generates 256-bit secrets and hashes them for lookup. `Auth.Request`
 validates credential transport, cookies, Origin and CSRF. `Auth.Session` resolves
@@ -722,8 +739,18 @@ canonical decimal-second precision for the indexed order, without timestamp
 rounding. Signed cursors carry owner/filter scope and the last position. Group
 persistence is absent, so no memberships can match a `groupId` filter yet.
 
-Deletion uses owner, ID and expected revision in SQL and requires a manual or
-HealthKit mapping. HealthKit deletion suppresses its source in the same transaction.
+Deletion uses owner, ID and expected revision in SQL and requires a manual, FIT
+or HealthKit mapping. The lifecycle coordinator suppresses imported sources in
+the same transaction as canonical deletion.
 Unmapped workouts return `409 reconciliation_required`. `deleteEmptyGroups` has no
 effect while no groups can be stored. HealthKit submission/detail and export receipt
 routes are mounted; group routes, other import routes and file exports remain contracts.
+
+### Safe failure diagnostics
+
+`App.Diagnostics` emits one JSON line for unexpected boundary failures or storage
+failures, using a generated request ID, a fixed operation family, phase and failure
+category. Request paths/IDs, headers, query strings, payloads, SQL and exception
+messages are excluded. Client-facing errors remain generic and include the same
+request ID. Diagnostic IO failures do not replace the response, and asynchronous
+cancellation continues to propagate.

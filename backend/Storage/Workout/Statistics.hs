@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
 
-module Storage.Workout.Statistics (load, refresh) where
+module Storage.Workout.Statistics (load, create, replaceUserData, replaceObservation) where
 
 import Control.Monad (unless)
 import Control.Monad.Trans.Class (lift)
@@ -11,11 +11,13 @@ import Data.Coerce (coerce)
 import Data.Time (UTCTime)
 import qualified Hasql.TH as TH
 import qualified Hasql.Transaction as T
+import Storage.Codec (jsonErrors)
 import Storage.Types
 import Storage.User.Types (UserId (..))
 import qualified Storage.Workout as Workouts
 import qualified Workout.Statistics as Statistics
 import Workout.Types
+import qualified Workout.Update as Update
 import qualified Workout.Validation as Validation
 
 -- Called inside the authenticated owner's account-locked transaction. Persisting
@@ -25,9 +27,37 @@ load now uid wid = do
     workout <- Workouts.loadWorkout uid wid >>= maybe (throwE WorkoutNotFound) pure
     if Statistics.isCurrent workout then pure workout else save now uid workout
 
--- Writes always recompute: a client-supplied calculated result is not trusted.
-refresh :: UTCTime -> UserId -> WorkoutId -> Store Workout
-refresh now uid wid = Workouts.loadWorkout uid wid >>= maybe (throwE WorkoutNotFound) (save now uid)
+-- Calculate against the final input revision before the single canonical write.
+-- Incoming calculated summaries are never trusted.
+create :: UTCTime -> UserId -> Workout -> Store Workout
+create now uid original = do
+    let errors =
+            Validation.validateWorkout original
+                <> jsonErrors "observation" (toJSON (workoutObservation original))
+                <> jsonErrors "userData" (toJSON (workoutUserData original))
+    unless (null errors) (throwE (InvalidWorkout errors))
+    let workout = Statistics.calculate now original
+    Workouts.createWorkout uid workout
+    pure workout
+
+replaceUserData
+    :: UTCTime -> UserId -> WorkoutId -> WorkoutRevision -> WorkoutUserData -> Store Workout
+replaceUserData now uid wid expected userData =
+    Workouts.updateWorkout
+        uid
+        wid
+        expected
+        (fmap (Statistics.calculate now) . Update.replaceUserData expected userData)
+
+-- Import reconciliation has already loaded and checked this workout under the
+-- account lock. Reuse it; SQL still compares the expected revision at the write.
+replaceObservation
+    :: UTCTime -> UserId -> Workout -> WorkoutRevision -> WorkoutObservation -> Store Workout
+replaceObservation now uid current expected observation =
+    case Update.replaceObservation expected observation current of
+        Left (Update.RevisionConflict _ _) -> throwE WorkoutConflict
+        Left (Update.InvalidWorkout errors) -> throwE (InvalidWorkout errors)
+        Right next -> Workouts.saveUpdated uid expected (Statistics.calculate now next)
 
 save :: UTCTime -> UserId -> Workout -> Store Workout
 save now uid original = do

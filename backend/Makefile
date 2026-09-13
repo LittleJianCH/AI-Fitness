@@ -1,4 +1,4 @@
-.PHONY: all run check test format format-check lint contract contract-test
+.PHONY: all perf run check test format format-check lint contract contract-test
 
 DOMAIN_SOURCES := $(wildcard Workout/*.hs Workout/*/*.hs Import/*.hs Import/Fit/*.hs)
 API_SOURCES := $(wildcard Api/*.hs Api/*/*.hs Api/*/*/*.hs)
@@ -18,7 +18,14 @@ all: build/backend
 
 build/backend: Main.hs Api.hs Config.hs $(DOMAIN_SOURCES) $(API_SOURCES) $(STORAGE_SOURCES) $(RUNTIME_SOURCES) build/native/fit_adapter.o Makefile
 	mkdir -p build
-	ghc --make -Wall -Werror -threaded -rtsopts -outputdir build Main.hs build/native/fit_adapter.o $(FIT_GHC_LIBS) -o $@
+	ghc --make -O0 -Wall -Werror -threaded -rtsopts -outputdir build Main.hs build/native/fit_adapter.o $(FIT_GHC_LIBS) -o $@
+
+# Keep optimized Haskell artifacts separate from the fast development build.
+perf: build/perf/backend
+
+build/perf/backend: Main.hs Api.hs Config.hs $(DOMAIN_SOURCES) $(API_SOURCES) $(STORAGE_SOURCES) $(RUNTIME_SOURCES) build/native/fit_adapter.o Makefile
+	mkdir -p build/perf
+	ghc --make -O1 -Wall -Werror -threaded -rtsopts -outputdir build/perf Main.hs build/native/fit_adapter.o $(FIT_GHC_LIBS) -o $@
 
 run: build/backend
 	./build/backend

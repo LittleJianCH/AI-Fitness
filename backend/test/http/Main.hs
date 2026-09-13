@@ -5,6 +5,7 @@ import App.Types
 import qualified Auth.Password as Password
 import qualified AuthChecks
 import qualified AuthRaceChecks
+import qualified BoundaryChecks
 import qualified Data.Text as Text
 import qualified ExportChecks
 import qualified FitChecks
@@ -28,6 +29,7 @@ main = do
             ExportChecks.verifyRestart environment
             FitChecks.verifyRestart environment
         [path] -> do
+            BoundaryChecks.checks environment
             AuthChecks.checks environment
             AuthRaceChecks.checks environment
             InputChecks.checks environment

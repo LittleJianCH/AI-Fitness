@@ -1,5 +1,6 @@
 module App.Types (Settings (..), Environment (..), RequestContext (..), Authenticated (..)) where
 
+import App.Admission (Admission)
 import Auth.Password (Options)
 import Control.Concurrent.MVar (MVar)
 import Control.Concurrent.QSem (QSem)
@@ -24,6 +25,7 @@ data Settings = Settings
     , authRequestsPerMinute :: Int
     , importRequestsPerMinute :: Int
     , fitArchiveRoot :: FilePath
+    , fitUploadSlots :: Int
     , maxJsonBytes :: Int
     }
 
@@ -32,6 +34,7 @@ data Environment = Environment
     , databasePool :: Pool
     , currentTime :: IO UTCTime
     , dummyPasswordHash :: PasswordHash
+    , fitUploads :: Admission
     , fitWorkers :: QSem
     , passwordWorkers :: QSem
     , cursorKey :: ByteString

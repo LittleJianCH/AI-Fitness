@@ -43,7 +43,7 @@ createManual now uid submission workout = do
                     |]
     if claimed == 1
         then do
-            Workouts.createWorkout uid workout
+            created <- Statistics.create now uid workout
             lift $
                 T.statement (uid, submission, workoutId workout) $
                     lmap
@@ -52,7 +52,7 @@ createManual now uid submission workout = do
                             UPDATE workout_submissions SET workout_id = $3 :: uuid
                             WHERE user_id = $1 :: uuid AND submission_id = $2 :: uuid
                         |]
-            Statistics.refresh now uid (workoutId workout)
+            pure created
         else do
             existing <-
                 lift $
@@ -70,8 +70,8 @@ createManual now uid submission workout = do
                     Statistics.load now uid identity
                 _ -> throwE SubmissionConflict
 
--- Import/group persistence is not mounted yet. Reject workouts with no manual
--- submission mapping so later source imports cannot accidentally bypass policy.
+-- Reject workouts without a manual submission mapping. Import deletion must
+-- retain its source tombstone through the lifecycle coordinator.
 deleteManual :: UserId -> WorkoutId -> WorkoutRevision -> Store ()
 deleteManual uid wid expected = do
     current <- Workouts.loadWorkout uid wid >>= maybe (throwE WorkoutNotFound) pure

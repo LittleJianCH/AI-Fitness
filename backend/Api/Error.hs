@@ -3,6 +3,7 @@
 module Api.Error (problemError, problem, storage, errorFormatters) where
 
 import Api.Common.Types (FieldError (..), Problem (..))
+import qualified App.Diagnostics as Diagnostics
 import App.Types
 import Control.Monad.IO.Class (liftIO)
 import Data.Aeson (encode)
@@ -30,7 +31,9 @@ storage environment context work = do
     result <- liftIO (Pool.use (databasePool environment) (Database.transaction work))
     either translate pure (fromRight (Left DatabaseFailure) result)
   where
-    translate DatabaseFailure = problem context 500 "internal_error" "Database operation failed"
+    translate DatabaseFailure = do
+        liftIO (Diagnostics.logFailure context Diagnostics.Storage Diagnostics.DatabaseFailure)
+        problem context 500 "internal_error" "Database operation failed"
     translate UserConflict = problem context 409 "registration_conflict" "Account cannot be registered"
     translate SessionConflict = problem context 409 "session_conflict" "Session state changed; retry the request"
     translate AuthenticationFailed = problem context 401 "unauthenticated" "Invalid or expired credentials"
@@ -51,7 +54,9 @@ storage environment context work = do
                             ]
                         )
                 }
-    translate CorruptWorkout = problem context 500 "internal_error" "Stored workout cannot be read"
+    translate CorruptWorkout = do
+        liftIO (Diagnostics.logFailure context Diagnostics.Storage Diagnostics.CorruptWorkout)
+        problem context 500 "internal_error" "Stored workout cannot be read"
     translate ImportNotFound = problem context 404 "not_found" "Import not found"
     translate ImportConflict = problem context 409 "revision_conflict" "Import changed; reload before retrying"
     translate ImportReconciliationRequired = problem context 409 "reconciliation_required" "Source parts or published records changed"
@@ -63,10 +68,14 @@ storage environment context work = do
             422
             "validation_failed"
             "Invalid HealthKit submission; this endpoint currently accepts one cycling or running part per object"
-    translate CorruptImport = problem context 500 "internal_error" "Stored import cannot be read"
+    translate CorruptImport = do
+        liftIO (Diagnostics.logFailure context Diagnostics.Storage Diagnostics.CorruptImport)
+        problem context 500 "internal_error" "Stored import cannot be read"
     translate ExportReceiptConflict = problem context 409 "export_conflict" "Platform object is already associated with another export"
     translate InvalidExportReceipt = problem context 422 "validation_failed" "Apple Health externalId must be a non-nil object UUID"
-    translate CorruptExportReceipt = problem context 500 "internal_error" "Stored export receipt cannot be read"
+    translate CorruptExportReceipt = do
+        liftIO (Diagnostics.logFailure context Diagnostics.Storage Diagnostics.CorruptExportReceipt)
+        problem context 500 "internal_error" "Stored export receipt cannot be read"
 
 errorFormatters :: RequestContext -> ErrorFormatters
 errorFormatters context =

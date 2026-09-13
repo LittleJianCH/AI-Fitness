@@ -35,6 +35,10 @@ Use `PORT=8080 make run` to change the port. Ctrl-C stops the server; `exit` lea
 the development shell. No database process or background services are started. The server opens a
 connection pool and checks connectivity; migrations are a separate explicit step. `make` compiles without starting the server.
 
+The default `make` build uses `-O0` for quick development. `make perf` builds
+with `-O1` into `backend/build/perf/backend`, with separate Haskell artifacts.
+Use that binary for runtime measurements; no benchmark speedup is assumed.
+
 ## Run the web demo
 
 ```sh
@@ -59,8 +63,9 @@ make check test format-check lint
 ```
 
 This checks all workout/import modules and runs pure validation and update
-scenarios. FIT and PostgreSQL integration have separate checks below. Platform sync
-is not implemented. `make` builds the API server, including authentication.
+scenarios. FIT and PostgreSQL integration have separate checks below. Explicit
+iOS HealthKit import/export has its own integration checks in [iOS development](ios/README.md).
+`make` builds the API server, including authentication.
 
 `make format` applies Fourmolu to backend sources and tests using the root
 `fourmolu.yaml`. The formatter and HLint are provided by the pinned Nix environment;
@@ -124,7 +129,10 @@ for the schema, transaction interface and implementation limits.
 `Import.Fit.readFit` reads a local file; `parseFit` accepts a strict
 `ByteString`. Both return `IO (Either FitError WorkoutObservation)`. The decoder
 calls Garmin's C++ SDK in process through a small C ABI, then Haskell normalizes
-and validates the observation. No upload endpoint or database writes are added.
+and validates the observation. This parser module does not perform persistence;
+the mounted `POST /api/v1/imports/fit` endpoint handles authenticated uploads,
+private archives and owner-scoped database publication (see
+[FIT upload persistence](docs/backend-architecture.md#fit-upload-persistence)).
 
 The initial subset accepts one complete activity file with exactly one cycling
 or running session. It reads absolute start/end times, reported elapsed/timer time and total

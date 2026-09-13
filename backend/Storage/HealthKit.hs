@@ -1,4 +1,5 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
 
@@ -14,7 +15,7 @@ import Data.Coerce (coerce)
 import Data.Int (Int16)
 import Data.List.NonEmpty (NonEmpty (..))
 import qualified Data.List.NonEmpty as NE
-import Data.Maybe (fromMaybe, isJust, isNothing)
+import Data.Maybe (isJust, isNothing)
 import Data.Profunctor (lmap)
 import qualified Data.Text as Text
 import Data.Time (UTCTime)
@@ -28,7 +29,6 @@ import Storage.Types
 import Storage.User.Types (UserId (..))
 import qualified Storage.Workout as Workouts
 import qualified Storage.Workout.Statistics as Statistics
-import qualified Storage.Workout.Submission as Manual
 import qualified Workout.Sport as Sport
 import Workout.Types
 import qualified Workout.Validation as Validation
@@ -42,15 +42,16 @@ submit uid freshImport freshWorkout now submission@(Api.HealthKitSubmission obje
     unless (validSubmission submission) (throwE InvalidImport)
     let initial =
             Api.ImportRecord
-                (Id freshImport)
-                (Revision 1)
-                (Api.HealthKit (Api.HealthKitSource object))
-                Api.Pending
-                Api.NotApplicable
-                (Timestamp now)
-                (Timestamp now)
-                Nothing
-                Nothing
+                { Api._id = Id freshImport
+                , Api._revision = Revision 1
+                , Api._source = Api.HealthKit (Api.HealthKitSource object)
+                , Api._status = Api.Pending
+                , Api._archive = Api.NotApplicable
+                , Api._createdAt = Timestamp now
+                , Api._updatedAt = Timestamp now
+                , Api._lastSuccess = Nothing
+                , Api._failure = Nothing
+                }
     void $
         lift $
             T.statement (uid, freshImport, object, toJSON initial) $
@@ -71,7 +72,7 @@ submit uid freshImport freshWorkout now submission@(Api.HealthKitSubmission obje
             FROM healthkit_imports WHERE user_id = $1 :: uuid AND object_id = $2 :: uuid FOR UPDATE
         |]
     (record, liveWorkout) <- maybe (throwE CorruptImport) decode stored
-    let Api.ImportRecord _ revision _ status _ _ _ previous _ = record
+    let Api.ImportRecord {Api._revision = revision, Api._status = status, Api._lastSuccess = previous} = record
     exported <- Export.isExportedObject uid (coerce object)
     if exported && status /= Api.Suppressed
         then do
@@ -97,8 +98,8 @@ submit uid freshImport freshWorkout now submission@(Api.HealthKitSubmission obje
   where
     Api.ImportPart partKey observation initialUserData = NE.head parts
     publish record liveWorkout = do
-        let Api.ImportRecord _ _ _ _ _ _ _ previous _ = record
-        (wid, userData, revision) <- case previous of
+        let Api.ImportRecord {Api._lastSuccess = previous} = record
+        (wid, userData, existingWorkout) <- case previous of
             Nothing -> pure (freshWorkout, initialUserData, Nothing)
             Just (Api.ImportOutput (Api.ImportedPart key wid :| []) Nothing _ _) -> do
                 unless (key == partKey && liveWorkout == Just (coerce wid)) (throwE ImportReconciliationRequired)
@@ -107,9 +108,9 @@ submit uid freshImport freshWorkout now submission@(Api.HealthKitSubmission obje
                     _ -> throwE ImportReconciliationRequired
                 current <- Workouts.loadWorkout uid wid >>= maybe (throwE ImportReconciliationRequired) pure
                 unless (workoutRevision current == expected) (throwE WorkoutConflict)
-                pure (wid, workoutUserData current, Just expected)
+                pure (wid, workoutUserData current, Just current)
             _ -> throwE ImportReconciliationRequired
-        let candidate = Workout wid (fromMaybe (WorkoutRevision 1) revision) observation userData
+        let candidate = Workout wid (maybe (WorkoutRevision 1) workoutRevision existingWorkout) observation userData
             errors =
                 Validation.validateWorkout candidate
                     <> jsonErrors "observation" (toJSON observation)
@@ -126,10 +127,9 @@ submit uid freshImport freshWorkout now submission@(Api.HealthKitSubmission obje
                 save uid failed liveWorkout
                 pure failed
             else do
-                case revision of
-                    Nothing -> Workouts.createWorkout uid candidate
-                    Just expected -> void (Workouts.replaceObservation uid wid expected observation)
-                void (Statistics.refresh now uid wid)
+                void $ case existingWorkout of
+                    Nothing -> Statistics.create now uid candidate
+                    Just current -> Statistics.replaceObservation now uid current (workoutRevision current) observation
                 let output =
                         Api.ImportOutput
                             (Api.ImportedPart partKey wid :| [])
@@ -173,7 +173,7 @@ loadImport uid iid = do
         |]
     maybe (throwE ImportNotFound) (fmap fst . decode) row
 
-deleteWorkout :: UserId -> WorkoutId -> WorkoutRevision -> UTCTime -> Store ()
+deleteWorkout :: UserId -> WorkoutId -> WorkoutRevision -> UTCTime -> Store Bool
 deleteWorkout uid wid expected now = do
     row <-
         lift $
@@ -185,12 +185,12 @@ deleteWorkout uid wid expected now = do
             FROM healthkit_imports WHERE user_id = $1 :: uuid AND workout_id = $2 :: uuid FOR UPDATE
         |]
     case row of
-        Nothing -> Manual.deleteManual uid wid expected
+        Nothing -> pure False
         Just stored -> do
             (record, _) <- decode stored
             current <- Workouts.loadWorkout uid wid >>= maybe (throwE WorkoutNotFound) pure
             unless (workoutRevision current == expected) (throwE WorkoutConflict)
-            let Api.ImportRecord _ _ _ _ _ _ _ previous _ = record
+            let Api.ImportRecord {Api._lastSuccess = previous} = record
             save uid (advance now Api.Suppressed previous Nothing record) Nothing
             count <-
                 lift $
@@ -202,6 +202,7 @@ deleteWorkout uid wid expected now = do
                         AND revision = ($3 :: text) :: numeric
                 |]
             unless (count == 1) (throwE WorkoutConflict)
+            pure True
 
 advance
     :: UTCTime
@@ -210,20 +211,17 @@ advance
     -> Maybe Api.Failure
     -> Api.ImportRecord
     -> Api.ImportRecord
-advance now status output failure (Api.ImportRecord iid (Revision revision) source _ archive created _ _ _) =
-    Api.ImportRecord
-        iid
-        (Revision (revision + 1))
-        source
-        status
-        archive
-        created
-        (Timestamp now)
-        output
-        failure
+advance now status output failure record@Api.ImportRecord {Api._revision = Revision revision} =
+    record
+        { Api._revision = Revision (revision + 1)
+        , Api._status = status
+        , Api._updatedAt = Timestamp now
+        , Api._lastSuccess = output
+        , Api._failure = failure
+        }
 
 save :: UserId -> Api.ImportRecord -> Maybe UUID -> Store ()
-save uid record@(Api.ImportRecord iid _ _ _ _ _ _ _ _) wid = do
+save uid record@Api.ImportRecord {Api._id = iid} wid = do
     count <-
         lift $
             T.statement (uid, iid, toJSON record, wid) $
@@ -238,16 +236,11 @@ save uid record@(Api.ImportRecord iid _ _ _ _ _ _ _ _) wid = do
 decode :: (UUID, UUID, Int16, Value, Maybe UUID) -> Store (Api.ImportRecord, Maybe UUID)
 decode (iid, object, version, value, wid) = case fromJSON value of
     Success
-        record@( Api.ImportRecord
-                    (Id storedId)
-                    (Revision revision)
-                    (Api.HealthKit (Api.HealthKitSource (Id storedObject)))
-                    _
-                    Api.NotApplicable
-                    _
-                    _
-                    _
-                    _
-                )
+        record@Api.ImportRecord
+            { Api._id = Id storedId
+            , Api._revision = Revision revision
+            , Api._source = Api.HealthKit (Api.HealthKitSource (Id storedObject))
+            , Api._archive = Api.NotApplicable
+            }
             | version == 1 && iid == storedId && object == storedObject && revision > 0 -> pure (record, wid)
     _ -> throwE CorruptImport

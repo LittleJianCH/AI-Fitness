@@ -53,6 +53,8 @@ common backend-settings
                  Api.Pagination,
                  App.Types,
                  App.Environment,
+                 App.Admission,
+                 App.Diagnostics,
                  Auth.Password,
                  Auth.Token,
                  Auth.Request,
@@ -97,6 +99,7 @@ common backend-settings
                  Storage.Workout,
                  Storage.Workout.Types,
                  Storage.Workout.Statistics,
+                 Storage.Workout.Lifecycle,
                  Storage.Workout.Query,
                  Storage.Workout.Submission
 
@@ -129,4 +132,4 @@ test-suite http
   hs-source-dirs: test, test/http
   main-is: http/Main.hs
   build-depends: async
-  other-modules: FitChecks, AuthChecks, AuthRaceChecks, InputChecks, HttpSupport, WorkoutChecks, HealthKitChecks, ExportChecks, RestartChecks, Fixtures
+  other-modules: BoundaryChecks, FitChecks, AuthChecks, AuthRaceChecks, InputChecks, HttpSupport, WorkoutChecks, HealthKitChecks, ExportChecks, RestartChecks, Fixtures

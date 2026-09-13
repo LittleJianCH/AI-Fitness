@@ -13,6 +13,7 @@ import Data.Bits ((.&.))
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as LBS
 import Data.List.NonEmpty (NonEmpty (..))
+import Data.Maybe (isNothing)
 import qualified Data.Text
 import qualified Data.Text.Encoding as Text
 import qualified Data.UUID.Types as UUID
@@ -198,7 +199,7 @@ verifyRestart env = do
 status :: Api.ImportRecord -> Api.ImportStatus
 status (Api.ImportRecord _ _ _ value _ _ _ _ _) = value
 noOutput :: Api.ImportRecord -> Bool
-noOutput (Api.ImportRecord _ _ _ _ _ _ _ output _) = output == Nothing
+noOutput (Api.ImportRecord _ _ _ _ _ _ _ output _) = isNothing output
 publishedWorkout :: Api.ImportRecord -> WorkoutId
 publishedWorkout (Api.ImportRecord _ _ _ _ _ _ _ (Just (Api.ImportOutput (Api.ImportedPart _ wid :| []) _ _ _)) _) = wid
 publishedWorkout _ = error "Expected one synthetic published workout"

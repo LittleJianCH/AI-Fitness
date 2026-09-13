@@ -18,7 +18,12 @@ HealthKit submissions have a per-process limit of 60 requests per owner per minu
 and 600 total, returning `429` with `Retry-After: 60`. Authentication has a separate
 budget. Horizontal deployment also needs a shared upstream rate limit.
 FIT upload and shared import-detail reads are mounted for one cycling or running
-activity per file. Files are limited to 16 MiB, parsed synchronously, retained
+activity per file. A separate process-wide admission limit is checked before FIT
+POST body buffering (default 4, configured by `FIT_UPLOAD_SLOTS`, range 1–32).
+Capacity exhaustion returns the existing `429 rate_limited` problem and
+`Retry-After: 1`; clients may retry without changing the upload identity. This
+limit also applies before authentication, independently of owner rate limits and
+the two SDK/archive worker permits. Files are limited to 16 MiB, parsed synchronously, retained
 privately, and deduplicated by owner and SHA-256 of actual input bytes. Invalid
 or unsupported files return a durable `failed` import with no published workout.
 Normal reupload returns the recorded state; explicit FIT retry/refresh and archive

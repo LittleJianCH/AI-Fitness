@@ -18,13 +18,12 @@ import Data.Aeson (toJSON)
 import Data.Maybe (fromMaybe, isJust)
 import Data.Text (Text)
 import qualified Data.UUID.Types as UUID
-import qualified Data.UUID.V4 as UUID
+import qualified Data.UUID.V4 as UUIDv4
 import qualified Data.Vector as V
 import Servant
 import qualified Storage.Codec as Storage
-import qualified Storage.Fit as Fit
 import Storage.User.Types (userId)
-import qualified Storage.Workout as Workouts
+import qualified Storage.Workout.Lifecycle as Lifecycle
 import qualified Storage.Workout.Query as Query
 import qualified Storage.Workout.Statistics as Statistics
 import qualified Storage.Workout.Submission as Submission
@@ -56,7 +55,7 @@ server environment context principal = list :<|> create :<|> details
     create (Api.ManualWorkout (Id submission) observation userData) = do
         unless (submission /= UUID.nil) $
             problem context 422 "validation_failed" "submissionId must not be nil"
-        wid <- WorkoutId <$> liftIO UUID.nextRandom
+        wid <- WorkoutId <$> liftIO UUIDv4.nextRandom
         now <- liftIO (currentTime environment)
         workout <- owned environment context principal $ \auth ->
             Submission.createManual
@@ -75,13 +74,12 @@ server environment context principal = list :<|> create :<|> details
         now <- liftIO (currentTime environment)
         workout <- owned environment context principal $ \auth -> do
             let uid = userId (authenticatedUser auth)
-            _ <- Workouts.replaceUserData uid wid expected userData
-            Statistics.refresh now uid wid
+            Statistics.replaceUserData now uid wid expected userData
         respond (WithStatus @200 workout)
     delete wid expected _deleteEmptyGroups = do
         now <- liftIO (currentTime environment)
         owned environment context principal $ \auth ->
-            Fit.deleteWorkout (userId (authenticatedUser auth)) wid expected now
+            Lifecycle.deleteWorkout (userId (authenticatedUser auth)) wid expected now
         respond (WithStatus @204 NoContent)
     unwrap (Timestamp value) = value
     sportName Api.Cycling = "cycling"

@@ -1,10 +1,18 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
 
-module Storage.Workout (createWorkout, loadWorkout, replaceUserData, replaceObservation, revisionText) where
+module Storage.Workout
+    ( createWorkout
+    , loadWorkout
+    , replaceUserData
+    , replaceObservation
+    , updateWorkout
+    , saveUpdated
+    , revisionText
+    ) where
 
 import Api.Workout.Codec ()
-import Control.Monad.Trans.Except (ExceptT (..))
+import Control.Monad.Trans.Except (ExceptT (..), runExceptT)
 import Data.Aeson (Result (..), Value, fromJSON, toJSON)
 import Data.Coerce (coerce)
 import Data.Int (Int16)
@@ -70,27 +78,33 @@ updateWorkout uid wid expected change = ExceptT $ do
         Right (Just workout) -> case change workout of
             Left (Update.RevisionConflict _ _) -> pure (Left WorkoutConflict)
             Left (Update.InvalidWorkout errors) -> pure (Left (InvalidWorkout errors))
-            Right next | errors@(_ : _) <- storageErrors next -> pure (Left (InvalidWorkout errors))
-            Right next -> do
-                count <-
-                    T.statement (uid, wid, expected, next) $
-                        lmap
-                            ( \(u, w, r, n) ->
-                                ( coerce u
-                                , coerce w
-                                , revisionText r
-                                , revisionText (workoutRevision n)
-                                , toJSON (workoutObservation n)
-                                , toJSON (workoutUserData n)
-                                )
-                            )
-                            [TH.rowsAffectedStatement|
-                                UPDATE workouts SET revision = ($4 :: text) :: numeric,
-                                    observation = $5 :: jsonb, user_data = $6 :: jsonb
-                                WHERE user_id = $1 :: uuid AND id = $2 :: uuid
-                                  AND revision = ($3 :: text) :: numeric
-                            |]
-                pure (if count == 1 then Right next else Left WorkoutConflict)
+            Right next -> runExceptT (saveUpdated uid expected next)
+
+-- The caller already resolved the owner and revision in the same transaction.
+-- Keep the final compare-and-swap even when an import reuses its loaded workout.
+saveUpdated :: UserId -> WorkoutRevision -> Workout -> Store Workout
+saveUpdated uid expected next = ExceptT $ case Validation.validateWorkout next <> storageErrors next of
+    errors@(_ : _) -> pure (Left (InvalidWorkout errors))
+    [] -> do
+        count <-
+            T.statement (uid, workoutId next, expected, next) $
+                lmap
+                    ( \(u, w, r, n) ->
+                        ( coerce u
+                        , coerce w
+                        , revisionText r
+                        , revisionText (workoutRevision n)
+                        , toJSON (workoutObservation n)
+                        , toJSON (workoutUserData n)
+                        )
+                    )
+                    [TH.rowsAffectedStatement|
+                        UPDATE workouts SET revision = ($4 :: text) :: numeric,
+                            observation = $5 :: jsonb, user_data = $6 :: jsonb
+                        WHERE user_id = $1 :: uuid AND id = $2 :: uuid
+                          AND revision = ($3 :: text) :: numeric
+                    |]
+        pure (if count == 1 then Right next else Left WorkoutConflict)
 
 selectWorkout :: Bool -> UserId -> WorkoutId -> T.Transaction (Either StorageError (Maybe Workout))
 selectWorkout lock uid wid =

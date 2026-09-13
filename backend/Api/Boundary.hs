@@ -4,14 +4,23 @@
 module Api.Boundary (withRequest) where
 
 import Api.Common.Types (Problem (..))
+import App.Admission (withAdmission)
+import qualified App.Diagnostics as Diagnostics
 import App.Types
-import Control.Exception (SomeAsyncException, SomeException, fromException, throwIO, try)
+import Control.Exception
+    ( IOException
+    , SomeAsyncException
+    , SomeException
+    , fromException
+    , throwIO
+    , try
+    )
 import Data.Aeson (encode)
 import qualified Data.ByteString as BS
-import Data.IORef (atomicModifyIORef', newIORef)
+import Data.IORef (atomicModifyIORef', newIORef, readIORef, writeIORef)
 import qualified Data.Text.Encoding as Text
 import qualified Data.UUID as UUID
-import qualified Data.UUID.V4 as UUID
+import qualified Data.UUID.V4 as UUIDv4
 import Import.Fit.Decode (maxFitBytes)
 import Network.HTTP.Types
 import Network.Wai
@@ -20,15 +29,13 @@ import Network.Wai.Internal (ResponseReceived (..))
 -- Request IDs and generic errors never echo credentials or health payloads.
 withRequest :: Environment -> (RequestContext -> Application) -> Application
 withRequest environment route original respond = do
-    rid <- UUID.toText <$> UUID.nextRandom
+    rid <- UUID.toText <$> UUIDv4.nextRandom
     let context = RequestContext original rid
-        limit =
-            if take 3 (pathInfo original) == ["api", "v1", "auth"]
-                then 16384
-                else
-                    if pathInfo original == ["api", "v1", "imports", "fit"]
-                        then maxFitBytes
-                        else maxJsonBytes (settings environment)
+        isFitUpload = requestMethod original == methodPost && pathInfo original == ["api", "v1", "imports", "fit"]
+        limit
+            | take 3 (pathInfo original) == ["api", "v1", "auth"] = 16384
+            | pathInfo original == ["api", "v1", "imports", "fit"] = maxFitBytes
+            | otherwise = maxJsonBytes (settings environment)
         failure status code message =
             responseLBS
                 status
@@ -49,27 +56,47 @@ withRequest environment route original respond = do
                     )
     -- Catch before sending to WAI; never send a second response after a socket
     -- failure in the responder. These handlers produce finite JSON responses.
-    outcome <- try $ do
-        body <- readLimited limit original
-        case body of
-            Nothing -> pure (failure status413 "payload_too_large" "Request body is too large")
-            Just bytes -> do
-                ref <- newIORef bytes
-                let next = atomicModifyIORef' ref (BS.empty,)
-                    req = setRequestBodyChunks next original
-                result <- newIORef Nothing
-                _ <-
-                    route
-                        (context {request = req})
-                        req
-                        (\response -> atomicModifyIORef' result (const (Just response, ResponseReceived)))
-                value <- atomicModifyIORef' result (Nothing,)
-                maybe (fail "Application returned no response") pure value
+    phase <- newIORef Diagnostics.BodyBuffer
+    let handle = do
+            body <- readLimited limit original
+            case body of
+                Nothing -> pure (failure status413 "payload_too_large" "Request body is too large")
+                Just bytes -> do
+                    writeIORef phase Diagnostics.Handler
+                    ref <- newIORef bytes
+                    let next = atomicModifyIORef' ref (BS.empty,)
+                        req = setRequestBodyChunks next original
+                    result <- newIORef Nothing
+                    _ <-
+                        route
+                            (context {request = req})
+                            req
+                            (\response -> atomicModifyIORef' result (const (Just response, ResponseReceived)))
+                    value <- atomicModifyIORef' result (Nothing,)
+                    maybe (fail "Application returned no response") pure value
+    outcome <-
+        try $
+            if isFitUpload
+                then do
+                    admitted <- withAdmission (fitUploads environment) handle
+                    pure $ case admitted of
+                        Just response -> response
+                        Nothing ->
+                            mapResponseHeaders
+                                (("Retry-After", "1") :)
+                                (failure status429 "rate_limited" "Upload capacity is busy; retry shortly")
+                else handle
     case outcome of
         Right response -> finish response
         Left err -> case fromException err :: Maybe SomeAsyncException of
             Just _ -> throwIO (err :: SomeException)
-            Nothing -> finish (failure status500 "internal_error" "Request failed")
+            Nothing -> do
+                failedPhase <- readIORef phase
+                let category = case fromException err :: Maybe IOException of
+                        Just _ -> Diagnostics.IOFailure
+                        Nothing -> Diagnostics.UnexpectedException
+                Diagnostics.logFailure context failedPhase category
+                finish (failure status500 "internal_error" "Request failed")
 
 readLimited :: Int -> Request -> IO (Maybe BS.ByteString)
 readLimited limit req = case requestBodyLength req of

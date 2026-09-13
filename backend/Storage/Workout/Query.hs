@@ -60,5 +60,8 @@ listWorkouts uid query after limit = ExceptT $ do
                 |]
     pure $
         traverse
-            (\value -> case fromJSON value of Success card -> Right card; Error _ -> Left CorruptWorkout)
+            ( \value -> case fromJSON value of
+                Success card -> Right card
+                Error _ -> Left CorruptWorkout
+            )
             values
