@@ -10,7 +10,10 @@ user-confirmed backend-to-HealthKit export with durable recovery and receipts.
 The current baseline is Xcode 15.4, Swift 5.10, and iOS 17 or later. Select Xcode
 with its platform SDKs installed. The macOS core test package requires macOS 14.
 The Xcode project is maintained in `Fitness.xcodeproj`; its `FitnessCore` product
-comes from this directory's local Swift package. Generated contracts are build
+comes from this directory's local Swift package. `App/FitnessApp.swift` owns the
+app entry point; `ServerScreen.swift` owns server selection, and
+`AuthenticatedRoot.swift` owns the session and signed-in tabs. These views are
+explicit members of the app target. Generated contracts are build
 inputs, not checked-in Swift sources.
 
 Generate the contract using the root development environment:
