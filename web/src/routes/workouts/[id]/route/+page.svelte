@@ -71,6 +71,6 @@
 	input {
 		width: 100%;
 		min-height: 44px;
-		accent-color: #1769d2;
+		accent-color: var(--blue);
 	}
 </style>

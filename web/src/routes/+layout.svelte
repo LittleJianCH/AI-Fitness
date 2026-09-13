@@ -9,6 +9,7 @@
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import ThemePicker from '$lib/components/ThemePicker.svelte';
 	import Icon from '$lib/components/Icon.svelte';
 	import { readScenario } from '$lib/api/read';
 	let { children } = $props();
@@ -63,9 +64,9 @@
 <a class="skip" href="#main">跳到主要内容</a>
 <aside class="sidebar">
 	<a class="brand" href={resolve(`/workouts${suffix}`)} aria-label="AI Fitness 训练"
-		><span class="brand-icon"><Icon /></span><span class="brand-name">AI Fitness</span></a
+		><span class="brand-icon">↗</span><span class="brand-name">AI Fitness</span></a
 	>
-	<div class="nav-caption">个人训练空间</div>
+	<span class="workspace-label">训练数据工作区</span>
 	<nav aria-label="主导航">
 		<a
 			class:active={page.url.pathname.includes('/workouts')}
@@ -81,6 +82,7 @@
 	{#if demo}<a class="bottom-link" href={resolve('/demo')}
 			><Icon kind="info" /><span>关于演示</span></a
 		>{/if}
+	<ThemePicker />
 </aside>
 <QueryClientProvider {client}>
 	<main class="app-content" id="main">
@@ -128,7 +130,7 @@
 		top: -80px;
 		left: 16px;
 		z-index: 10;
-		background: #fff;
+		background: var(--panel);
 		padding: 12px;
 	}
 	.skip:not(:focus) {
@@ -138,56 +140,46 @@
 		top: 12px;
 	}
 	.sidebar {
-		position: fixed;
-		inset: 0 auto 0 0;
-		width: 208px;
-		padding: 32px 20px;
-		border-right: 1px solid #e6e8ee;
-		background: #fafafd;
 		display: flex;
-		flex-direction: column;
-		z-index: 5;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 12px;
+		padding: 10px 24px;
+		border-bottom: 1px solid var(--line);
+		background: var(--panel);
 	}
 	.brand {
 		display: flex;
 		align-items: center;
 		gap: 10px;
 		font-weight: 700;
-		font-size: 19px;
-		white-space: nowrap;
+		font-size: 16px;
 	}
 	.brand-icon {
 		display: grid;
 		place-items: center;
-		width: 32px;
-		height: 32px;
-		background: #1769d2;
-		color: #fff;
-		border-radius: 9px;
+		color: var(--blue);
 	}
-	.nav-caption {
-		margin: 48px 12px 12px;
-		font-size: 12px;
-		color: #606672;
+	nav {
+		display: flex;
+		gap: 8px;
+		margin-left: auto;
 	}
 	nav a,
 	.bottom-link {
 		display: flex;
 		align-items: center;
-		gap: 12px;
-		padding: 13px;
-		border-radius: 9px;
-		font-size: 15px;
-		min-height: 48px;
+		gap: 8px;
+		padding: 10px 12px;
+		border-radius: 6px;
+		min-height: 44px;
 	}
 	nav .active {
-		color: #1769d2;
-		background: #e8eef9;
-		font-weight: 600;
+		background: var(--soft);
+		color: var(--blue);
 	}
 	.bottom-link {
-		margin-top: auto;
-		color: #606672;
+		color: var(--muted);
 	}
 	.demo-bar {
 		min-height: 44px;
@@ -197,13 +189,13 @@
 		gap: 8px 20px;
 		justify-content: space-between;
 		align-items: center;
-		color: #606672;
+		color: var(--muted);
 	}
 	.demo-dot {
 		width: 6px;
 		height: 6px;
 		display: inline-block;
-		background: #1769d2;
+		background: var(--blue);
 		border-radius: 50%;
 		margin-right: 7px;
 	}
@@ -217,64 +209,48 @@
 		min-height: 36px;
 		background: transparent;
 	}
-	@media (max-width: 1100px) and (min-width: 701px) {
-		.sidebar {
-			width: 76px;
-			padding: 28px 12px;
-		}
-		.brand {
-			justify-content: center;
-		}
-		.brand-name,
-		.nav-caption {
-			display: none;
-		}
-		nav {
-			margin-top: 40px;
-		}
-		nav a,
-		.bottom-link {
-			flex-direction: column;
-			gap: 4px;
-			padding: 10px 0;
-			font-size: 11px;
-		}
-	}
 	@media (max-width: 700px) {
 		.sidebar {
-			top: auto;
-			right: 0;
-			width: auto;
-			height: calc(68px + env(safe-area-inset-bottom));
-			padding: 4px 20px env(safe-area-inset-bottom);
-			border-right: 0;
-			border-top: 1px solid #e6e8ee;
-			flex-direction: row;
-			align-items: center;
-			justify-content: space-around;
-			background: #fff;
+			padding: 12px;
+			gap: 8px;
 		}
-		nav {
-			display: flex;
-			gap: 24px;
+		.brand {
+			font-size: 16px;
 		}
-		.brand,
-		.nav-caption {
+		nav a {
+			padding: 8px;
+		}
+		.bottom-link {
 			display: none;
 		}
-		nav a,
-		.bottom-link {
-			margin: 0;
-			flex-direction: column;
-			padding: 6px 20px;
-			gap: 2px;
-			font-size: 12px;
-			background: transparent;
-		}
-		.demo-bar select {
-			min-height: 44px;
-		}
 		.demo-note {
+			display: none;
+		}
+	}
+	.brand-icon {
+		width: 23px;
+		height: 23px;
+		border-radius: 4px;
+		background: var(--blue);
+		color: var(--panel);
+		font-size: 18px;
+		font-weight: 700;
+	}
+	.workspace-label {
+		font-size: 11px;
+		color: var(--muted);
+		margin-left: 10px;
+	}
+	nav a,
+	.bottom-link {
+		font-size: 12px;
+	}
+	.sidebar :global(select) {
+		font-size: 11px;
+		min-height: 36px;
+	}
+	@media (max-width: 700px) {
+		.workspace-label {
 			display: none;
 		}
 	}

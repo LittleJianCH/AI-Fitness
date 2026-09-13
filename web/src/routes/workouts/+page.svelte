@@ -275,7 +275,7 @@
 	.filters {
 		display: flex;
 		padding: 4px;
-		background: #e9ebf1;
+		background: var(--soft);
 		border-radius: 11px;
 	}
 	.filters button {
@@ -283,13 +283,13 @@
 		min-height: 44px;
 		border: 0;
 		background: transparent;
-		color: #606672;
+		color: var(--muted);
 		border-radius: 8px;
 		font-size: 14px;
 	}
 	.filters .chosen {
-		background: #fff;
-		color: #171923;
+		background: var(--panel);
+		color: var(--text);
 		font-weight: 600;
 	}
 	.activity-group {
@@ -297,12 +297,12 @@
 	}
 	.activity-group h2 {
 		font-size: 15px;
-		color: #606672;
+		color: var(--muted);
 		margin-bottom: 12px;
 		font-weight: 500;
 	}
 	.activity-list {
-		background: #fff;
+		background: var(--panel);
 		border-radius: 18px;
 		overflow: clip;
 	}
@@ -311,13 +311,13 @@
 		align-items: center;
 		gap: 20px;
 		padding: 26px;
-		border-bottom: 1px solid #e6e8ee;
+		border-bottom: 1px solid var(--line);
 	}
 	.activity-row:last-child {
 		border: 0;
 	}
 	.activity-row:hover {
-		background: #fafbfe;
+		background: var(--soft);
 		color: inherit;
 	}
 	.activity-row:focus-visible {
@@ -328,8 +328,8 @@
 		place-items: center;
 		width: 52px;
 		height: 52px;
-		background: #f0f4fc;
-		color: #1769d2;
+		background: var(--soft);
+		color: var(--blue);
 		border-radius: 14px;
 		flex-shrink: 0;
 	}
@@ -343,7 +343,7 @@
 	}
 	.activity-type {
 		font-size: 13px;
-		color: #606672;
+		color: var(--muted);
 	}
 	.tags {
 		display: flex;
@@ -366,10 +366,10 @@
 	}
 	.activity-numbers span {
 		font-size: 13px;
-		color: #606672;
+		color: var(--muted);
 	}
 	.row-arrow {
-		color: #606672;
+		color: var(--muted);
 		margin-left: 12px;
 	}
 	.list-footer {

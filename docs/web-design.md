@@ -23,8 +23,9 @@ in real layouts, rather than individually approved pixel-level requirements.
 
 ## Visual language
 
-Use a light, native-feeling interface: pale gray background, white content
-surfaces, dark text, system fonts and restrained metric colors. Use the
+Use compact surfaces, thin borders, small radii, system fonts and restrained
+metric colors. Support light, dark and system appearance.
+Store only the appearance preference locally; never persist workout samples. Use the
 **AI Fitness** wordmark initially. Interface labels are Simplified Chinese;
 units retain their conventional symbols, such as bpm, W, rpm and km.
 
@@ -43,7 +44,9 @@ the meaning; accompanying icons are decorative for assistive technology.
 
 Give the current task room: previews communicate overall shape; a dedicated
 analysis page gives the main chart visual priority. Content grows and scrolls at
-readable sizes. Related detail is accessible through the metric page. A workout
+readable sizes. Clicking a metric or map opens a native modal with a close control and Escape
+support. Modal selection is local; closing restores focus, scroll and the original
+overview selection. Dedicated metric and route pages remain available. A workout
 overview is one continuous page, with direct links to full analysis.
 
 Colors identify metrics, while labels, legends and line styles explain meaning.
@@ -55,9 +58,9 @@ Load values show their method and unit; progress visuals require a defined targe
 
 | Role                              | Value                 |
 | --------------------------------- | --------------------- |
-| Page background / content surface | `#F4F4F8` / `#FFFFFF` |
-| Primary / secondary text          | `#171923` / `#606672` |
-| Decorative separator              | `#E6E8EE`             |
+| Page background / content surface | `#EDF0F4` / `#FFFFFF` |
+| Primary / secondary text          | `#253344` / `#647286` |
+| Decorative separator              | `#D9E0E9`             |
 | Interactive accent                | `#1769D2`             |
 | Heart rate                        | `#D43A4A`             |
 | Power                             | `#7350C7`             |
@@ -69,27 +72,30 @@ Project targets are at least 4.5:1 for body text and 3:1 for essential graphical
 marks and control boundaries. Decorative separators have a supporting role.
 Necessary information remains available through text as well as color.
 
+Dark surfaces use #101722 / #1A2433, text #E5EBF4 / #A0AFC4,
+borders #354359 and accent #8EBAFF. System mode follows OS changes.
+
 ### Typography and spacing defaults
 
 Web values are CSS pixels; typography entries are font size / line height.
 System fonts include a Chinese fallback and support browser text enlargement.
 
-| Element                   | Desktop                 | Mobile                         |
-| ------------------------- | ----------------------- | ------------------------------ |
-| Page title                | 30 / 40                 | 28 / 36                        |
-| Analysis section title    | 22 / 30                 | 22 / 30                        |
-| Card title                | 17 / 24                 | 18 / 26                        |
-| Body and settings         | 16 / 24                 | 17 / 26                        |
-| Secondary text            | 14 / 21                 | 15 / 22                        |
-| Chart axes and legends    | 13 / 18                 | 13 / 18                        |
-| Primary metric            | 28–32 / 36–40           | 28–32 / 36–40                  |
-| Units                     | 14–15 / 21–22           | 15 / 22                        |
-| Page horizontal padding   | 32; 24 when constrained | 20; 16 on narrow screens       |
-| Card padding              | 20–24                   | 16–20                          |
-| Card gap / section gap    | 20–24 / 32              | 16 / 28–32                     |
-| Card radius               | 16–20                   | 20; up to 24 for larger groups |
-| Preview plot height       | 100–140                 | 88–120                         |
-| Main analysis plot height | 300–380                 | 240–300                        |
+| Element                   | Desktop                 | Mobile                   |
+| ------------------------- | ----------------------- | ------------------------ |
+| Page title                | 23 / 32                 | 23 / 32                  |
+| Analysis section title    | 22 / 30                 | 22 / 30                  |
+| Card title                | 17 / 24                 | 18 / 26                  |
+| Body and settings         | 16 / 24                 | 17 / 26                  |
+| Secondary text            | 14 / 21                 | 15 / 22                  |
+| Chart axes and legends    | 13 / 18                 | 13 / 18                  |
+| Primary metric            | 28–32 / 36–40           | 28–32 / 36–40            |
+| Units                     | 14–15 / 21–22           | 15 / 22                  |
+| Page horizontal padding   | 32; 24 when constrained | 20; 16 on narrow screens |
+| Card padding              | 20–24                   | 16–20                    |
+| Card gap / section gap    | 20–24 / 32              | 16 / 28–32               |
+| Card radius               | 8                       | 8                        |
+| Preview plot height       | 100–140                 | 88–120                   |
+| Main analysis plot height | 300–380                 | 240–300                  |
 
 Plot height excludes titles, summaries, axes and legends. Card height follows its
 content. Enlarged text wraps and increases height while preserving chart area.
@@ -98,9 +104,9 @@ content. Enlarged text wraps and increases height while preserving chart area.
 
 ### Desktop baseline
 
-Start at **1440 × 900**, and check **1280 × 800** and **1920 × 1080**. Use a left
-sidebar, a short breadcrumb and a main content region. Settings belong at the
-bottom of the sidebar. Present destinations as they become usable.
+Start at **1440 × 900**, and check **1280 × 800** and **1920 × 1080**. Use a top bar with training/account destinations aligned right, a short
+breadcrumb and a main content region. The overview has a 160px recent-workout
+column populated from the current account; hide it at 900px and below. Present destinations as they become usable.
 
 The workout overview begins with activity identity, distance and a clearly
 labeled duration. Below it, use a wide chart column and a narrower route-map
@@ -108,16 +114,14 @@ column. Stack power, heart rate, cadence, speed and elevation previews in the
 main column. The map shows the complete route and links to route analysis;
 brief notes may follow it. Sources and processing details sit later in the page.
 
-| Layout parameter                  | Working default                                                       |
-| --------------------------------- | --------------------------------------------------------------------- |
-| Expanded sidebar                  | 208                                                                   |
-| Compact navigation                | 72-wide icon rail with accessible labels, or a drawer                 |
-| Main content maximum width        | 1200, centered on wider screens                                       |
-| Chart column / map column minimum | 600 / 300                                                             |
-| Column gap                        | 24                                                                    |
-| Two-column threshold              | At least 924 of available content width                               |
-| Example at 1440                   | 208 sidebar + 64 outer padding + 1168 content; columns 784 + 24 + 360 |
-| Overview map height               | 260–320 initially, adjusted for route and window shape                |
+| Layout parameter           | Working default        |
+| -------------------------- | ---------------------- |
+| Recent-workout column      | 160                    |
+| Main content maximum width | 1600                   |
+| Route column               | 310                    |
+| Column gap                 | 20–24                  |
+| Route beside charts        | Viewport at least 1100 |
+| Surface radius             | 8                      |
 
 Title, summary and grid share their left edge. The map aligns with the first
 chart card at the top. Each module stays inside the main grid and uses its
@@ -126,8 +130,7 @@ Map stickiness is an optional local improvement when it helps comparison and
 fits the viewport without covering content.
 
 Full metric analysis uses a dedicated page with a wide main chart. Related
-statistics and methods may sit alongside each other when readable. Optional
-future metric comparison should favor stacked charts with a shared time cursor;
+statistics and methods may sit alongside each other when readable. The overview uses stacked charts with a shared time cursor;
 an overlay needs explicit units, axes and legends.
 
 ### Mobile and intermediate widths
@@ -139,11 +142,10 @@ Actual browser chrome and safe areas determine usable space. The main page
 reflows within the viewport; genuinely two-dimensional maps and tables can use
 their own contained interaction or scrolling regions.
 
-At widths below the two-column content threshold, collapse navigation and keep
-readable text with one main content column. Mobile uses a global bottom bar once
-multiple destinations exist; full-screen map/chart views can temporarily hide
-it. Top navigation provides back, title and relevant actions. Reserve bottom-bar
-height and safe-area padding so the last item remains reachable.
+Below 1100px, show the route before the chart stack. Keep global navigation at
+the top and let it wrap on narrow screens. Modals fit the viewport and scroll
+internally, with a sticky close control. Native dialog focus containment and
+Escape dismissal remain available on both desktop and mobile.
 
 In the mobile overview, place activity identity, distance and duration first,
 then a route preview around 200–220 high, then full-width metric previews. The
@@ -209,9 +211,14 @@ The header defaults to distance and moving duration when the service provides
 that defined statistic. Label any available alternative duration accurately.
 Indoor workouts can use duration alone. Preview statistic labels are explicit,
 including a non-zero average when applicable. A summary without samples gets a
-numeric entry labeled accordingly. The whole metric preview is a focusable page
-link with visible hover, focus and press states. Mobile previews preserve normal
-vertical scrolling; sample selection belongs to the analysis view.
+numeric entry labeled accordingly. The whole metric preview is a focusable button opening its detail modal.
+The shared timeline follows the pointer across chart headings and gaps as well
+as plots; a slider provides touch and keyboard selection. A pin control stops
+pointer tracking. Values and route markers use exact recorded timestamps:
+missing samples display “未记录”, with no extrapolation. Modal metric selection
+starts at the nearest actual sample and displays that sample's elapsed time.
+The overview keeps its selection while the modal is explored. GPS routes remain
+schematic with no external basemap requests.
 
 ### Metric analysis
 
@@ -302,8 +309,8 @@ Map-provider requests also belong in the data/privacy explanation.
 The design focus is personal training review. Social features, friends, route
 libraries, badges and leaderboards remain outside product scope. Today, trends
 and AI are future information-architecture ideas whose pages need their own
-specifications. Dark theme, replay and multi-metric comparison are separate
-follow-up design work.
+specifications. Replay remains future work; light/dark themes and linked
+multi-metric review are implemented in the workout review interface.
 
 Implement ordinary, task-specific components as features need them: navigation,
 activity summary, metric preview, analysis view, time-series chart, route map and
@@ -334,3 +341,23 @@ results and skipped checks. Browser emulation and real mobile Safari testing are
 reported separately. Use layout measurements and visual review together. Choose
 any comparison experiment around a concrete task, such as finding mean heart
 rate, selecting a sample or returning to the overview.
+
+### Workout review interactions
+
+The overview uses five separated summary cells, a narrow recent-workout column,
+area-filled stacked charts, a continuous guide across chart gaps, and a floating
+multi-metric timestamp card. Mobile shows a compact two-column timestamp card.
+Route precedes charts in the DOM and mobile layout; desktop places it beside the
+chart column. Notes and training summary sit below the route.
+
+Zoom narrows the displayed time range around selection without changing samples
+or statistics. Previous/next and the slider select actual timestamps, with an
+explicit pin control and Escape to release. Clicking a chart or route opens a
+native dialog; route details combine a large schematic and timestamp values.
+Dialogs preserve the overview selection and return focus on closing. No map
+provider is contacted and no geographic landmarks are fabricated.
+
+Prefer current calculated statistics where present. When unavailable, the
+review may display supplied recorded statistics with an explicit recorded label;
+never relabel them as calculated or derive authoritative statistics in the UI.
+Absent statistics get a concise unavailable label without a dangling unit.

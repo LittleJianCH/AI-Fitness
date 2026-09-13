@@ -98,6 +98,30 @@ export function metrics(workout: Workout): Metric[] {
 		(item) => item.samples.length || item.average !== undefined || item.maximum !== undefined
 	);
 }
+// Recorded statistics are displayed with their provenance, never relabeled as calculations.
+export function recordedMetricSummary(
+	workout: Workout,
+	key: string
+): { averageValue?: number; maximumValue?: number } {
+	const summary = common(workout),
+		sport = workout.workoutObservation.observationSport;
+	switch (key) {
+		case 'speed':
+			return summary.summarySpeed;
+		case 'power':
+			return summary.summaryPower;
+		case 'heart-rate':
+			return summary.summaryHeartRate;
+		case 'altitude':
+			return summary.summaryAltitude;
+		case 'cadence':
+			return sport.type === 'cycling'
+				? sport.data.cyclingSummary.recordedSummary.summaryCyclingCadence
+				: sport.data.runningSummary.recordedSummary.summaryRunningCadence;
+		default:
+			return {};
+	}
+}
 export const valueText = (value: number | undefined, factor = 1, digits = 0) =>
 	value === undefined
 		? '未记录'

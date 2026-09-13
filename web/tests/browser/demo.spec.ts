@@ -47,7 +47,10 @@ test('metric navigation, keyboard samples, table and route selection', async ({ 
 	const errors: string[] = [];
 	page.on('pageerror', (e) => errors.push(e.message));
 	await page.goto(`/workouts/${ride}`);
-	await page.getByRole('link', { name: /心率.*计算/ }).click();
+	await page.getByRole('button', { name: '放大心率图表' }).click();
+	await page.getByRole('link', { name: '独立页面查看' }).click();
+	await expect(page).toHaveURL(/metrics\/heart-rate/);
+	await expect(page.getByRole('dialog')).toHaveCount(0);
 	await expect(page.getByRole('heading', { name: '心率分析', exact: true })).toBeVisible();
 	const slider = page.getByRole('slider', { name: /选择真实样本/ });
 	await slider.focus();
@@ -81,8 +84,8 @@ test('summary-only and unavailable metrics keep their meaning', async ({ page })
 	await expect(page.getByRole('slider')).toHaveCount(0);
 	await page.goto(`/workouts/${noHr}`);
 	await expect(page.getByRole('heading', { name: '午后慢跑 · 无心率' })).toBeVisible();
-	await expect(page.getByRole('link', { name: /心率.*计算/ })).toHaveCount(0);
-	await page.getByRole('link', { name: /步频.*计算/ }).click();
+	await expect(page.getByRole('button', { name: '放大心率图表' })).toHaveCount(0);
+	await page.getByRole('button', { name: '放大步频图表' }).click();
 	await expect(page.getByText('跑步步频使用双脚总步数（步/分钟）。')).toBeVisible();
 	await page.goto(`/workouts/${noHr}/metrics/heart-rate`);
 	await expect(page.getByRole('heading', { name: '这项指标没有可用数据' })).toBeVisible();
@@ -146,12 +149,16 @@ test('responsive grid and review screenshots', async ({ page }, info) => {
 			)
 			.toBe(true);
 		if (width === 1440) {
-			await expect(page.locator('.overview-grid')).toHaveClass(/two-columns/);
-			const chart = await page.locator('.metric-card').first().boundingBox();
+			await expect(page.locator('.review-grid')).toHaveClass(/has-route/);
+			const chart = await page.locator('.linked-panel').boundingBox();
 			const map = await page.locator('.route-card').boundingBox();
 			expect(chart && map && Math.abs(chart.y - map.y) < 2).toBeTruthy();
 		}
-		if (width <= 430) await expect(page.locator('.overview-grid')).not.toHaveClass(/two-columns/);
+		if (width <= 430) {
+			const map = await page.locator('.route-card').boundingBox();
+			const chart = await page.locator('.linked-panel').boundingBox();
+			expect(map && chart && map.y < chart.y).toBeTruthy();
+		}
 	}
 	await page.setViewportSize({
 		width: info.project.name === 'desktop' ? 1440 : 393,
@@ -161,7 +168,10 @@ test('responsive grid and review screenshots', async ({ page }, info) => {
 	await expect(page.locator('.time-chart svg').first()).toBeVisible();
 	await expect.poll(() => page.evaluate(() => window.visualViewport?.scale)).toBe(1);
 	await page.screenshot({ path: `test-results/screenshots/${info.project.name}-overview.png` });
-	await page.getByRole('link', { name: /心率.*计算/ }).click();
+	await page.getByRole('button', { name: '放大心率图表' }).click();
+	await page.getByRole('link', { name: '独立页面查看' }).click();
+	await expect(page).toHaveURL(/metrics\/heart-rate/);
+	await expect(page.getByRole('dialog')).toHaveCount(0);
 	await expect(page.getByRole('heading', { name: '心率分析', exact: true })).toBeVisible();
 	await expect(page.locator('.time-chart svg')).toBeVisible();
 	await page.screenshot({ path: `test-results/screenshots/${info.project.name}-heart-rate.png` });
@@ -169,12 +179,13 @@ test('responsive grid and review screenshots', async ({ page }, info) => {
 
 test('browser back restores metric and route focus without changing scroll', async ({ page }) => {
 	await page.goto(`/workouts/${ride}`);
-	const metric = page.getByRole('link', { name: /海拔.*计算/ });
+	const metric = page.getByRole('button', { name: '放大海拔图表' });
 	await metric.focus();
 	const scroll = await page.evaluate(() => window.scrollY);
 	await metric.press('Enter');
-	await expect(page.getByRole('heading', { name: '海拔分析', exact: true })).toBeVisible();
-	await page.goBack();
+	await expect(page.getByRole('dialog', { name: '海拔详情', exact: true })).toBeVisible();
+	await page.keyboard.press('Escape');
+	await expect(page.getByRole('dialog')).toHaveCount(0);
 	await expect(metric).toBeFocused();
 	await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(scroll);
 	const route = page.getByRole('link', { name: '查看完整轨迹' });
@@ -261,4 +272,41 @@ test('demo keeps account and workout write forms unavailable', async ({ page }) 
 	await expect(page.getByText('账号设置需要登录真实账号，演示模式仅供查看。')).toBeVisible();
 	await expect(page.getByLabel('当前密码', { exact: true })).toHaveCount(0);
 	expect(authenticationRequests).toEqual([]);
+});
+
+test('theme persistence and map popup preserve the overview time', async ({ page }) => {
+	await page.goto(`/workouts/${ride}`);
+	await page.getByLabel('外观主题').selectOption('dark');
+	await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+	await page.reload();
+	await expect(page.getByLabel('外观主题')).toHaveValue('dark');
+	const time = page.getByRole('slider', { name: '选择时间点', exact: true });
+	await time.focus();
+	await time.press('ArrowRight');
+	const selected = await time.inputValue();
+	const map = page.getByRole('button', { name: '放大轨迹地图' });
+	await map.click();
+	const dialog = page.getByRole('dialog', { name: '轨迹详情' });
+	await expect(dialog).toBeVisible();
+	await dialog.getByRole('slider').focus();
+	await dialog.getByRole('slider').press('End');
+	await page.keyboard.press('Escape');
+	await expect(dialog).toHaveCount(0);
+	await expect(time).toHaveValue(selected);
+	await expect(map).toBeFocused();
+	await page.getByLabel('外观主题').selectOption('light');
+	await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+});
+test('the linked cursor keeps moving through the space between charts', async ({ page }, info) => {
+	test.skip(info.project.name !== 'desktop', 'Mouse hover interaction');
+	await page.goto(`/workouts/${ride}`);
+	const chart = page.locator('.metric-open').first();
+	await chart.scrollIntoViewIfNeeded();
+	const box = await chart.boundingBox();
+	if (!box) throw new Error('Chart missing');
+	const time = page.getByRole('slider', { name: '选择时间点', exact: true });
+	await page.mouse.move(box.x + 70, box.y + box.height - 4);
+	const before = await time.inputValue();
+	await page.mouse.move(box.x + box.width - 30, box.y + box.height - 4);
+	await expect(time).not.toHaveValue(before);
 });

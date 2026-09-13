@@ -1,45 +1,71 @@
 <script lang="ts">
 	const demo = import.meta.env.MODE === 'demo';
 	import type { Workout } from '$lib/api/generated/client';
-	import { dateText, duration, valueText, type Metric } from '$lib/workouts/presentation';
+	import {
+		dateText,
+		duration,
+		valueText,
+		recordedMetricSummary,
+		type Metric
+	} from '$lib/workouts/presentation';
+	import { nearestTimeIndex } from '$lib/workouts/timeline';
+	import { untrack } from 'svelte';
 	import TimeChart from './TimeChart.svelte';
-	let { workout, metric }: { workout: Workout; metric: Metric } = $props();
-	let index = $state(0);
+	let {
+		workout,
+		metric,
+		initialTime,
+		embedded = false
+	}: { workout: Workout; metric: Metric; initialTime?: string; embedded?: boolean } = $props();
+	let index = $state(
+		untrack(() => {
+			if (!initialTime) return 0;
+			return nearestTimeIndex(
+				metric.samples.map((s) => s.timestamp),
+				Date.parse(initialTime)
+			);
+		})
+	);
 	const range = $derived(workout.workoutObservation.observationRange);
+	const recorded = $derived(recordedMetricSummary(workout, metric.key));
+	const average = $derived(metric.average ?? recorded.averageValue);
+	const maximum = $derived(metric.maximum ?? recorded.maximumValue);
 	const selected = $derived(metric.samples[index]);
 </script>
 
 <svelte:head><title>{metric.title}分析 · AI Fitness</title></svelte:head>
-<header class="page-heading">
-	<div>
-		<div class="eyebrow">METRIC ANALYSIS</div>
-		<h1>{metric.title}分析</h1>
-		<p class="subtle">
-			{workout.workoutUserData.workoutTitle ?? '未命名训练'} · {dateText(range.rangeStart)}
-		</p>
-	</div>
-</header>
+{#if !embedded}<header class="page-heading">
+		<div>
+			<div class="eyebrow">METRIC ANALYSIS</div>
+			<h1>{metric.title}分析</h1>
+			<p class="subtle">
+				{workout.workoutUserData.workoutTitle ?? '未命名训练'} · {dateText(range.rangeStart)}
+			</p>
+		</div>
+	</header>{/if}
 <p class="small subtle">
-	平均值包含真实零值，按相邻样本线性变化做时间加权；超过 2 分钟的空档不计入。最大值取所有真实样本。
+	{#if metric.average !== undefined || metric.maximum !== undefined}计算统计包含真实零值；超过 2
+		分钟的空档不计入时间加权平均。{:else}当前显示记录自带的汇总。曲线保留原始采样；缺失记录不补零。{/if}
 </p>
-<div class="summary-strip">
-	<div>
-		<div class="summary-label">计算平均</div>
-		<div class="summary-number">
-			{valueText(metric.average, metric.factor, metric.key === 'speed' ? 1 : 0)}<small
-				>{metric.unit}</small
-			>
+{#if average !== undefined || maximum !== undefined}<div class="summary-strip">
+		<div>
+			<div class="summary-label">{metric.average !== undefined ? '计算平均' : '记录平均'}</div>
+			<div class="summary-number">
+				{valueText(average, metric.factor, metric.key === 'speed' ? 1 : 0)}<small
+					>{average !== undefined ? metric.unit : ''}</small
+				>
+			</div>
+		</div>
+		<div>
+			<div class="summary-label">{metric.maximum !== undefined ? '计算最大' : '记录最大'}</div>
+			<div class="summary-number">
+				{valueText(maximum, metric.factor, metric.key === 'speed' ? 1 : 0)}<small
+					>{maximum !== undefined ? metric.unit : ''}</small
+				>
+			</div>
 		</div>
 	</div>
-	<div>
-		<div class="summary-label">计算最大</div>
-		<div class="summary-number">
-			{valueText(metric.maximum, metric.factor, metric.key === 'speed' ? 1 : 0)}<small
-				>{metric.unit}</small
-			>
-		</div>
-	</div>
-</div>
+{:else}<p class="small subtle">此指标暂无汇总统计，可以查看下方真实采样。</p>{/if}
 {#if selected}<section class="surface analysis-chart">
 		<h2>{metric.title}时间曲线</h2>
 		<p class="small subtle">横轴为经过时间 · 超过 2 分钟的采样间隔以断线显示</p>
@@ -52,7 +78,7 @@
 		/>
 		<div class="sample-value" aria-live="polite">
 			<span>{duration((Date.parse(selected.timestamp) - Date.parse(range.rangeStart)) / 1000)}</span
-			><strong style:color={metric.color}
+			><strong style:color={`var(--metric-${metric.key})`}
 				>{valueText(selected.value, metric.factor, 1)} <small>{metric.unit}</small></strong
 			>
 		</div>
@@ -91,25 +117,31 @@
 		</details>
 	</section>{:else}<div class="status">
 		<h2>这次训练仅包含汇总数据</h2>
-		<p>没有逐点样本，因此不展示曲线。上方统计值来自后端计算结果。</p>
+		<p>没有逐点样本，因此不展示曲线。汇总值按其实际来源标注为计算或记录。</p>
 	</div>{/if}
-<section class="section">
-	<h2>如何阅读这些数据</h2>
-	<div class="surface">
-		<p>
-			平均与最大值由后端根据当前修订的完整采样计算。曲线按原始采样时间排列，保留真实零值；显示中的断线与抽样不会参与统计计算。
-		</p>
-		{#if metric.key === 'heart-rate'}<p>
-				当前接口没有提供已配置的心率分区或运动后恢复计算，因此这里展示心率记录本身。
-			</p>{/if}{#if metric.key === 'cadence' && workout.workoutObservation.observationSport.type === 'running'}<p
-			>
-				跑步步频使用双脚总步数（步/分钟）。
-			</p>{/if}
-		<p class="small subtle">
-			数据来源：{demo ? '合成演示响应' : '当前账号的训练记录'} · 时间显示使用本地时区
-		</p>
-	</div>
-</section>
+{#if embedded && metric.key === 'cadence' && workout.workoutObservation.observationSport.type === 'running'}<p
+		class="small subtle"
+	>
+		跑步步频使用双脚总步数（步/分钟）。
+	</p>{/if}
+{#if !embedded}<section class="section">
+		<h2>如何阅读这些数据</h2>
+		<div class="surface">
+			<p>
+				标为“计算”的统计来自后端对当前修订采样的计算；标为“记录”的统计直接来自训练记录。曲线按原始时间排列，保留真实零值，显示中的断线或缩放不改变统计值。
+			</p>
+			{#if metric.key === 'heart-rate'}<p>
+					当前接口没有提供已配置的心率分区或运动后恢复计算，因此这里展示心率记录本身。
+				</p>{/if}{#if metric.key === 'cadence' && workout.workoutObservation.observationSport.type === 'running'}<p
+				>
+					跑步步频使用双脚总步数（步/分钟）。
+				</p>{/if}
+			<p class="small subtle">
+				数据来源：{demo ? '合成演示响应' : '当前账号的训练记录'} · 时间显示使用本地时区
+			</p>
+		</div>
+	</section>
+{/if}
 
 <style>
 	h2 {
@@ -141,7 +173,7 @@
 	input[type='range'] {
 		width: 100%;
 		min-height: 44px;
-		accent-color: #1769d2;
+		accent-color: var(--blue);
 	}
 	.sample-buttons {
 		display: flex;

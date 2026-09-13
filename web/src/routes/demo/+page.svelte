@@ -31,7 +31,7 @@
 		max-width: 760px;
 	}
 	p {
-		color: #606672;
+		color: var(--muted);
 		margin: 14px 0 28px;
 		line-height: 1.8;
 	}

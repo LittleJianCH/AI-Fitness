@@ -59,6 +59,7 @@ function makeWorkout(id: number, title: string, start: string, cycling: boolean)
 		motionSpeed: samples(start, n, step, (i) =>
 			Math.max(0, (cycling ? 8 : 3) + wave(i) * (cycling ? 2 : 0.4))
 		),
+		motionDistance: samples(start, n, step, (i) => ((cycling ? 42600 : 8200) * i) / (n - 1)),
 		motionAltitude: samples(
 			start,
 			n,

@@ -58,7 +58,7 @@
 	li {
 		display: flex;
 		align-items: center;
-		background: #edf2fa;
+		background: var(--soft);
 		border-radius: 8px;
 		padding-left: 12px;
 		max-width: 100%;
