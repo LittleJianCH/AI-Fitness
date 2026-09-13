@@ -1,17 +1,20 @@
 <script lang="ts">
-	const demo = import.meta.env.MODE === 'demo';
 	import { page } from '$app/state';
 	import { createFocusSnapshot } from '$lib/focus-snapshot.svelte';
-	const focus = createFocusSnapshot();
-	const restoreFocus = focus.restoreFocus;
-	export const snapshot = focus.snapshot;
 	import { resolve } from '$app/paths';
-	import RecentWorkouts from '$lib/components/RecentWorkouts.svelte';
-	import WorkoutReview from '$lib/components/WorkoutReview.svelte';
-	import WorkoutGate from '$lib/components/WorkoutGate.svelte';
+	import RecentWorkouts from '$lib/workouts/components/RecentWorkouts.svelte';
+	import WorkoutReview from '$lib/workouts/components/WorkoutReview.svelte';
+	import WorkoutGate from '$lib/workouts/components/WorkoutGate.svelte';
 	import Icon from '$lib/components/Icon.svelte';
 	import { readScenario } from '$lib/api/read';
 	import { common, valueText, duration, timeSummary, dateText } from '$lib/workouts/presentation';
+
+	const demo = import.meta.env.MODE === 'demo';
+
+	const focus = createFocusSnapshot();
+	const restoreFocus = focus.restoreFocus;
+	export const snapshot = focus.snapshot;
+
 	const id = $derived(page.params.id ?? '');
 	const scenario = $derived(readScenario(page.url.searchParams.get('scenario')));
 	const suffix: '' | `?scenario=${string}` = $derived(

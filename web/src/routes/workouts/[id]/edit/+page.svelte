@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
-	import WorkoutGate from '$lib/components/WorkoutGate.svelte';
-	import WorkoutEditor from '$lib/components/WorkoutEditor.svelte';
+	import WorkoutGate from '$lib/workouts/components/WorkoutGate.svelte';
+	import WorkoutEditor from '$lib/workouts/components/WorkoutEditor.svelte';
+
 	const demo = import.meta.env.MODE === 'demo';
 	const id = $derived(page.params.id ?? '');
 </script>

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount, type Snippet } from 'svelte';
+
 	let { title, onclose, children }: { title: string; onclose: () => void; children: Snippet } =
 		$props();
 	let dialog: HTMLDialogElement;

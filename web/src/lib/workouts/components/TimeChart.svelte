@@ -4,8 +4,10 @@
 	import { LineChart } from 'echarts/charts';
 	import { GridComponent, MarkLineComponent, MarkPointComponent } from 'echarts/components';
 	import { SVGRenderer } from 'echarts/renderers';
+	import { chartPoints, nearestIndex, sampleTimes } from '$lib/workouts/chart-data';
 	import { sampleAt } from '$lib/workouts/timeline';
-	import { chartPoints, duration, type Metric } from '$lib/workouts/presentation';
+	import { duration, type Metric } from '$lib/workouts/presentation';
+
 	use([LineChart, GridComponent, MarkLineComponent, MarkPointComponent, SVGRenderer]);
 	let {
 		metric,
@@ -28,6 +30,9 @@
 		viewEnd?: number;
 		onSelect?: (index: number) => void;
 	} = $props();
+	const timestamps = $derived(sampleTimes(metric.samples));
+	const points = $derived(chartPoints(metric.samples, start, metric.factor));
+	const startTime = $derived(Date.parse(start));
 	let host: HTMLDivElement;
 	let dark = $state(false);
 	const color = $derived(
@@ -64,17 +69,7 @@
 			const position: unknown = instance.convertFromPixel('grid', [event.offsetX, event.offsetY]);
 			if (!Array.isArray(position) || typeof position[0] !== 'number') return;
 			const seconds = position[0];
-			let nearest = 0;
-			metric.samples.forEach((sample, i) => {
-				if (
-					Math.abs((Date.parse(sample.timestamp) - Date.parse(start)) / 1000 - seconds) <
-					Math.abs(
-						(Date.parse(metric.samples[nearest].timestamp) - Date.parse(start)) / 1000 - seconds
-					)
-				)
-					nearest = i;
-			});
-			if (metric.samples.length) onSelect(nearest);
+			if (timestamps.length) onSelect(nearestIndex(timestamps, startTime + seconds * 1000));
 		};
 		instance.getZr().on('mousemove', (event) => {
 			if (!pinned) selectAt(event);
@@ -141,7 +136,7 @@
 				series: [
 					{
 						type: 'line',
-						data: chartPoints(metric.samples, start, metric.factor),
+						data: points,
 						showSymbol: false,
 						connectNulls: false,
 						smooth: false,

@@ -11,6 +11,7 @@
 		duration,
 		valueText
 	} from '$lib/workouts/presentation';
+
 	let { id, scenario }: { id: string; scenario: Scenario } = $props();
 	const session = useSession();
 	const suffix = $derived(scenario === 'normal' ? '' : (`?scenario=${scenario}` as const));

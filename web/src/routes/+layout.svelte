@@ -3,7 +3,7 @@
 	import { onMount } from 'svelte';
 	import { provideSession } from '$lib/auth/session.svelte';
 	import { ApiError, errorText } from '$lib/api/request';
-	import AuthGate from '$lib/components/AuthGate.svelte';
+	import AuthGate from '$lib/auth/components/AuthGate.svelte';
 	import { QueryCache, QueryClient, QueryClientProvider } from '@tanstack/svelte-query';
 	import { browser } from '$app/environment';
 	import { page } from '$app/state';
@@ -12,6 +12,7 @@
 	import ThemePicker from '$lib/components/ThemePicker.svelte';
 	import Icon from '$lib/components/Icon.svelte';
 	import { readScenario } from '$lib/api/read';
+
 	let { children } = $props();
 	const demo = import.meta.env.MODE === 'demo';
 	const client = new QueryClient({

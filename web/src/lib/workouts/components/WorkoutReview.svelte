@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { nearestTimeIndex, sampleAt } from '$lib/workouts/timeline';
+	import { sampleAt } from '$lib/workouts/timeline';
+	import { nearestIndex } from '$lib/workouts/chart-data';
 	import type { Workout } from '$lib/api/generated/client';
 	import {
 		metrics,
@@ -9,12 +10,13 @@
 		common,
 		recordedMetricSummary
 	} from '$lib/workouts/presentation';
-	import TimePointDetails from './TimePointDetails.svelte';
-	import TimeChart from './TimeChart.svelte';
-	import RoutePlot from './RoutePlot.svelte';
-	import DetailDialog from './DetailDialog.svelte';
-	import MetricAnalysis from './MetricAnalysis.svelte';
+	import TimePointDetails from '$lib/workouts/components/TimePointDetails.svelte';
+	import TimeChart from '$lib/workouts/components/TimeChart.svelte';
+	import RoutePlot from '$lib/workouts/components/RoutePlot.svelte';
+	import DetailDialog from '$lib/components/DetailDialog.svelte';
+	import MetricAnalysis from '$lib/workouts/components/MetricAnalysis.svelte';
 	import { resolve } from '$app/paths';
+
 	let {
 		workout,
 		restoreFocus,
@@ -38,6 +40,9 @@
 			])
 		].sort((a, b) => Date.parse(a) - Date.parse(b))
 	);
+	const timestamps = $derived(times.map((time) => Date.parse(time)));
+	const positionTimes = $derived(positions.map((sample) => Date.parse(sample.timestamp)));
+	const startTime = $derived(Date.parse(range.rangeStart));
 	let index = $state(0);
 	let pinned = $state(false);
 	let opened = $state<string | null>(null);
@@ -49,12 +54,10 @@
 	let tipY = $state(0);
 	let plotWidth = $state(0);
 
-	const elapsed = $derived((Date.parse(range.rangeEnd) - Date.parse(range.rangeStart)) / 1000);
+	const elapsed = $derived((Date.parse(range.rangeEnd) - startTime) / 1000);
 	const windowLength = $derived(elapsed / zoom);
 	const windowEnd = $derived(windowStart + windowLength);
-	const selectedSeconds = $derived(
-		selectedTime ? (Date.parse(selectedTime) - Date.parse(range.rangeStart)) / 1000 : 0
-	);
+	const selectedSeconds = $derived(selectedTime ? (timestamps[index] - startTime) / 1000 : 0);
 	const cursorX = $derived(
 		40 +
 			Math.max(0, Math.min(1, (selectedSeconds - windowStart) / (windowLength || 1))) *
@@ -90,9 +93,11 @@
 		}
 	}
 
-	const positionIndex = $derived(
-		positions.findIndex((p) => Date.parse(p.timestamp) === Date.parse(selectedTime))
-	);
+	const positionIndex = $derived.by(() => {
+		if (!selectedTime || !positionTimes.length) return -1;
+		const nearest = nearestIndex(positionTimes, timestamps[index]);
+		return positionTimes[nearest] === timestamps[index] ? nearest : -1;
+	});
 	const selectedMetric = $derived(items.find((m) => m.key === opened));
 	function move(event: PointerEvent) {
 		if (pinned || event.pointerType === 'touch' || !(event.currentTarget instanceof HTMLElement))
@@ -102,19 +107,14 @@
 			0,
 			Math.min(1, (event.clientX - rect.left - 40) / Math.max(1, rect.width - 52))
 		);
-		const target = Date.parse(range.rangeStart) + (windowStart + fraction * windowLength) * 1000;
-		index = nearestTimeIndex(times, target);
+		const target = startTime + (windowStart + fraction * windowLength) * 1000;
+		index = nearestIndex(timestamps, target);
 		tip = true;
 		tipY = Math.max(8, Math.min(rect.height - 260, event.clientY - rect.top + 16));
 	}
 	function openRoute() {
 		routeIndex =
-			positionIndex >= 0
-				? positionIndex
-				: nearestTimeIndex(
-						positions.map((p) => p.timestamp),
-						Date.parse(selectedTime)
-					);
+			positionIndex >= 0 ? positionIndex : nearestIndex(positionTimes, timestamps[index]);
 		opened = 'route';
 	}
 </script>
@@ -307,9 +307,7 @@
 		</div>
 		<p class="subtle">轨迹示意 · 无地图底图</p>
 		<p>
-			{duration(
-				(Date.parse(positions[routeIndex].timestamp) - Date.parse(range.rangeStart)) / 1000
-			)} · 经过时间
+			{duration((Date.parse(positions[routeIndex].timestamp) - startTime) / 1000)} · 经过时间
 		</p>
 		<label
 			>选择轨迹样本<input

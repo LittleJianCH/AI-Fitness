@@ -1,32 +1,15 @@
 <script lang="ts">
 	import { useSession } from '$lib/auth/session.svelte';
-	const session = useSession();
-	const demo = import.meta.env.MODE === 'demo';
 	import { page } from '$app/state';
 	import { createFocusSnapshot, type FocusSnapshot } from '$lib/focus-snapshot.svelte';
 	import type { Snapshot } from '@sveltejs/kit';
 	import { untrack } from 'svelte';
-	const focus = createFocusSnapshot();
-	let restoration = $state<{ focus: FocusSnapshot; pages: number; url: string } | null>(null);
-	export const snapshot: Snapshot<{ focus: FocusSnapshot; pages: number }> = {
-		capture: () => ({ focus: focus.snapshot.capture(), pages: query.data?.pages.length ?? 1 }),
-		restore: (saved) => {
-			restoration = { ...saved, url: page.url.href };
-		}
-	};
-	const restoreFocus = focus.restoreFocus;
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { createInfiniteQuery, useQueryClient } from '@tanstack/svelte-query';
 	import { browser } from '$app/environment';
 	import { filtersFromUrl } from '$lib/workouts/filters';
 	import { ApiError } from '$lib/api/request';
-	const client = useQueryClient();
-	let validation = $state('');
-	// Editable derived values follow URL navigation and allow an explicit draft reset.
-	let fromDate = $derived(page.url.searchParams.get('from') ?? '');
-	let throughDate = $derived(page.url.searchParams.get('through') ?? '');
-	let tagDraft = $derived(page.url.searchParams.get('tag') ?? '');
 	import { loadWorkouts, readScenario } from '$lib/api/read';
 	import {
 		commonCard,
@@ -37,6 +20,27 @@
 	} from '$lib/workouts/presentation';
 	import Icon from '$lib/components/Icon.svelte';
 	import Feedback from '$lib/components/Feedback.svelte';
+
+	const session = useSession();
+	const demo = import.meta.env.MODE === 'demo';
+
+	const focus = createFocusSnapshot();
+	let restoration = $state<{ focus: FocusSnapshot; pages: number; url: string } | null>(null);
+	export const snapshot: Snapshot<{ focus: FocusSnapshot; pages: number }> = {
+		capture: () => ({ focus: focus.snapshot.capture(), pages: query.data?.pages.length ?? 1 }),
+		restore: (saved) => {
+			restoration = { ...saved, url: page.url.href };
+		}
+	};
+	const restoreFocus = focus.restoreFocus;
+
+	const client = useQueryClient();
+	let validation = $state('');
+	// Editable derived values follow URL navigation and allow an explicit draft reset.
+	let fromDate = $derived(page.url.searchParams.get('from') ?? '');
+	let throughDate = $derived(page.url.searchParams.get('through') ?? '');
+	let tagDraft = $derived(page.url.searchParams.get('tag') ?? '');
+
 	const filters = $derived(filtersFromUrl(page.url.searchParams));
 	const selectedSport = $derived(filters.success ? filters.data.sport : undefined);
 	const filterError = $derived(

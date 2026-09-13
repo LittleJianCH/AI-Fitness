@@ -1,3 +1,4 @@
+import { chartPoints } from '../src/lib/workouts/chart-data';
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { readFile } from 'node:fs/promises';
 import { workouts, card } from '../demo/fixtures';
@@ -6,13 +7,7 @@ import {
 	getWorkoutsWorkoutId200Response
 } from '../src/lib/api/generated/schemas';
 import { loadWorkouts, loadWorkout, readScenario, ApiError } from '../src/lib/api/read';
-import {
-	chartPoints,
-	metrics,
-	duration,
-	common,
-	timeSummary
-} from '../src/lib/workouts/presentation';
+import { metrics, duration, common, timeSummary } from '../src/lib/workouts/presentation';
 
 afterEach(() => vi.unstubAllGlobals());
 describe('generated runtime contract', () => {

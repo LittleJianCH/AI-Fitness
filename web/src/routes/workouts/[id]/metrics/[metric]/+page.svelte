@@ -1,10 +1,11 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
-	import WorkoutGate from '$lib/components/WorkoutGate.svelte';
-	import MetricAnalysis from '$lib/components/MetricAnalysis.svelte';
+	import WorkoutGate from '$lib/workouts/components/WorkoutGate.svelte';
+	import MetricAnalysis from '$lib/workouts/components/MetricAnalysis.svelte';
 	import { readScenario } from '$lib/api/read';
 	import { metrics } from '$lib/workouts/presentation';
+
 	const id = $derived(page.params.id ?? '');
 	const scenario = $derived(readScenario(page.url.searchParams.get('scenario')));
 	const suffix: '' | `?scenario=${string}` = $derived(

@@ -1,12 +1,33 @@
 import { expect, it } from 'vitest';
-import { nearestTimeIndex, sampleAt } from '../src/lib/workouts/timeline';
+import { sampleAt } from '../src/lib/workouts/timeline';
+import { nearestIndex } from '../src/lib/workouts/chart-data';
 const times = ['2026-01-01T00:00:00Z', '2026-01-01T00:00:30Z', '2026-01-01T00:05:00Z'];
 it('snaps to real timestamps across gaps and clamps at both ends', () => {
-	expect(nearestTimeIndex(times, Date.parse(times[0]) - 1000)).toBe(0);
-	expect(nearestTimeIndex(times, Date.parse(times[2]) + 1000)).toBe(2);
-	expect(nearestTimeIndex(times, Date.parse(times[1]) + 1000)).toBe(1);
-	expect(nearestTimeIndex(times, Date.parse(times[0]) + 15000)).toBe(0);
-	expect(nearestTimeIndex([], 0)).toBe(0);
+	expect(
+		nearestIndex(
+			times.map((time) => Date.parse(time)),
+			Date.parse(times[0]) - 1000
+		)
+	).toBe(0);
+	expect(
+		nearestIndex(
+			times.map((time) => Date.parse(time)),
+			Date.parse(times[2]) + 1000
+		)
+	).toBe(2);
+	expect(
+		nearestIndex(
+			times.map((time) => Date.parse(time)),
+			Date.parse(times[1]) + 1000
+		)
+	).toBe(1);
+	expect(
+		nearestIndex(
+			times.map((time) => Date.parse(time)),
+			Date.parse(times[0]) + 15000
+		)
+	).toBe(0);
+	expect(nearestIndex([], 0)).toBe(0);
 });
 it('preserves zero and refuses to invent values between samples', () => {
 	const samples = [

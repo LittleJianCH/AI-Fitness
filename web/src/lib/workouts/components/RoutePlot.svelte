@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { TimedPosition } from '$lib/api/generated/client';
+
 	let {
 		samples,
 		selected = 0,

@@ -1,5 +1,4 @@
 <script lang="ts">
-	const demo = import.meta.env.MODE === 'demo';
 	import type { Workout } from '$lib/api/generated/client';
 	import {
 		dateText,
@@ -8,9 +7,12 @@
 		recordedMetricSummary,
 		type Metric
 	} from '$lib/workouts/presentation';
-	import { nearestTimeIndex } from '$lib/workouts/timeline';
+	import { nearestIndex, sampleTimes } from '$lib/workouts/chart-data';
 	import { untrack } from 'svelte';
-	import TimeChart from './TimeChart.svelte';
+	import TimeChart from '$lib/workouts/components/TimeChart.svelte';
+
+	const demo = import.meta.env.MODE === 'demo';
+
 	let {
 		workout,
 		metric,
@@ -20,10 +22,7 @@
 	let index = $state(
 		untrack(() => {
 			if (!initialTime) return 0;
-			return nearestTimeIndex(
-				metric.samples.map((s) => s.timestamp),
-				Date.parse(initialTime)
-			);
+			return nearestIndex(sampleTimes(metric.samples), Date.parse(initialTime));
 		})
 	);
 	const range = $derived(workout.workoutObservation.observationRange);

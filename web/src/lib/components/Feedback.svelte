@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { errorText } from '$lib/api/read';
+
 	let { error, retry }: { error: Error | null; retry: () => void } = $props();
 </script>
 

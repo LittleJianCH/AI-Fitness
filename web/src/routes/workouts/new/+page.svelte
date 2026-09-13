@@ -9,7 +9,8 @@
 	import { postWorkouts200Response } from '$lib/api/generated/schemas';
 	import { ApiError, errorText, request } from '$lib/api/request';
 	import { buildManualWorkout, manualDraftSchema } from '$lib/workouts/manual';
-	import TagsInput from '$lib/components/TagsInput.svelte';
+	import TagsInput from '$lib/workouts/components/TagsInput.svelte';
+
 	const session = useSession();
 	const client = useQueryClient();
 	const demo = import.meta.env.MODE === 'demo';

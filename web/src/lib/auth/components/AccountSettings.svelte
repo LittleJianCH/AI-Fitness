@@ -18,7 +18,8 @@
 		getMe200Response
 	} from '$lib/api/generated/schemas';
 	import { ApiError, errorText, request, requestOptions } from '$lib/api/request';
-	import Feedback from './Feedback.svelte';
+	import Feedback from '$lib/components/Feedback.svelte';
+
 	const session = useSession();
 	const client = useQueryClient();
 	const policy = createQuery(() => ({

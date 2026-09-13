@@ -1,5 +1,6 @@
 <script lang="ts">
-	import AccountSettings from '$lib/components/AccountSettings.svelte';
+	import AccountSettings from '$lib/auth/components/AccountSettings.svelte';
+
 	const demo = import.meta.env.MODE === 'demo';
 </script>
 

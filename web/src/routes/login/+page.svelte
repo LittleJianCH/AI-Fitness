@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
-	const demo = import.meta.env.MODE === 'demo';
 	import { createQuery } from '@tanstack/svelte-query';
 	import { useSession } from '$lib/auth/session.svelte';
 	import { getAuthPolicy } from '$lib/api/generated/client';
@@ -11,6 +10,9 @@
 	} from '$lib/api/generated/schemas';
 	import { errorText, request, requestOptions, ApiError } from '$lib/api/request';
 	import Feedback from '$lib/components/Feedback.svelte';
+
+	const demo = import.meta.env.MODE === 'demo';
+
 	const session = useSession();
 	const policy = createQuery(() => ({
 		queryKey: ['auth-policy'],

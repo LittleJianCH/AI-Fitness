@@ -1,13 +1,15 @@
-import type { Workout, WorkoutCard, CommonSummary, TimedHeartRate } from '../api/generated/client';
+import type { Workout, WorkoutCard, CommonSummary } from '../api/generated/client';
 
+import type { NumericSample } from './chart-data';
+export type MetricKey = 'power' | 'heart-rate' | 'cadence' | 'speed' | 'altitude';
 export type Metric = {
-	key: string;
+	key: MetricKey;
 	title: string;
 	unit: string;
 	color: string;
 	average?: number;
 	maximum?: number;
-	samples: TimedHeartRate[];
+	samples: readonly NumericSample[];
 	factor: number;
 };
 export function commonCard(card: WorkoutCard): CommonSummary {
@@ -158,30 +160,13 @@ export const dayText = (value: string) =>
 		weekday: 'long'
 	});
 
-// Display rule only: separate samples more than two minutes apart. The points
-// and all reported statistics remain unchanged, and the rule is stated in UI.
-export function chartPoints(
-	samples: TimedHeartRate[],
-	start: string,
-	factor: number
-): [number, number | null][] {
-	const points: [number, number | null][] = [];
-	for (let i = 0; i < samples.length; i++) {
-		const sample = samples[i];
-		const t = (Date.parse(sample.timestamp) - Date.parse(start)) / 1000;
-		const previous = samples[i - 1];
-		if (previous && Date.parse(sample.timestamp) - Date.parse(previous.timestamp) > 120000)
-			points.push([t - 0.001, null]);
-		points.push([t, sample.value * factor]);
-	}
-	return points;
-}
-
-export function groupCards(items: WorkoutCard[]): [string, WorkoutCard[]][] {
+export function groupCards(items: readonly WorkoutCard[]): [string, WorkoutCard[]][] {
 	const groups = new Map<string, WorkoutCard[]>();
 	for (const item of items) {
 		const key = dayText(item.range.rangeStart);
-		groups.set(key, [...(groups.get(key) ?? []), item]);
+		const group = groups.get(key);
+		if (group) group.push(item);
+		else groups.set(key, [item]);
 	}
 	return [...groups];
 }

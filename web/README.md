@@ -238,3 +238,12 @@ Demo mode has no upload form. Server archive setup is documented in
 Run `./scripts/web_integration_test import.spec.ts` from the repository root for
 real HTTPS/backend/PostgreSQL upload checks at desktop and mobile widths. The
 harness generates synthetic FIT fixtures and isolates both the database and archive.
+
+## Code organization
+
+Workout-specific views live in `src/lib/workouts/components/`; account and session
+views live in `src/lib/auth/components/`. Shared dialog, icon, feedback and theme
+controls remain in `src/lib/components/`. `workouts/chart-data.ts` prepares numeric
+sample times/display points and performs binary nearest-sample lookup. These
+values are cached by Svelte derivations independently of cursor and theme changes;
+a cursor move updates chart markers without rebuilding the full series.

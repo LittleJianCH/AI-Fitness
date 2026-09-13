@@ -5,7 +5,8 @@
 	import type { Snippet } from 'svelte';
 	import { useSession } from '$lib/auth/session.svelte';
 	import { loginDestination } from '$lib/auth/navigation';
-	import Feedback from './Feedback.svelte';
+	import Feedback from '$lib/components/Feedback.svelte';
+
 	let { children }: { children: Snippet } = $props();
 	const session = useSession();
 	const demo = import.meta.env.MODE === 'demo';

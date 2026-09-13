@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+
 	let theme = $state('system');
 	let ready = $state(false);
 	function apply() {

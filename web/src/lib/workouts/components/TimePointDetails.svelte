@@ -2,6 +2,7 @@
 	import type { Workout } from '$lib/api/generated/client';
 	import { metrics, motion, duration, valueText } from '$lib/workouts/presentation';
 	import { sampleAt } from '$lib/workouts/timeline';
+
 	let {
 		workout,
 		time,

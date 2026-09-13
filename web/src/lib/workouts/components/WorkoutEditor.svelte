@@ -17,7 +17,8 @@
 	} from '$lib/api/generated/schemas';
 	import { ApiError, errorText, request } from '$lib/api/request';
 	import { loadWorkout } from '$lib/api/read';
-	import TagsInput from './TagsInput.svelte';
+	import TagsInput from '$lib/workouts/components/TagsInput.svelte';
+
 	let { workout }: { workout: Workout } = $props();
 	const session = useSession();
 	const client = useQueryClient();
