@@ -1,10 +1,39 @@
-import ContractClient
+@testable import ContractClient
 import Foundation
 import HTTPTypes
 import OpenAPIRuntime
 import XCTest
 
 final class ContractTests: XCTestCase {
+    func testHighPrecisionFractionalTimestamps() throws {
+        let transcoder = FitnessDateTranscoder()
+        let whole = try transcoder.decode("2024-01-01T10:00:32Z")
+        for digits in ["3", "333333", "333333333333", "666666666667", "123456789012", "999999999999"] {
+            let expected = try XCTUnwrap(Double("0." + digits))
+            for (clock, zone) in [("10:00:32", "Z"), ("18:00:32", "+08:00"), ("05:00:32", "-05:00")] {
+                let decoded = try transcoder.decode("2024-01-01T\(clock).\(digits)\(zone)")
+                XCTAssertEqual(decoded.timeIntervalSince(whole), expected, accuracy: 0.000001)
+            }
+        }
+        for invalid in ["invalid-date", "2024-01-01T10:00:32.Z", "2024-01-01T10:00:32.xyzZ"] {
+            XCTAssertThrowsError(try transcoder.decode(invalid))
+        }
+    }
+
+    func testGeneratedClientDecodesPicosecondTimestamps() async throws {
+        let bytes = try fixtureData("export-response")
+        let response = Data(String(decoding: bytes, as: UTF8.self)
+            .replacingOccurrences(of: "2026-09-05T05:55:32.125Z", with: "2026-09-05T05:55:32.333333333333Z").utf8)
+        let client = makeFitnessClient(
+            serverURL: try XCTUnwrap(URL(string: "https://fitness.invalid")),
+            transport: FixtureTransport(response: response)
+        )
+        let exported = try await client.get_workouts_workoutId_exports_canonical(path: .init(workoutId: workoutID))
+            .ok.body.application_json_charset_utf_hyphen_8
+        let whole = try FitnessDateTranscoder().decode("2026-09-05T05:55:32Z")
+        XCTAssertEqual(exported.exportedAt.timeIntervalSince(whole), 1.0 / 3, accuracy: 0.000001)
+    }
+
     func testGeneratedClientDecodesServantResponses() async throws {
         let list = try fixtureClient("list-response")
         let page = try await list.get_workouts().ok.body.application_json_charset_utf_hyphen_8

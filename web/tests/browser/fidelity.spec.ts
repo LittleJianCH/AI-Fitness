@@ -8,6 +8,7 @@ test('D fidelity: linked tooltip, zoom, themes and detail dialogs', async ({ pag
 	await slider.focus();
 	await slider.press('End');
 	await slider.press('ArrowLeft');
+	const selectedIndex = await slider.inputValue();
 	await expect(page.getByRole('button', { name: '解除固定', exact: true })).toBeVisible();
 
 	const assertAlignment = async () => {
@@ -52,7 +53,7 @@ test('D fidelity: linked tooltip, zoom, themes and detail dialogs', async ({ pag
 		fullPage: true
 	});
 	await page.keyboard.press('Escape');
-	await expect(slider).toHaveValue('179');
+	await expect(slider).toHaveValue(selectedIndex);
 	await page.getByLabel('外观主题').selectOption('light');
 	await page.screenshot({
 		path: `test-results/fidelity/${info.project.name}-light.png`,

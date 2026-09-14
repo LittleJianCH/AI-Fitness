@@ -12,6 +12,7 @@ struct WorkoutDetailScreen: View {
     @State private var showingExport = false
     @State private var store: WorkoutDetailStore
     @State private var retry: Task<Void, Never>?
+    @State private var curveReload = 0
 
     init(id: String, api: FitnessAPI, session: SessionStore) {
         self.id = id
@@ -27,7 +28,18 @@ struct WorkoutDetailScreen: View {
                     workoutHeader(workout)
                     SummarySection(title: "记录摘要", summary: workout.recordedCommonSummary, isRunning: workout.sportName == "跑步")
                     RouteSection(positions: workout.motion.motionPosition)
-                    ForEach(workout.metrics.filter { !$0.points.isEmpty }) { metric in MetricSection(metric: metric) }
+                    ForEach(workout.metrics.filter {
+                        !$0.points.isEmpty || ($0.id == "power" && (
+                            workout.recordedCommonSummary.summaryPower.averageValue != nil ||
+                            workout.recordedCommonSummary.summaryPower.maximumValue != nil
+                        ))
+                    }) { metric in
+                        MetricSection(metric: metric)
+                        if metric.id == "power" {
+                            PowerCurveSection(workout: workout, api: api, session: session, refreshWorkout: reloadWorkout)
+                                .id(curveReload)
+                        }
+                    }
                     if workout.metrics.contains(where: { $0.points.isEmpty }) {
                         DisclosureGroup("未记录的指标") {
                             ForEach(workout.metrics.filter { $0.points.isEmpty }) { metric in
@@ -73,7 +85,7 @@ struct WorkoutDetailScreen: View {
                 if let message = store.message {
                     VStack(alignment: .leading, spacing: 12) {
                         Label(message, systemImage: "exclamationmark.circle").foregroundStyle(.red)
-                        Button("重试") { retry = Task { await store.load(id: id) } }.buttonStyle(.bordered)
+                        Button("重试", action: reloadWorkout).buttonStyle(.bordered)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading).padding(20).fitnessCard()
                 }
@@ -84,11 +96,24 @@ struct WorkoutDetailScreen: View {
         .background(FitnessStyle.background)
         .navigationTitle("运动详情").navigationBarTitleDisplayMode(.inline)
         .task(id: id) { await store.load(id: id) }
-        .refreshable { await store.load(id: id) }
+        .refreshable { await refreshDetail() }
         .onDisappear { retry?.cancel() }
         .sheet(isPresented: $showingExport) {
             if let workout = store.workout { HealthExportScreen(workout: workout, api: api, session: session) }
         }
+    }
+
+    private func reloadWorkout() {
+        retry?.cancel()
+        // The detail owns this task: loading removes its power-curve child.
+        retry = Task { await refreshDetail() }
+    }
+
+    private func refreshDetail() async {
+        await store.load(id: id)
+        // SwiftUI may coalesce nil -> the same workout into one update. Force
+        // the curve to load again even when the detail revision did not change.
+        if !Task.isCancelled { curveReload &+= 1 }
     }
 
     private func workoutHeader(_ workout: Workout) -> some View {
@@ -184,6 +209,7 @@ struct MetricSection: View {
                     Label("无采样数据", systemImage: symbol).font(.subheadline).foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 } else {
+                    let chartPoints = metric.chartPoints
                     if let last = metric.points.last {
                         VStack(alignment: .leading, spacing: 4) {
                             Label("最后采样", systemImage: symbol).font(.subheadline).foregroundStyle(.secondary)
@@ -191,10 +217,11 @@ struct MetricSection: View {
                                 .font(.system(.title, design: .rounded, weight: .semibold)).monospacedDigit().foregroundStyle(accent)
                         }
                     }
-                    Chart(metric.points) { point in
+                    Chart(chartPoints) { point in
                         LineMark(x: .value("时间", point.timestamp), y: .value(metric.unit, point.value))
                             .foregroundStyle(accent).lineStyle(StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round))
-                            .interpolationMethod(.linear).symbol(.circle).symbolSize(16)
+                            .interpolationMethod(.linear).symbol(.circle)
+                            .symbolSize(chartPoints.count == metric.points.count ? 16 : 0)
                     }
                     .chartYScale(domain: .automatic(includesZero: false))
                     .chartYAxis {
@@ -206,6 +233,10 @@ struct MetricSection: View {
                     .chartXAxis { AxisMarks(values: .automatic(desiredCount: 3)) { _ in AxisValueLabel().foregroundStyle(Color.secondary) } }
                     .frame(height: 180).accessibilityLabel(metric.title)
                     Text("\(metric.points.count) 个采样点 · \(metric.unit)").font(.subheadline).foregroundStyle(.secondary)
+                    if chartPoints.count < metric.points.count {
+                        Text("概览保留分段峰谷，原始采样完整保留。")
+                            .font(.subheadline).foregroundStyle(.secondary)
+                    }
                 }
             }
             .padding(20).fitnessCard()

@@ -12,6 +12,31 @@ public struct WorkoutMetric: Identifiable, Sendable {
     public let title: String
     public let unit: String
     public let points: [MetricPoint]
+
+    /// Bound overview rendering while retaining original samples for all data operations.
+    /// Each bucket contributes its extrema in timestamp order, including zero troughs.
+    public var chartPoints: [MetricPoint] {
+        let limit = 600
+        guard points.count > limit else { return points }
+        let buckets = (limit - 2) / 2
+        let interiorCount = points.count - 2
+        var result = [points[0]]
+        result.reserveCapacity(limit)
+        for bucket in 0..<buckets {
+            let start = 1 + bucket * interiorCount / buckets
+            let end = 1 + (bucket + 1) * interiorCount / buckets
+            var low = start
+            var high = start
+            for index in start..<end {
+                if points[index].value < points[low].value { low = index }
+                if points[index].value > points[high].value { high = index }
+            }
+            result.append(points[min(low, high)])
+            if low != high { result.append(points[max(low, high)]) }
+        }
+        result.append(points[points.count - 1])
+        return result
+    }
 }
 
 public extension Components.Schemas.SportSummary {

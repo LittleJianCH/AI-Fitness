@@ -14,6 +14,7 @@ import qualified Data.Aeson.KeyMap as KM
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as LBS
 import Data.List (sortOn)
+import Data.Maybe (isNothing)
 import Data.Ord (Down (..))
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Text
@@ -23,12 +24,14 @@ import qualified Data.UUID.V4 as UUID
 import qualified Data.Vector as V
 import qualified Fixtures as F
 import HttpSupport
-import Network.Wai.Test (simpleBody)
+import Network.Wai.Test (simpleBody, simpleHeaders)
 import qualified Storage.User as Users
 import qualified Storage.User.Types as U
 import qualified Storage.Workout as Workouts
 import Web.HttpApiData (toUrlPiece)
 import Workout.Empty
+import qualified Workout.PowerCurve.Calculate as PowerCurve
+import qualified Workout.PowerCurve.Types as PC
 import qualified Workout.Sport as Sport
 import qualified Workout.Statistics as Statistics
 import Workout.Types
@@ -264,6 +267,15 @@ checks env = do
     user <- db env (Users.findUserByUsername "workout.alice") >>= maybe (fail "Missing account") pure
     unmappedId <- WorkoutId <$> UUID.nextRandom
     db env (Workouts.createWorkout (U.userId user) (F.workout {workoutId = unmappedId}))
+    curve <-
+        rawCall env "GET" (workoutPath unmappedId <> "/power-curve") (bearer token) "" 200 >>= decoded
+    assert
+        "Power curve uses canonical data and revision"
+        (curve == PowerCurve.calculate (F.workout {workoutId = unmappedId}))
+    unchanged <- db env (Workouts.loadWorkout (U.userId user) unmappedId)
+    assert
+        "Power curve reads never backfill or write observations"
+        (unchanged == Just (F.workout {workoutId = unmappedId}))
     legacy <- getWorkout token unmappedId
     assert
         "Legacy detail backfills without changing source or revision"
@@ -309,6 +321,42 @@ checks env = do
     assert "Large filters still produce bounded cursors" (Text.length tagNext < 8192)
     Page tagSecond _ <- list token (tagQuery <> "&cursor=" <> Text.encodeUtf8 tagNext)
     assert "Large-filter cursor round-trips" (V.length tagSecond == 1 && tagFirst /= tagSecond)
+    let curvePath = workoutPath (workoutId running) <> "/power-curve"
+    void (rawCall env "GET" curvePath [] "" 401)
+    void (rawCall env "GET" curvePath (bearer bobToken) "" 404)
+    void (rawCall env "GET" (workoutPath (workoutId first) <> "/power-curve") (bearer token) "" 404)
+    emptyCurve <-
+        rawCall env "GET" (workoutPath (workoutId older) <> "/power-curve") (bearer token) "" 200
+            >>= decoded @PC.PowerCurve
+    assert
+        "No power remains unavailable rather than zero"
+        (V.all (isNothing . PC.best) (PC.points emptyCurve))
+    let power = V.fromList [Timed (F.at t) (Power 200) | t <- [0 .. 60]]
+        withPower sport = case sport of
+            Cycling dat -> Cycling dat {cyclingMotion = (cyclingMotion dat) {motionPower = power}}
+            Running dat -> Running dat {runningMotion = (runningMotion dat) {motionPower = power}}
+    mapM_
+        ( \source -> do
+            sid <- Id <$> UUID.nextRandom
+            let obs = workoutObservation source
+                observation =
+                    obs
+                        { observationRange = TimeRange F.start (F.at 20000)
+                        , observationSport = withPower (observationSport obs)
+                        }
+            w <- create token (Api.ManualWorkout sid observation emptyUserData)
+            response <- rawCall env "GET" (workoutPath (workoutId w) <> "/power-curve") (bearer token) "" 200
+            result <- decoded @PC.PowerCurve response
+            assert
+                "Private curve responses cannot be cached"
+                (lookup "Cache-Control" (simpleHeaders response) == Just "no-store")
+            assert
+                "Both sports expose the correct full-minute effort"
+                ( fmap PC.averagePower (PC.best =<< V.find ((== 60) . PC.durationSeconds) (PC.points result))
+                    == Just (Power 200)
+                )
+        )
+        [F.workout, F.runningWorkout]
     putStrLn
         "HTTP cycling/running persistence, owner isolation, concurrent retries, exact pagination, edits and tombstones passed"
   where

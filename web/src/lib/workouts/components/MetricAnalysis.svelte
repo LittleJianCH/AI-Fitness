@@ -9,6 +9,7 @@
 	} from '$lib/workouts/presentation';
 	import { nearestIndex, sampleTimes } from '$lib/workouts/chart-data';
 	import { untrack } from 'svelte';
+	import PowerCurveAnalysis from '$lib/workouts/components/PowerCurveAnalysis.svelte';
 	import TimeChart from '$lib/workouts/components/TimeChart.svelte';
 
 	const demo = import.meta.env.MODE === 'demo';
@@ -118,6 +119,13 @@
 		<h2>这次训练仅包含汇总数据</h2>
 		<p>没有逐点样本，因此不展示曲线。汇总值按其实际来源标注为计算或记录。</p>
 	</div>{/if}
+{#if metric.key === 'power'}
+	{#if metric.samples.length > 0}<PowerCurveAnalysis {workout} />
+	{:else}<section class="section" aria-label="最佳持续功率">
+			<h2>最佳持续功率</h2>
+			<p>没有足够的连续功率采样，无法计算最佳持续功率。</p>
+		</section>{/if}
+{/if}
 {#if embedded && metric.key === 'cadence' && workout.workoutObservation.observationSport.type === 'running'}<p
 		class="small subtle"
 	>

@@ -14,6 +14,7 @@ const operations = {
   '/imports/{importId}': ['get'],
   '/workouts': ['get', 'post'],
   '/workouts/{workoutId}': ['get', 'delete'],
+  '/workouts/{workoutId}/power-curve': ['get'],
   '/workouts/{workoutId}/user-data': ['put'],
 };
 const content = (value) => ({

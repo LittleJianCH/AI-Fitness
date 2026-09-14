@@ -1,5 +1,6 @@
 import type {
 	CommonSummary,
+	PowerCurve,
 	MotionData,
 	Sport,
 	Workout,
@@ -172,6 +173,44 @@ if (noHeartRate.workoutObservation.observationSport.type === 'running') {
 	data.runningMotion.motionHeartRate = [];
 	data.runningSummary.recordedSummary.runningCommonSummary.summaryHeartRate = {};
 	noHeartRate.workoutObservation.observationDataIssues = [];
+}
+// A known 60-second, 200 W effort exercises the new analysis without a second
+// implementation of the backend algorithm. Later cycling samples remain sparse.
+for (const workout of [cycling, running]) {
+	const sport = workout.workoutObservation.observationSport;
+	const motion = sport.type === 'cycling' ? sport.data.cyclingMotion : sport.data.runningMotion;
+	const start = workout.workoutObservation.observationRange.rangeStart;
+	motion.motionPower = [
+		...samples(start, 61, 1, () => 200),
+		...motion.motionPower.filter(
+			(sample) => Date.parse(sample.timestamp) > Date.parse(start) + 60000
+		)
+	];
+}
+export function powerCurveFixture(workout: Workout): PowerCurve {
+	const start = workout.workoutObservation.observationRange.rangeStart;
+	const hasEffort = workout === cycling || workout === running;
+	return {
+		curveWorkoutId: workout.workoutId,
+		inputRevision: workout.workoutRevision,
+		method: 'linear-best-duration-v1',
+		maxGapSeconds: 5,
+		points: [
+			1, 5, 10, 15, 30, 60, 120, 180, 300, 600, 900, 1200, 1800, 2700, 3600, 5400, 7200, 10800,
+			14400
+		].map((durationSeconds) => ({
+			durationSeconds,
+			...(hasEffort && durationSeconds <= 60
+				? {
+						best: {
+							averagePower: 200,
+							start,
+							end: new Date(Date.parse(start) + durationSeconds * 1000).toISOString()
+						}
+					}
+				: {})
+		}))
+	};
 }
 export const workouts: readonly Workout[] = [cycling, running, indoor, noHeartRate];
 export function card(workout: Workout): WorkoutCard {

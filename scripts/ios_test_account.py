@@ -1,4 +1,6 @@
 """Provision only the disposable account owned by ios_integration_test."""
+from datetime import datetime, timedelta
+import copy
 import http.cookies
 import json
 import os
@@ -44,9 +46,30 @@ with urllib.request.urlopen(request, timeout=10) as response:
     token = json.load(response)['token']
 with (Path(__file__).resolve().parent.parent / 'backend/build/export-response.json').open() as source:
     workouts = json.load(source)['workouts']
-for workout in workouts:
+workouts.append(copy.deepcopy(workouts[0]))
+for index, workout in enumerate(workouts):
     sport = workout['workoutObservation']['observationSport']['type']
     workout['workoutUserData']['workoutTitle'] = 'Synthetic ' + sport
+    observation = workout['workoutObservation']
+    start = datetime.fromisoformat(observation['observationRange']['rangeStart'].replace('Z', '+00:00'))
+    motion = observation['observationSport']['data'][sport + 'Motion']
+    motion['motionPower'] = [
+        {'timestamp': (start + timedelta(seconds=second)).isoformat(), 'value': 200}
+        for second in range(61)
+    ]
+    if index == 2:
+        workout['workoutUserData']['workoutTitle'] = 'Synthetic dense cycling'
+        for field, base_value in [('motionPower', 200), ('motionHeartRate', 120),
+                                  ('motionSpeed', 5), ('motionAltitude', 50)]:
+            motion[field] = [
+                {'timestamp': (start + timedelta(seconds=second)).isoformat(),
+                 'value': base_value + second % 30}
+                for second in range(12_001)
+            ]
+        observation['observationSport']['data']['cyclingCadence'] = [
+            {'timestamp': (start + timedelta(seconds=second)).isoformat(), 'value': 70 + second % 30}
+            for second in range(12_001)
+        ]
     request = urllib.request.Request(
         base + '/workouts',
         data=json.dumps({'submissionId': str(uuid.uuid4()), 'observation': workout['workoutObservation'],

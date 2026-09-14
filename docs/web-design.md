@@ -222,6 +222,15 @@ schematic with no external basemap requests.
 
 ### Metric analysis
 
+Power analysis includes a best-duration curve on both the standalone page and the
+metric dialog. Show fixed-duration points on a logarithmic duration axis, watts
+on a linear axis, the selected best interval, a keyboard/touch duration selector,
+and an expandable results table. Missing efforts are unavailable, not zero.
+Explain the five-second interpolation limit separately from time-series display
+and summary rules. Revision mismatch, loading and retry states belong to the
+curve section; a curve error does not hide the source time series.
+
+
 Use a shared reading pattern: activity context → key statistics → main chart →
 zones/distribution → related analysis → method and sources. Related available
 content continues down the page. Heart rate is the first detailed reference:
@@ -232,7 +241,7 @@ rate appears only with appropriate post-end samples and a supported method.
 
 | Topic            | Content and prerequisites                                                                                                       |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| Power            | Average, maximum and time series; normalized power, intensity and best-duration means require supported calculations and inputs |
+| Power            | Average, maximum, time series and backend best-duration power curve; normalized power and intensity require additional supported calculations and inputs |
 | Cadence          | Average, maximum and time series; distinguish averages including/excluding zero                                                 |
 | Speed            | Average, maximum and time series; label duration basis and source                                                               |
 | Elevation        | Ascent, descent, high, low and curve; explain correction and source; gradients/climbs require calculated results                |

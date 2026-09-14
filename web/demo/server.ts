@@ -1,5 +1,5 @@
 import type { Plugin, Connect } from 'vite';
-import { card, workouts } from './fixtures.ts';
+import { card, workouts, powerCurveFixture } from './fixtures.ts';
 import { getWorkoutsQueryParams } from '../src/lib/api/generated/schemas.ts';
 
 // Explicit demo mode only: a stateless, read-only fixture transport. No real
@@ -73,6 +73,13 @@ export const demoMiddleware: Connect.NextHandleFunction = (request, response, ne
 						}
 					: {})
 			});
+		}
+		const curveId = url.pathname.match(/^\/api\/v1\/workouts\/([^/]+)\/power-curve$/)?.[1];
+		if (curveId) {
+			const workout = workouts.find((w) => w.workoutId === curveId);
+			if (!workout) return problem(404, 'not_found');
+			if (scenario === 'invalid') return send(200, { points: 'invalid' });
+			return send(200, powerCurveFixture(workout));
 		}
 		const id = url.pathname.match(/^\/api\/v1\/workouts\/([^/]+)$/)?.[1];
 		const workout = workouts.find((w) => w.workoutId === id);

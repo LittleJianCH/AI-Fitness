@@ -13,8 +13,13 @@ native() {
 }
 test_root=$(mktemp -d /tmp/ai-fitness-ios.XXXXXX)
 server_pid=''
+proxy_pid=''
 simulator_id=''
 cleanup() {
+    if [[ -n "$proxy_pid" ]]; then
+        kill "$proxy_pid" 2>/dev/null || true
+        wait "$proxy_pid" 2>/dev/null || true
+    fi
     if [[ -n "$server_pid" ]]; then
         kill "$server_pid" 2>/dev/null || true
         wait "$server_pid" 2>/dev/null || true
@@ -52,6 +57,14 @@ export ARGON_MEMORY_KIB=19456 ARGON_ITERATIONS=2
 backend/build/backend >"$test_root/server.log" 2>&1 &
 server_pid=$!
 native /usr/bin/python3 scripts/ios_test_account.py
+native /usr/bin/python3 scripts/ios_test_proxy.py "$test_root/proxy-port" >"$test_root/proxy.log" 2>&1 &
+proxy_pid=$!
+for _ in {1..100}; do
+    [[ -s "$test_root/proxy-port" ]] && break
+    kill -0 "$proxy_pid"
+    sleep 0.1
+done
+proxy_port=$(cat "$test_root/proxy-port")
 simulator_id=$(native /usr/bin/xcrun simctl create 'AI Fitness integration' 'iPhone 15' 'iOS17.5')
 native /usr/bin/xcrun simctl boot "$simulator_id"
 native /usr/bin/xcrun simctl bootstatus "$simulator_id" -b >ios/build/simulator-boot.log 2>&1
@@ -59,7 +72,7 @@ native /usr/bin/xcodebuild -project ios/Fitness.xcodeproj -scheme Fitness -confi
     -destination "platform=iOS Simulator,id=$simulator_id" -derivedDataPath ios/DerivedData \
     -resultBundlePath "$result_path" \
     -skipPackagePluginValidation \
-    "FITNESS_TEST_SERVER=http://127.0.0.1:$PORT" test >ios/build/integration-xcode.log 2>&1
+    "FITNESS_TEST_SERVER=http://127.0.0.1:$proxy_port" test >ios/build/integration-xcode.log 2>&1
 native /usr/bin/xcrun xcresulttool get --path "$result_path" --format json >ios/build/integration-result.json
 native /usr/bin/python3 - <<'PY'
 import json

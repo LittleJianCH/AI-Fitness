@@ -14,6 +14,7 @@ import App.Types
 import Auth.Session (owned)
 import Control.Monad (unless)
 import Control.Monad.IO.Class (liftIO)
+import Control.Monad.Trans.Except (throwE)
 import Data.Aeson (toJSON)
 import Data.Maybe (fromMaybe, isJust)
 import Data.Text (Text)
@@ -22,12 +23,15 @@ import qualified Data.UUID.V4 as UUIDv4
 import qualified Data.Vector as V
 import Servant
 import qualified Storage.Codec as Storage
+import Storage.Types (StorageError (WorkoutNotFound))
 import Storage.User.Types (userId)
+import qualified Storage.Workout as Workouts
 import qualified Storage.Workout.Lifecycle as Lifecycle
 import qualified Storage.Workout.Query as Query
 import qualified Storage.Workout.Statistics as Statistics
 import qualified Storage.Workout.Submission as Submission
 import Storage.Workout.Types (WorkoutFilter (..))
+import qualified Workout.PowerCurve.Calculate as PowerCurve
 import Workout.Types
 
 server :: Environment -> RequestContext -> Principal -> Server WorkoutAPI
@@ -64,12 +68,18 @@ server environment context principal = list :<|> create :<|> details
                 submission
                 (Workout wid (WorkoutRevision 1) observation userData)
         respond (WithStatus @200 workout)
-    details wid = get wid :<|> edit wid :<|> delete wid
+    details wid = get wid :<|> powerCurve wid :<|> edit wid :<|> delete wid
     get wid = do
         now <- liftIO (currentTime environment)
         workout <- owned environment context principal $ \auth ->
             Statistics.load now (userId (authenticatedUser auth)) wid
         respond (WithStatus @200 workout)
+    powerCurve wid = do
+        workout <- owned environment context principal $ \auth ->
+            Workouts.loadWorkout (userId (authenticatedUser auth)) wid
+                >>= maybe (throwE WorkoutNotFound) pure
+        -- Calculate after the owned read releases its transaction/account lock.
+        respond (WithStatus @200 (PowerCurve.calculate workout))
     edit wid (Api.EditWorkout expected userData) = do
         now <- liftIO (currentTime environment)
         workout <- owned environment context principal $ \auth -> do

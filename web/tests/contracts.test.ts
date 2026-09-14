@@ -4,7 +4,8 @@ import { readFile } from 'node:fs/promises';
 import { workouts, card } from '../demo/fixtures';
 import {
 	getWorkouts200Response,
-	getWorkoutsWorkoutId200Response
+	getWorkoutsWorkoutId200Response,
+	getWorkoutsWorkoutIdPowerCurve200Response
 } from '../src/lib/api/generated/schemas';
 import { loadWorkouts, loadWorkout, readScenario, ApiError } from '../src/lib/api/read';
 import { metrics, duration, common, timeSummary } from '../src/lib/workouts/presentation';
@@ -14,7 +15,8 @@ describe('generated runtime contract', () => {
 	it('accepts the actual Servant list and detail responses', async () => {
 		for (const [file, schema] of [
 			['list-response.json', getWorkouts200Response],
-			['workout-response.json', getWorkoutsWorkoutId200Response]
+			['workout-response.json', getWorkoutsWorkoutId200Response],
+			['power-curve-response.json', getWorkoutsWorkoutIdPowerCurve200Response]
 		] as const) {
 			const raw: unknown = JSON.parse(
 				await readFile(new URL(`../../backend/build/${file}`, import.meta.url), 'utf8')
@@ -138,7 +140,7 @@ describe('presentation semantics', () => {
 	});
 	it('distinguishes sensor absence, summary-only records and sport cadences', () => {
 		expect(metrics(workouts[3]).find((m) => m.key === 'heart-rate')).toBeUndefined();
-		expect(metrics(workouts[2]).find((m) => m.key === 'power')).toBeUndefined();
+		expect(metrics(workouts[2]).find((m) => m.key === 'power')?.samples).toEqual([]);
 		expect(metrics(workouts[0]).find((m) => m.key === 'cadence')?.unit).toBe('rpm');
 		expect(metrics(workouts[1]).find((m) => m.key === 'cadence')?.unit).toBe('步/分钟');
 		expect(timeSummary(common(workouts[0])).label).toBe('计时时长');

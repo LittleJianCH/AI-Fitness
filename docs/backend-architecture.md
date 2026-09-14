@@ -192,6 +192,30 @@ Derived-cache writes preserve the input revision; repeated reads reuse the store
 calculation timestamp. List reads return stored summaries without triggering
 backfill. No schema migration or background worker is needed.
 
+### Single-workout power curve
+
+`Workout.PowerCurve.Calculate` computes best mean power for fixed durations from
+one cycling or running canonical power stream. Adjacent samples are linearly
+interpolated only when their gap is at most five seconds. Longer gaps split the
+stream; a window must have complete continuous support. Real zeros participate,
+with no boundary extrapolation, missing-data zero fill or timer-event compression.
+Empty/singleton streams have no duration-supported efforts. This five-second rule
+is independent of the existing 120-second sample-summary rule.
+
+The calculation scans both window edges through each continuous run, testing
+segment boundaries and interior stationary points of the integrated window.
+It does not round windows onto a one-second grid. Powers are scaled before
+integration to keep large finite values representable. Work is O(n × k) for n
+samples and k fixed durations, without expanding observations into per-second data.
+Each result includes its best UTC interval; means equal within relative numerical
+tolerance 1e-12 choose the earliest start.
+
+The authenticated power-curve endpoint reads the owned canonical workout and
+calculates after releasing the storage transaction. Results carry the input
+revision, method `linear-best-duration-v1` and gap limit. Curves are not persisted;
+reads do not refresh summary caches or change the workout. Web and iOS display
+these results without independently computing power statistics.
+
 ### Modules and validation
 
 | Module | Responsibility |

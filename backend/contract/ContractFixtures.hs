@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module ContractFixtures (workout, runningWorkout, workoutPage, failure, exportBundle) where
+module ContractFixtures (powerWorkout, workout, runningWorkout, workoutPage, failure, exportBundle) where
 
 import Api.Common.Types
 import qualified Api.Export.Types as Export
@@ -64,3 +64,16 @@ exportBundle =
         (Timestamp (addUTCTime 0.125 F.start))
         [workout, runningWorkout]
         [F.group]
+
+powerWorkout :: Workout
+powerWorkout = workout {workoutObservation = obs {observationSport = sport}}
+  where
+    obs = workoutObservation workout
+    sport = case observationSport obs of
+        Cycling dat ->
+            Cycling
+                dat
+                    { cyclingMotion =
+                        (cyclingMotion dat) {motionPower = Vector.fromList [Timed (F.at t) (Power 200) | t <- [0 .. 60]]}
+                    }
+        other -> other

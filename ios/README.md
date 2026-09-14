@@ -240,3 +240,31 @@ default, comfortable type and spacing, minimal decoration, and platform behavior
 before custom controls. No analytical metrics, source metadata or social features
 are inferred from visual references. Check light/dark appearance, accessibility
 text sizes and the existing isolated UI integration flow when changing presentation.
+
+## Best-duration power
+
+Detail time-series charts render at most 600 original points, selecting each
+bucket's minimum and maximum in time order and preserving the first/last sample.
+Dense series omit per-point symbols to bound Swift Charts/Metal rendering work.
+The UI labels reduced overviews; full samples, exports and backend calculations
+are unchanged. Simulator coverage includes five streams of 12,001 samples.
+
+Workout detail shows a native Swift Charts power-duration section after the power
+samples, including cycling and running. It uses the generated authenticated
+`power-curve` operation through `PowerCurveStore`; no power calculation is duplicated
+on device. The logarithmic duration chart, duration picker and expandable result
+list show mean watts and best intervals relative to workout start. Insufficient
+continuous coverage has an explicit empty state. Failures offer retry, revision
+mismatches offer a workout refresh, and cancellation/session guards discard late
+responses. The detail screen owns the refresh task so removing the curve section
+during reload cannot cancel the workout request. Curves remain in view-owned memory
+only. Summary-only power displays an unavailable message without a curve request;
+workouts with neither power samples nor a recorded power summary omit the section.
+The sampling-gap explanation uses the backend response threshold.
+
+The isolated simulator harness seeds a 60-second, 200 W effort and exercises the
+native result and duration picker. A loopback test proxy forwards requests to the
+real backend and changes the first curve revision per workout, making the stale
+revision refresh/unmount regression deterministic. Core tests cover wire decoding,
+revision mismatch, retry, cancellation and session isolation. Swift contract tests
+also cover 12-digit fractional timestamps without reducing backend precision.

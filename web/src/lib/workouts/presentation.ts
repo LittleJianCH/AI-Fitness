@@ -96,9 +96,17 @@ export function metrics(workout: Workout): Metric[] {
 			factor: 1
 		}
 	];
-	return result.filter(
-		(item) => item.samples.length || item.average !== undefined || item.maximum !== undefined
-	);
+	return result.filter((item) => {
+		const recordedPower =
+			item.key === 'power' ? recordedMetricSummary(workout, 'power') : undefined;
+		return (
+			item.samples.length ||
+			item.average !== undefined ||
+			item.maximum !== undefined ||
+			recordedPower?.averageValue !== undefined ||
+			recordedPower?.maximumValue !== undefined
+		);
+	});
 }
 // Recorded statistics are displayed with their provenance, never relabeled as calculations.
 export function recordedMetricSummary(

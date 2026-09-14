@@ -8,7 +8,8 @@ module Main (main) where
 import Api.Common.Routes (CookieResponse, Response)
 import Api.Common.Types (Revision (..))
 import Api.Export.Types (Platform (..))
-import Api.Workout.Routes (WorkoutDetailAPI, WorkoutListAPI)
+import Api.Workout.PowerCurveCodec ()
+import Api.Workout.Routes (PowerCurveAPI, WorkoutDetailAPI, WorkoutListAPI)
 import ContractFixtures
 import Control.Monad (unless)
 import Data.Aeson (eitherDecode, encode)
@@ -19,20 +20,28 @@ import Network.HTTP.Types (status200, status204, status400)
 import Network.Wai (defaultRequest, requestMethod)
 import Network.Wai.Test (request, runSession, setPath, simpleBody, simpleHeaders, simpleStatus)
 import Servant
+import qualified Workout.PowerCurve.Calculate as PowerCurve
 import Workout.Types (WorkoutId, WorkoutRevision (..), WorkoutUserData)
 
 type FixtureAPI =
     ( "api"
         :> "v1"
         :> "workouts"
-        :> (WorkoutListAPI :<|> Capture "workoutId" WorkoutId :> WorkoutDetailAPI)
+        :> (WorkoutListAPI :<|> Capture "workoutId" WorkoutId :> (WorkoutDetailAPI :<|> PowerCurveAPI))
     )
         :<|> "fixture-no-content" :> Response 'DELETE 204 (CookieResponse NoContent)
 
 -- Test-only handlers exercise the real Servant router and MIME encoders. They
 -- are never linked into the production application and do not implement auth.
 application :: Application
-application = serve (Proxy :: Proxy FixtureAPI) ((listHandler :<|> detailHandler) :<|> respond emptyResponse)
+application =
+    serve
+        (Proxy :: Proxy FixtureAPI)
+        ( ( listHandler
+                :<|> (\wid -> detailHandler wid :<|> respond (WithStatus @200 (PowerCurve.calculate powerWorkout)))
+          )
+            :<|> respond emptyResponse
+        )
   where
     listHandler :: Server WorkoutListAPI
     listHandler _ _ _ _ _ _ limit =
@@ -53,6 +62,16 @@ main = do
         runSession
             (request (setPath defaultRequest "/api/v1/workouts/00000000-0000-0000-0000-000000000000"))
             application
+    curve <-
+        runSession
+            (request (setPath defaultRequest "/api/v1/workouts/00000000-0000-0000-0000-000000000000/power-curve"))
+            application
+    ensure
+        ( simpleStatus curve == status200
+            && eitherDecode (simpleBody curve) == Right (PowerCurve.calculate powerWorkout)
+        )
+        "Power curve response round trip failed"
+    ByteString.writeFile "build/power-curve-response.json" (simpleBody curve)
     emptyResponse <-
         runSession
             (request ((setPath defaultRequest "/fixture-no-content") {requestMethod = "DELETE"}))

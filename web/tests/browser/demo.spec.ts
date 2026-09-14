@@ -77,9 +77,7 @@ test('summary-only and unavailable metrics keep their meaning', async ({ page })
 	await page.goto(`/workouts/${indoor}`);
 	await expect(page.getByRole('heading', { name: '室内骑行 · 仅汇总' })).toBeVisible();
 	await expect(page.getByRole('link', { name: '查看完整轨迹' })).toHaveCount(0);
-	await expect(
-		page.getByText('这条训练缺少逐点采样，暂时无法计算指标平均值或最大值。')
-	).toBeVisible();
+	await expect(page.getByText('仅记录汇总 · 无逐点曲线')).toBeVisible();
 	await expect(page.getByRole('link', { name: /功率/ })).toHaveCount(0);
 	await expect(page.getByRole('slider')).toHaveCount(0);
 	await page.goto(`/workouts/${noHr}`);

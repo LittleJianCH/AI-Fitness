@@ -29,6 +29,7 @@ const bundle = await readJSON('../backend/build/export-response.json');
 validate('Page_WorkoutCard', page);
 const workoutCheck = validate('Workout', workout);
 validate('Problem', problem);
+validate('PowerCurve', await readJSON('../backend/build/power-curve-response.json'));
 validate('CanonicalExport', bundle);
 validate('Platform', 'appleHealth');
 assert.equal(bundle.version, 'canonicalV1');

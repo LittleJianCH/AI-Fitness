@@ -2,11 +2,16 @@ import { z } from 'zod';
 import {
 	getWorkouts,
 	getWorkoutsWorkoutId,
+	getWorkoutsWorkoutIdPowerCurve,
 	type GetWorkoutsParams,
 	type PageWorkoutCard,
 	type Workout
 } from './generated/client';
-import { getWorkouts200Response, getWorkoutsWorkoutId200Response } from './generated/schemas';
+import {
+	getWorkouts200Response,
+	getWorkoutsWorkoutId200Response,
+	getWorkoutsWorkoutIdPowerCurve200Response
+} from './generated/schemas';
 
 export const scenarioSchema = z.enum([
 	'normal',
@@ -48,3 +53,9 @@ export const loadWorkout = (
 		getWorkoutsWorkoutId200Response
 	);
 };
+
+export const loadPowerCurve = (id: string, signal: AbortSignal, scenario: Scenario) =>
+	request(
+		() => getWorkoutsWorkoutIdPowerCurve(id, undefined, options(signal, scenario)),
+		getWorkoutsWorkoutIdPowerCurve200Response
+	);

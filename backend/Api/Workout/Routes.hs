@@ -1,7 +1,7 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TypeOperators #-}
 
-module Api.Workout.Routes (WorkoutAPI, WorkoutListAPI, WorkoutDetailAPI) where
+module Api.Workout.Routes (WorkoutAPI, WorkoutListAPI, WorkoutDetailAPI, PowerCurveAPI) where
 
 import Api.Common.Routes
 import Api.Common.Types
@@ -23,6 +23,12 @@ type WorkoutDetailAPI =
     Summary "Read the complete canonical workout including independent sample streams"
         :> Response 'GET 200 Workout
 
+type PowerCurveAPI =
+    "power-curve"
+        :> Summary
+            "Best time-weighted power for fixed durations; linear interpolation across gaps at most five seconds"
+        :> Response 'GET 200 PowerCurve
+
 type WorkoutAPI =
     "workouts"
         :> ( WorkoutListAPI
@@ -31,6 +37,7 @@ type WorkoutAPI =
                     :> Response 'POST 200 Workout
                 :<|> Capture "workoutId" WorkoutId
                     :> ( WorkoutDetailAPI
+                            :<|> PowerCurveAPI
                             :<|> "user-data"
                                 :> Summary "Replace editable metadata with optimistic concurrency control"
                                 :> ReqBody '[JSON] EditWorkout

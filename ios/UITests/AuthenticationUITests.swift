@@ -1,6 +1,43 @@
 import XCTest
 
 final class AuthenticationUITests: XCTestCase {
+    @MainActor
+    func testDenseWorkoutChartsRemainUsable() throws {
+        guard let server = ProcessInfo.processInfo.environment["FITNESS_TEST_SERVER"],
+              server.hasPrefix("http://127.0.0.1:") else {
+            throw XCTSkip("Run through the isolated iOS integration harness.")
+        }
+        let app = XCUIApplication()
+        app.launchArguments = ["-serverOrigin", server]
+        app.launch()
+        let username = app.textFields["username"]
+        XCTAssertTrue(username.waitForExistence(timeout: 15))
+        username.tap()
+        username.typeText("ios_fixture_user")
+        app.secureTextFields["password"].tap()
+        app.secureTextFields["password"].typeText("synthetic ios fixture password")
+        app.buttons["login"].tap()
+        let dense = app.staticTexts["Synthetic dense cycling"]
+        XCTAssertTrue(dense.waitForExistence(timeout: 15))
+        dense.tap()
+        XCTAssertTrue(app.staticTexts["workoutTitle"].waitForExistence(timeout: 15))
+        let reduced = app.staticTexts["概览保留分段峰谷，原始采样完整保留。"].firstMatch
+        reveal(reduced, in: app)
+        let refresh = app.buttons["刷新训练"]
+        reveal(refresh, in: app)
+        refresh.tap()
+        let power = app.staticTexts["powerCurveSelected"]
+        reveal(power, in: app)
+        XCTAssertTrue(power.label.contains("W"))
+        capture(app, name: "Dense workout power curve")
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+        XCTAssertTrue(dense.waitForExistence(timeout: 10))
+        app.tabBars.buttons["账号"].tap()
+        XCTAssertTrue(app.buttons["logout"].waitForExistence(timeout: 10))
+        app.buttons["logout"].tap()
+        XCTAssertTrue(username.waitForExistence(timeout: 10))
+    }
+
     override func setUpWithError() throws { continueAfterFailure = false }
 
     @MainActor
@@ -61,6 +98,19 @@ final class AuthenticationUITests: XCTestCase {
         expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: averageHeartRate)
         waitForExpectations(timeout: 5)
         capture(app, name: "Workout detail")
+        // The isolated harness injects a stale curve once. Refreshing removes
+        // the child section; its cancellation must not cancel the detail load.
+        let refreshWorkout = app.buttons["刷新训练"]
+        reveal(refreshWorkout, in: app)
+        refreshWorkout.tap()
+        XCTAssertTrue(app.staticTexts["workoutTitle"].waitForExistence(timeout: 10), app.debugDescription)
+        XCTAssertEqual(app.staticTexts["workoutTitle"].label, "Synthetic running")
+        reveal(app.staticTexts["powerCurveSelected"], in: app)
+        XCTAssertTrue(app.staticTexts["powerCurveSelected"].label.contains("200"))
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+        XCTAssertTrue(app.staticTexts["Synthetic running"].waitForExistence(timeout: 10))
+        app.staticTexts["Synthetic running"].tap()
+        XCTAssertTrue(app.buttons["openHealthExport"].waitForExistence(timeout: 10))
         app.buttons["openHealthExport"].tap()
         XCTAssertTrue(app.navigationBars["导出到 Apple 健康"].waitForExistence(timeout: 10))
         capture(app, name: "Health export")
@@ -102,6 +152,15 @@ final class AuthenticationUITests: XCTestCase {
         heartRateChart.tap()
         XCTAssertTrue(heartRateChart.isHittable)
         capture(app, name: "Heart rate")
+        let power = app.staticTexts["powerCurveSelected"]
+        reveal(power, in: app)
+        XCTAssertTrue(power.label.contains("200"), power.label)
+        capture(app, name: "Power curve")
+        let duration = app.buttons["powerCurveDuration"]
+        reveal(duration, in: app)
+        duration.tap()
+        app.buttons["0:00:05"].tap()
+        XCTAssertTrue(power.label.contains("0:00:05"), power.label)
         app.tabBars.buttons["账号"].tap()
         XCTAssertTrue(app.buttons["logout"].waitForExistence(timeout: 15))
         app.buttons["logout"].tap()

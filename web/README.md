@@ -247,3 +247,21 @@ controls remain in `src/lib/components/`. `workouts/chart-data.ts` prepares nume
 sample times/display points and performs binary nearest-sample lookup. These
 values are cached by Svelte derivations independently of cursor and theme changes;
 a cursor move updates chart markers without rebuilding the full series.
+
+## Best-duration power
+
+Cycling and running power analysis pages and dialogs request the owned workout's
+`power-curve` endpoint. The backend supplies fixed durations from one second to
+four hours with best mean watts and interval timestamps. The UI provides a
+logarithmic duration chart, selection and a results table. It rejects mismatched
+workout revisions and offers a refresh. Missing coverage is shown explicitly;
+summary-only power still has an analysis entry, with a local unavailable message
+and no power-curve request when its sample stream is empty. Demo rides/runs include a known
+60-second, 200 W synthetic effort. Longer sparse observations do not fabricate
+continuous efforts. No workout data is saved to browser storage.
+
+Demo power-curve responses are static fixtures; they do not run the backend
+calculation. Use connected mode to review the complete calculation flow.
+`./scripts/web_integration_test power-curve.spec.ts` verifies cycling and running
+on desktop and mobile against the real Haskell backend, using declining power
+samples and checking both the API response and displayed best-duration values.

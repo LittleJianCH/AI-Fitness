@@ -4,6 +4,7 @@ import Control.Monad (forM_, unless)
 import qualified CyclingTests
 import qualified ImportOutputTests
 import qualified ImportStateTests
+import qualified PowerCurveTests
 import qualified RunningTests
 import qualified StatisticsTests
 import qualified WorkoutTests
@@ -15,6 +16,7 @@ main = do
                 ++ CyclingTests.cases
                 ++ RunningTests.cases
                 ++ StatisticsTests.cases
+                ++ PowerCurveTests.cases
                 ++ ImportStateTests.cases
                 ++ ImportOutputTests.cases
     forM_ cases $ \(name, ok) -> unless ok (fail name)
