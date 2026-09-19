@@ -8,7 +8,12 @@ import {
 	getSettings200Response
 } from '../../src/lib/api/generated/schemas';
 
-async function seed(page: Page, sport: 'cycling' | 'running', summaryOnly = false) {
+async function seed(
+	page: Page,
+	sport: 'cycling' | 'running',
+	summaryOnly = false,
+	withDistance = true
+) {
 	const input = buildManualWorkout(
 		{
 			sport,
@@ -35,7 +40,7 @@ async function seed(page: Page, sport: 'cycling' | 'running', summaryOnly = fals
 		motion.motionHeartRate = samples((i) => 140 + i / 120);
 		motion.motionPower = samples((i) => 200 + i / 60);
 		motion.motionSpeed = samples(() => 5);
-		motion.motionDistance = samples((i) => i * 5);
+		motion.motionDistance = withDistance ? samples((i) => i * 5) : [];
 		motion.motionAltitude = samples((i) => 50 + i / 100);
 		motion.motionGrade = samples(() => 1);
 		motion.motionEnvironment.ambientTemperature = samples(() => 20);
@@ -116,10 +121,23 @@ for (const sport of ['cycling', 'running'] as const) {
 		await expect(dialog.getByRole('heading', { name: '统计与分布', exact: true })).toBeVisible();
 		await expect(dialog.getByRole('heading', { name: '相关分析', exact: true })).toBeVisible();
 		await expect(dialog.getByRole('region', { name: '指标统计与分布' })).toContainText('210 W');
+		await dialog.getByLabel('图表横轴').selectOption('distance');
+		await expect(dialog.getByRole('heading', { name: '功率距离曲线' })).toBeVisible();
+		await dialog.getByLabel('选择真实样本').fill('600');
+		await expect(dialog.locator('.sample-value')).toContainText('3.00 km');
+		await expect(dialog.locator('.sample-value')).toContainText('210 W');
+		await dialog.getByRole('button', { name: '下一个样本' }).click();
+		await expect(dialog.locator('.sample-value')).toContainText('3.00 km');
 		await page.keyboard.press('Escape');
 		await page.goto(`/workouts/${id}/metrics/temperature`);
 		await expect(page.getByRole('heading', { level: 1, name: '温度分析' })).toBeVisible();
 		await expect(page.getByRole('region', { name: '指标统计与分布' })).toContainText('20 °C');
+		await page.getByLabel('图表横轴').selectOption('distance');
+		await expect(page.getByRole('heading', { name: '温度距离曲线' })).toBeVisible();
+		await page.getByLabel('选择真实样本').fill('1200');
+		await expect(page.locator('.sample-value')).toContainText('6.00 km');
+		await page.getByLabel('图表横轴').selectOption('time');
+		await expect(page.getByRole('heading', { name: '温度时间曲线' })).toBeVisible();
 		await profile(page, '2026-01-10T00:00', '150', '76');
 		const settings = getSettings200Response.parse(
 			await (await page.request.get('/api/v1/settings')).json()
@@ -143,6 +161,23 @@ for (const sport of ['cycling', 'running'] as const) {
 			.toBe(true);
 	});
 }
+
+test('distance axis explains missing samples and preserves the raw time chart when analysis fails', async ({
+	page
+}) => {
+	await login(page, await register(page));
+	const id = await seed(page, 'cycling', false, false);
+	await page.route(`**/api/v1/workouts/${id}/analysis`, (route) => route.abort());
+	await page.goto(`/workouts/${id}/metrics/power`);
+	await page.getByLabel('图表横轴').selectOption('distance');
+	await expect(page.getByText('没有可对齐的距离采样，请切换时间轴查看原始曲线。')).toBeVisible();
+	await expect(page.locator('.sample-value')).toContainText('距离未记录');
+	await page.getByLabel('图表横轴').selectOption('time');
+	await expect(page.getByRole('heading', { name: '功率时间曲线' })).toBeVisible();
+	await expect(page.locator('.time-chart svg')).toBeVisible();
+	await page.getByRole('button', { name: '下一个样本' }).click();
+	await expect(page.locator('.sample-value')).toContainText('00:00:01');
+});
 
 test('history distinguishes unknown from confirmed rest and explicit prior load', async ({
 	page

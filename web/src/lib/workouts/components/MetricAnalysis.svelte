@@ -3,12 +3,13 @@
 	import type { Workout } from '$lib/api/generated/client';
 	import {
 		metricKinds,
+		motion,
 		dateText,
 		duration,
 		recordedMetricSummary,
 		type Metric
 	} from '$lib/workouts/presentation';
-	import { nearestIndex, sampleTimes } from '$lib/workouts/chart-data';
+	import { distanceCoordinates, nearestIndex, sampleTimes } from '$lib/workouts/chart-data';
 	import { untrack } from 'svelte';
 	import MetricDetails from '$lib/analysis/MetricDetails.svelte';
 	import { workoutAnalysisQuery } from '$lib/analysis/query.svelte';
@@ -43,6 +44,17 @@
 		(demo ? metric.maximum : statistics?.maximumValue) ?? recorded.maximumValue
 	);
 	const selected = $derived(metric.samples[index]);
+	let axis = $state<'time' | 'distance'>('time');
+	const distances = $derived(
+		distanceCoordinates(
+			metric.samples,
+			motion(workout).motionDistance,
+			analysis.data?.analysisMaxGapSeconds ?? 120
+		)
+	);
+	const hasDistance = $derived(distances.some((value) => value !== undefined));
+	const distanceText = (value: number | undefined) =>
+		value === undefined ? '距离未记录' : `${value.toFixed(2)} km`;
 </script>
 
 <svelte:head><title>{metric.title}分析 · AI Fitness</title></svelte:head>
@@ -83,19 +95,37 @@
 	</div>
 {:else}<p class="small subtle">此指标暂无汇总统计，可以查看下方真实采样。</p>{/if}
 {#if selected}<section class="surface analysis-chart">
-		<h2>{metric.title}时间曲线</h2>
-		<p class="small subtle">横轴为经过时间 · 超过 2 分钟的采样间隔以断线显示</p>
-		<TimeChart
-			{metric}
-			maxGapSeconds={analysis.data?.analysisMaxGapSeconds ?? 120}
-			start={range.rangeStart}
-			end={range.rangeEnd}
-			selectedTime={selected.timestamp}
-			onSelect={(i) => (index = i)}
-		/>
+		<h2>{metric.title}{axis === 'time' ? '时间' : '距离'}曲线</h2>
+		<label
+			>图表横轴
+			<select bind:value={axis}>
+				<option value="time">时间</option>
+				<option value="distance">距离</option>
+			</select>
+		</label>
+		<p class="small subtle">
+			横轴为{axis === 'time' ? '经过时间' : '累计距离（km）'} · 超过 2 分钟的采样间隔以断线显示
+		</p>
+		{#if axis === 'distance'}<p class="small subtle">
+				距离按记录时间对齐；仅在相邻距离记录间插值，不跨空档或距离重置外推。指标数值仍为原始样本。
+			</p>{/if}
+		{#if axis === 'distance' && !hasDistance}<p role="status">
+				没有可对齐的距离采样，请切换时间轴查看原始曲线。
+			</p>{:else}
+			<TimeChart
+				{metric}
+				distanceCoordinates={axis === 'distance' ? distances : undefined}
+				maxGapSeconds={analysis.data?.analysisMaxGapSeconds ?? 120}
+				start={range.rangeStart}
+				end={range.rangeEnd}
+				selectedTime={selected.timestamp}
+				onSelect={(i) => (index = i)}
+			/>
+		{/if}
 		<div class="sample-value" aria-live="polite">
 			<span>{duration((Date.parse(selected.timestamp) - Date.parse(range.rangeStart)) / 1000)}</span
-			><strong style:color={`var(--metric-${metric.key})`}
+			>{#if axis === 'distance'}<span>{distanceText(distances[index])}</span>{/if}<strong
+				style:color={`var(--metric-${metric.key})`}
 				>{metricValueText(selected.value, metricKinds[metric.key], 1)}
 				<small>{metric.unit}</small></strong
 			>
@@ -121,13 +151,21 @@
 			<summary>查看样本数据表</summary>
 			<div class="table-scroll" role="region" aria-label="指标样本表">
 				<table>
-					<thead><tr><th>经过时间</th><th>{metric.title} ({metric.unit})</th></tr></thead><tbody
-						>{#each metric.samples as sample (sample.timestamp)}<tr
+					<thead
+						><tr
+							><th>经过时间</th>{#if axis === 'distance'}<th>累计距离</th>{/if}<th
+								>{metric.title} ({metric.unit})</th
+							></tr
+						></thead
+					><tbody
+						>{#each metric.samples as sample, sampleIndex (sample.timestamp)}<tr
 								><td
 									>{duration(
 										(Date.parse(sample.timestamp) - Date.parse(range.rangeStart)) / 1000
 									)}</td
-								><td>{metricValueText(sample.value, metricKinds[metric.key], 1)}</td></tr
+								>{#if axis === 'distance'}<td>{distanceText(distances[sampleIndex])}</td>{/if}<td
+									>{metricValueText(sample.value, metricKinds[metric.key], 1)}</td
+								></tr
 							>{/each}</tbody
 					>
 				</table>
@@ -178,6 +216,7 @@
 	}
 	.sample-value {
 		display: flex;
+		flex-wrap: wrap;
 		align-items: baseline;
 		gap: 20px;
 		font-variant-numeric: tabular-nums;

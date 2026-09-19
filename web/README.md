@@ -276,6 +276,11 @@ and running dynamics when recorded. Statistics use the full backend input;
 browser chart points never supply averages. Time plots retain every recorded
 sample and insert breaks using `analysisMaxGapSeconds`. Relationships render the
 backend's bounded point set. Units remain explicit in selectors, tables and axes.
+Metric dialogs and direct pages also offer a distance axis. Distance coordinates
+align to recorded timestamps, interpolating only inside nondecreasing distance
+intervals within the gap limit; missing coverage and resets break the curve.
+The original metric samples, selected timestamps and backend statistics remain
+unchanged. Missing distance data is explicit and does not prevent time-axis use.
 Recorded altitude/energy/laps/bicycle context remain labeled separately.
 Recorded summaries keep metric entries available even without samples, including
 running dynamics; overview, dialogs and direct pages retain recorded provenance.

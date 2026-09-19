@@ -4,7 +4,12 @@
 	import { LineChart } from 'echarts/charts';
 	import { GridComponent, MarkLineComponent, MarkPointComponent } from 'echarts/components';
 	import { SVGRenderer } from 'echarts/renderers';
-	import { chartPoints, nearestIndex, sampleTimes } from '$lib/workouts/chart-data';
+	import {
+		chartPoints,
+		nearestIndex,
+		nearestCoordinateIndex,
+		sampleTimes
+	} from '$lib/workouts/chart-data';
 	import { sampleAt } from '$lib/workouts/timeline';
 	import { duration, type Metric } from '$lib/workouts/presentation';
 
@@ -19,6 +24,7 @@
 		viewStart = 0,
 		viewEnd,
 		maxGapSeconds = 120,
+		distanceCoordinates,
 		onSelect
 	}: {
 		metric: Metric;
@@ -30,10 +36,21 @@
 		viewStart?: number;
 		viewEnd?: number;
 		maxGapSeconds?: number;
+		distanceCoordinates?: readonly (number | undefined)[];
 		onSelect?: (index: number) => void;
 	} = $props();
 	const timestamps = $derived(sampleTimes(metric.samples));
-	const points = $derived(chartPoints(metric.samples, start, metric.factor, maxGapSeconds));
+	const points = $derived(
+		chartPoints(metric.samples, start, metric.factor, maxGapSeconds, distanceCoordinates)
+	);
+	const maximumX = $derived(
+		distanceCoordinates
+			? Math.max(
+					0.001,
+					distanceCoordinates.reduce<number>((maximum, x) => Math.max(maximum, x ?? 0), 0)
+				)
+			: (viewEnd ?? (Date.parse(end) - Date.parse(start)) / 1000)
+	);
 	const startTime = $derived(Date.parse(start));
 	let host: HTMLDivElement;
 	let dark = $state(false);
@@ -76,7 +93,10 @@
 			const position: unknown = instance.convertFromPixel('grid', [event.offsetX, event.offsetY]);
 			if (!Array.isArray(position) || typeof position[0] !== 'number') return;
 			const seconds = position[0];
-			if (timestamps.length) onSelect(nearestIndex(timestamps, startTime + seconds * 1000));
+			if (distanceCoordinates) {
+				const index = nearestCoordinateIndex(distanceCoordinates, seconds);
+				if (index !== undefined) onSelect(index);
+			} else if (timestamps.length) onSelect(nearestIndex(timestamps, startTime + seconds * 1000));
 		};
 		instance.getZr().on('mousemove', (event) => {
 			if (!pinned) selectAt(event);
@@ -119,11 +139,11 @@
 				xAxis: {
 					type: 'value',
 					min: viewStart,
-					max: viewEnd ?? (Date.parse(end) - Date.parse(start)) / 1000,
+					max: maximumX,
 					splitNumber: compact ? 3 : 5,
 					show: !preview,
 					axisLabel: {
-						formatter: (v: number) => duration(v),
+						formatter: (v: number) => (distanceCoordinates ? `${v.toFixed(1)} km` : duration(v)),
 						alignMinLabel: 'left',
 						alignMaxLabel: 'right',
 						hideOverlap: true,
@@ -159,8 +179,14 @@
 		if (!chart) return;
 		const candidate = sampleAt(metric.samples, selectedTime);
 		const seconds = candidate ? (Date.parse(candidate.timestamp) - Date.parse(start)) / 1000 : 0;
+		const coordinate = distanceCoordinates
+			? candidate
+				? distanceCoordinates[nearestIndex(timestamps, Date.parse(candidate.timestamp))]
+				: undefined
+			: seconds;
 		const sample =
 			candidate &&
+			coordinate !== undefined &&
 			seconds >= viewStart &&
 			seconds <= (viewEnd ?? (Date.parse(end) - Date.parse(start)) / 1000)
 				? candidate
@@ -177,22 +203,25 @@
 						data: sample
 							? [
 									{
-										coord: [
-											(Date.parse(sample.timestamp) - Date.parse(start)) / 1000,
-											sample.value * metric.factor
-										]
+										coord: [coordinate, sample.value * metric.factor]
 									}
 								]
 							: []
 					},
 					markLine:
-						selectedTime && !preview && !compact
+						selectedTime && !preview && !compact && (!distanceCoordinates || sample)
 							? {
 									silent: true,
 									symbol: 'none',
 									label: { show: false },
 									lineStyle: { color: dark ? '#a0afc4' : '#647286' },
-									data: [{ xAxis: (Date.parse(selectedTime) - Date.parse(start)) / 1000 }]
+									data: [
+										{
+											xAxis: distanceCoordinates
+												? coordinate
+												: (Date.parse(selectedTime) - Date.parse(start)) / 1000
+										}
+									]
 								}
 							: { data: [] }
 				}
