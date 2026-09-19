@@ -55,16 +55,23 @@ struct TrainingHistoryScreen: View {
             }
             if let history = store.history {
                 Section("训练趋势") {
-                    Chart(history.trainingDays, id: \.trainingCalendar.calendarDate) { day in
-                        if let fitness = day.trainingFitness {
-                            LineMark(x: .value("日期", day.trainingCalendar.calendarStart), y: .value("HRSS / 日", fitness), series: .value("指标", "体能 CTL"))
-                                .foregroundStyle(by: .value("指标", "体能 CTL"))
-                        }
-                        if let fatigue = day.trainingFatigue {
-                            LineMark(x: .value("日期", day.trainingCalendar.calendarStart), y: .value("HRSS / 日", fatigue), series: .value("指标", "疲劳 ATL"))
-                                .foregroundStyle(by: .value("指标", "疲劳 ATL"))
-                        }
-                    }.frame(height: 240)
+                    if history.trainingDays.contains(where: { $0.trainingFitness != nil || $0.trainingFatigue != nil }) {
+                        Chart(history.trainingDays, id: \.trainingCalendar.calendarDate) { day in
+                            if let fitness = day.trainingFitness {
+                                LineMark(x: .value("日期", day.trainingCalendar.calendarStart), y: .value("HRSS / 日", fitness), series: .value("指标", "体能 CTL"))
+                                    .foregroundStyle(by: .value("指标", "体能 CTL"))
+                            }
+                            if let fatigue = day.trainingFatigue {
+                                LineMark(x: .value("日期", day.trainingCalendar.calendarStart), y: .value("HRSS / 日", fatigue), series: .value("指标", "疲劳 ATL"))
+                                    .foregroundStyle(by: .value("指标", "疲劳 ATL"))
+                            }
+                        }.frame(height: 240)
+                    } else {
+                        Label("暂无可绘制的训练趋势", systemImage: "chart.xyaxis.line")
+                            .foregroundStyle(.secondary)
+                        Text("请确认运动记录完整，并为相关运动设置心率参数。心率采样不足时，训练负荷仍保留未知。")
+                            .font(.footnote).foregroundStyle(.secondary)
+                    }
                     if let last = history.trainingDays.last {
                         analysisRow("期末体能 CTL", last.trainingFitness, "", digits: 1)
                         analysisRow("期末疲劳 ATL", last.trainingFatigue, "", digits: 1)
