@@ -71,6 +71,10 @@ export function errorText(error: Error | null): string {
 			return '当前账号无法执行这个操作。';
 		case 'analysis_revision_conflict':
 			return '训练已更新，请刷新后查看对应版本的分析。';
+		case 'analysis_too_large':
+			return '这段历史的数据量超过处理上限，请缩短日期范围后重试。';
+		case 'analysis_unavailable':
+			return '当前历史数据暂时无法完成分析，请检查记录与个人参数。';
 		case 'revision_conflict':
 			return '这条训练已被更新，请重新加载最新版本后再修改。';
 		case 'submission_conflict':
