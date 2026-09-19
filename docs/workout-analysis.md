@@ -55,6 +55,8 @@ profile. It never changes observations or recorded summaries.
 * Power uses five-second gaps. Normalized power integrates complete 30-second
   rolling windows at one-second endpoints, averages fourth powers, then takes
   the fourth root. Gaps reset windows and startup padding is not invented.
+  Complete-second endpoints use the same capped conversion-scale tolerance, so
+  a fractional start time does not lose the final complete rolling window.
   The fourth moment is scaled by contributing windows; isolated observations,
   short disconnected runs and fractional tails cannot change that scale.
   The returned normalization duration

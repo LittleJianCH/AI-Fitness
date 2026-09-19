@@ -100,6 +100,21 @@ cases =
         )
     , ("analysis: normalized constant power", nearMaybe 200 (fst (normalizedPower plateau)))
     ,
+        ( "analysis: fractional origin preserves a complete thirty-second window"
+        , let (np, count) = normalizedPower (V.fromList [(2.3 + fromIntegral i, 200) | i <- [0 .. 30 :: Int]])
+           in nearMaybe 200 np && count == 1
+        )
+    ,
+        ( "analysis: fractional origin preserves the final complete rolling window"
+        , let (np, count) = normalizedPower (V.fromList [(4.1 + fromIntegral i, 200) | i <- [0 .. 60 :: Int]])
+           in nearMaybe 200 np && count == 31
+        )
+    ,
+        ( "analysis: a genuinely incomplete second does not supply a rolling window"
+        , let xs = V.fromList ([(2.3 + fromIntegral i, 200) | i <- [0 .. 29 :: Int]] <> [(32.3 - 1e-6, 200)])
+           in normalizedPower xs == (Nothing, 0)
+        )
+    ,
         ( "analysis: fractional timestamps preserve exact five-second gaps"
         , let watts = V.fromList ((0, 200) : [(0.2 + fromIntegral i * 5, 200) | i <- [0 .. 12 :: Int]])
               result = analysePower 60.2 (AthleteContext Nothing Nothing (Just (Power 200))) watts V.empty

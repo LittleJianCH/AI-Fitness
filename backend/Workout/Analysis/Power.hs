@@ -42,7 +42,13 @@ normalizedPower xs
     rolling original@(first : _) =
         let origin = fromTime first
             end = foldl' (\_ s -> toTime s) origin original
-            n = floor (end - origin) :: Int
+            duration = end - origin
+            whole = floor duration :: Int
+            -- Subtracting converted timestamps can put an exact whole-second
+            -- duration just below its endpoint (e.g. 32.3 - 2.3). Admit only
+            -- conversion-scale rounding, never a genuinely incomplete second.
+            tolerance = min 1e-9 (4 * encodeFloat 1 (-52) * maximum [1, abs origin, abs end])
+            n = if fromIntegral (whole + 1) - duration <= tolerance then whole + 1 else whole
             -- A fractional tail beyond the final one-second endpoint does not
             -- contribute to any complete window and must not change scaling.
             ss = clip origin (origin + fromIntegral n) original
