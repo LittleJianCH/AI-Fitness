@@ -8,7 +8,13 @@ user-confirmed backend-to-HealthKit export with durable recovery and receipts.
 The Settings tab groups appearance, effective-dated body/training parameters,
 bicycle/shoe management and account controls. Workout details include backend
 statistics, metric analysis, distance splits, power/heart-rate zones, running
-dynamics, fitness-history analysis and full-screen routes. See
+dynamics, fitness-history analysis and full-screen routes. Raw metric charts,
+metric navigation/comparison, and the separately requested power curve remain
+available when derived workout analysis fails; retry applies to the derived
+analysis. Settings requests and cached values are isolated by session identity,
+including account changes during a save; reads hide stale settings immediately
+before the next load starts. Training-history requests use each
+civil day's actual boundaries, including midnight daylight-saving changes. See
 [the analysis definitions](../docs/workout-analysis.md) for coverage policies,
 parameter precedence, algorithm assumptions and explicit remaining feature gaps.
 
@@ -110,8 +116,10 @@ account with synthetic cycling/running records, and creates a dedicated iPhone 1
 iOS 17.5 simulator. It runs the XCUITest login, wrong-password, workout list/filter/
 detail, relaunch/restoration and logout scenarios. It also verifies body mass/height
 and equipment name/mass after relaunch, persisted body mass/FTP in backend
-analysis, metric comparison and axis switching, negative grade/temperature analysis, and explicit training-history assumptions
-with unknown daily loads. The harness then removes the server, database and
+analysis, metric comparison and axis switching, negative grade/temperature
+analysis, and explicit training-history assumptions with unknown daily loads.
+A failure/recovery case verifies raw metric and power-curve availability while
+derived analysis is unavailable. The harness then removes the server, database and
 simulator. A profile-fallback fixture starts one hour after test setup and omits
 imported athlete parameters, so the newly effective profile can be tested without
 changing real timestamps or depending on the current calendar date. Existing
@@ -287,3 +295,11 @@ real backend and changes the first curve revision per workout, making the stale
 revision refresh/unmount regression deterministic. Core tests cover wire decoding,
 revision mismatch, retry, cancellation and session isolation. Swift contract tests
 also cover 12-digit fractional timestamps without reducing backend precision.
+
+The disposable iOS harness explicitly enables analysis-failure controls in its
+loopback-only test proxy via `FITNESS_TEST_ANALYSIS_FAILURE_CONTROLS=1`. The UI
+regression toggles `POST /__test/analysis-failure/on` and `/off` to verify raw
+metrics, comparison axes, the independent power curve, and derived-analysis
+retry. These controls are absent from the production backend and disabled in
+the proxy unless explicitly enabled. The default harness requires all six UI
+tests to run without skips.

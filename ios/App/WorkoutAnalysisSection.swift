@@ -22,19 +22,19 @@ struct WorkoutAnalysisSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 28) {
-            if let analysis = store.analysis {
-                ForEach(workout.metrics.filter { !$0.points.isEmpty }) { metric in
-                    if let statistics = analysis.analysisMetrics.first(where: { $0.metricKind.rawValue == metric.id + "Metric" }) {
-                        MetricAnalysisCard(workout: workout, metric: metric, statistics: statistics, analysis: analysis)
-                    }
-                    if metric.id == "power" {
-                        PowerSummaryCard(power: analysis.analysisPower)
-                        PowerCurveSection(workout: workout, api: api, session: session, refreshWorkout: refreshWorkout)
-                    }
-                }
-                if workout.motion.motionPower.isEmpty && (workout.recordedCommonSummary.summaryPower.averageValue != nil || workout.recordedCommonSummary.summaryPower.maximumValue != nil) {
+            ForEach(workout.metrics.filter { !$0.points.isEmpty }) { metric in
+                MetricAnalysisCard(workout: workout, metric: metric,
+                                   statistics: store.analysis?.analysisMetrics.first(where: { $0.metricKind.rawValue == metric.id + "Metric" }),
+                                   analysis: store.analysis)
+                if metric.id == "power" {
+                    if let analysis = store.analysis { PowerSummaryCard(power: analysis.analysisPower) }
                     PowerCurveSection(workout: workout, api: api, session: session, refreshWorkout: refreshWorkout)
                 }
+            }
+            if workout.motion.motionPower.isEmpty && (workout.recordedCommonSummary.summaryPower.averageValue != nil || workout.recordedCommonSummary.summaryPower.maximumValue != nil) {
+                PowerCurveSection(workout: workout, api: api, session: session, refreshWorkout: refreshWorkout)
+            }
+            if let analysis = store.analysis {
                 HeartLoadCard(heart: analysis.analysisHeart)
                 NavigationLink {
                     TrainingHistoryScreen(api: api, session: session, ending: min(Date(), workout.workoutObservation.observationRange.rangeStart))
@@ -76,27 +76,31 @@ struct WorkoutAnalysisSection: View {
 private struct MetricAnalysisCard: View {
     let workout: Workout
     let metric: WorkoutMetric
-    let statistics: MetricAnalysis
-    let analysis: WorkoutAnalysis
+    let statistics: MetricAnalysis?
+    let analysis: WorkoutAnalysis?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             FitnessSectionTitle(title: metric.title, color: metric.accent)
             VStack(alignment: .leading, spacing: 18) {
-                HStack(alignment: .top) {
-                    if metric.id == "speed", workout.sportName == "跑步" {
-                        FitnessStat(title: "平均配速", value: WorkoutFormat.pace(statistics.metricStatistics.averageValue), prominent: true)
-                        FitnessStat(title: "最快采样配速", value: WorkoutFormat.pace(statistics.metricStatistics.maximumValue))
-                    } else {
-                        FitnessStat(title: "平均", value: metric.displayValue(statistics.metricStatistics.averageValue), prominent: true)
-                        FitnessStat(title: "最大", value: metric.displayValue(statistics.metricStatistics.maximumValue))
+                if let statistics {
+                    HStack(alignment: .top) {
+                        if metric.id == "speed", workout.sportName == "跑步" {
+                            FitnessStat(title: "平均配速", value: WorkoutFormat.pace(statistics.metricStatistics.averageValue), prominent: true)
+                            FitnessStat(title: "最快采样配速", value: WorkoutFormat.pace(statistics.metricStatistics.maximumValue))
+                        } else {
+                            FitnessStat(title: "平均", value: metric.displayValue(statistics.metricStatistics.averageValue), prominent: true)
+                            FitnessStat(title: "最大", value: metric.displayValue(statistics.metricStatistics.maximumValue))
+                        }
                     }
                 }
                 MetricTimeline(workout: workout, metric: metric, axis: .time)
                     .frame(height: 165).accessibilityIdentifier("metric-\(metric.id)")
                 HStack {
-                    Text("有效覆盖 " + WorkoutFormat.duration(statistics.metricCoveredSeconds))
-                        .font(.caption).foregroundStyle(.secondary)
+                    if let statistics {
+                        Text("有效覆盖 " + WorkoutFormat.duration(statistics.metricCoveredSeconds))
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
                     Spacer()
                     NavigationLink("详细分析") {
                         MetricAnalysisScreen(workout: workout, metric: metric, statistics: statistics, analysis: analysis)

@@ -2,13 +2,17 @@ import Observation
 
 @MainActor @Observable
 public final class SettingsStore {
-    public private(set) var settings: UserSettings?
+    public var settings: UserSettings? {
+        sessionIdentity == session.generation ? cachedSettings : nil
+    }
+    private var cachedSettings: UserSettings?
     public private(set) var isLoading = false
     public private(set) var isSaving = false
     public private(set) var message: String?
     @ObservationIgnored private let service: any SettingsService
     @ObservationIgnored private let session: SessionStore
     @ObservationIgnored private var generation: UInt64 = 0
+    private var sessionIdentity: UInt64?
 
     public init(service: any SettingsService, session: SessionStore) {
         self.service = service
@@ -16,11 +20,12 @@ public final class SettingsStore {
     }
 
     public func load() async {
+        invalidateForSessionChange()
         guard !isSaving else { return }
         generation &+= 1
         let request = generation
         let identity = session.generation
-        settings = nil
+        cachedSettings = nil
         message = nil
         guard let token = session.token, session.user != nil else { isLoading = false; return }
         isLoading = true
@@ -29,11 +34,12 @@ public final class SettingsStore {
             let result = try await service.settings(token: token)
             guard request == generation, identity == session.generation else { return }
             try Task.checkCancellation()
-            settings = result
+            cachedSettings = result
         } catch { handle(error, identity: identity, request: request) }
     }
 
     public func save(_ proposed: UserSettings) async -> Bool {
+        invalidateForSessionChange()
         guard !isSaving, !isLoading, let token = session.token, session.user != nil else { return false }
         generation &+= 1
         let request = generation
@@ -45,12 +51,23 @@ public final class SettingsStore {
             let result = try await service.saveSettings(token: token, settings: proposed)
             guard request == generation, identity == session.generation else { return false }
             try Task.checkCancellation()
-            settings = result
+            cachedSettings = result
             return true
         } catch {
             handle(error, identity: identity, request: request)
             return false
         }
+    }
+
+    private func invalidateForSessionChange() {
+        guard sessionIdentity != session.generation else { return }
+        sessionIdentity = session.generation
+        // Old requests must neither publish data nor finish the new account's work.
+        generation &+= 1
+        cachedSettings = nil
+        message = nil
+        isLoading = false
+        isSaving = false
     }
 
     private func handle(_ error: any Error, identity: UInt64, request: UInt64) {

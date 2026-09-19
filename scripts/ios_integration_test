@@ -109,6 +109,8 @@ finally:
     request('/auth/logout', {}, token)
 print('Synthetic grade and temperature fixture created.')
 PY
+# Fault controls exist only in this loopback proxy over disposable test data.
+export FITNESS_TEST_ANALYSIS_FAILURE_CONTROLS=1
 native /usr/bin/python3 scripts/ios_test_proxy.py "$test_root/proxy-port" >"$test_root/proxy.log" 2>&1 &
 proxy_pid=$!
 for _ in {1..100}; do
@@ -130,7 +132,7 @@ native /usr/bin/python3 - <<'PY'
 import json
 with open('ios/build/integration-result.json') as source:
     metrics = json.load(source)['metrics']
-assert int(metrics['testsCount']['_value']) >= 5, 'Required UI tests did not run'
+assert int(metrics['testsCount']['_value']) >= 6, 'Required UI tests did not run'
 assert int(metrics.get('testsSkippedCount', {}).get('_value', '0')) == 0, 'UI integration tests were skipped'
 assert int(metrics.get('testsFailedCount', {}).get('_value', '0')) == 0, 'UI integration tests failed'
 PY

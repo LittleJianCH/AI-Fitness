@@ -14,6 +14,30 @@ final class TrainingCalendarTests: XCTestCase {
         XCTAssertFalse(days[0].calendarRecordingComplete)
     }
 
+    func testCalendarCrossesMidnightDaylightSavingWithoutOverlappingDays() throws {
+        try assertSantiagoDays(ending: "2026-09-07T16:00:00Z", dates: ["2026-09-05", "2026-09-06", "2026-09-07"],
+                               boundaries: ["2026-09-05T04:00:00Z", "2026-09-06T04:00:00Z", "2026-09-07T03:00:00Z", "2026-09-08T03:00:00Z"])
+    }
+
+    func testCalendarEndingOnMidnightDaylightSavingDoesNotShiftEarlierDays() throws {
+        try assertSantiagoDays(ending: "2026-09-06T16:00:00Z", dates: ["2026-09-04", "2026-09-05", "2026-09-06"],
+                               boundaries: ["2026-09-04T04:00:00Z", "2026-09-05T04:00:00Z", "2026-09-06T04:00:00Z", "2026-09-07T03:00:00Z"])
+    }
+
+    private func assertSantiagoDays(ending: String, dates: [String], boundaries: [String]) throws {
+        let zone = try XCTUnwrap(TimeZone(identifier: "America/Santiago"))
+        let formatter = ISO8601DateFormatter()
+        let date = try XCTUnwrap(formatter.date(from: ending))
+        let expected = try boundaries.map { try XCTUnwrap(formatter.date(from: $0)) }
+        let days = TrainingCalendar.days(ending: date, count: dates.count, timeZone: zone, complete: true)
+        XCTAssertEqual(days.map(\.calendarDate), dates)
+        XCTAssertEqual(days.map(\.calendarStart), Array(expected.dropLast()))
+        XCTAssertEqual(days.map(\.calendarEnd), Array(expected.dropFirst()))
+        for (day, next) in zip(days, days.dropFirst()) { XCTAssertEqual(day.calendarEnd, next.calendarStart) }
+        let transition = try XCTUnwrap(days.first { $0.calendarDate == "2026-09-06" })
+        XCTAssertEqual(transition.calendarEnd.timeIntervalSince(transition.calendarStart), 23 * 3600)
+    }
+
     func testCalendarBoundsAndExplicitCompleteness() throws {
         let zone = try XCTUnwrap(TimeZone(secondsFromGMT: 8 * 3600))
         XCTAssertTrue(TrainingCalendar.days(ending: Date(), count: 0, timeZone: zone, complete: true).isEmpty)

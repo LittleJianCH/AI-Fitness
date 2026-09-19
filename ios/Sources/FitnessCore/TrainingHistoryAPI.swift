@@ -32,10 +32,12 @@ public enum TrainingCalendar {
         formatter.timeZone = timeZone
         formatter.dateFormat = "yyyy-MM-dd"
         return (0..<count).compactMap { index in
-            guard let start = calendar.date(byAdding: .day, value: index-count+1, to: end),
-                  let next = calendar.date(byAdding: .day, value: 1, to: start) else { return nil }
-            return .init(calendarDate: formatter.string(from: start), calendarEnd: next,
-                         calendarRecordingComplete: complete, calendarStart: start)
+            // Midnight can normalize to 01:00. Resolve each civil day's interval
+            // independently so that hour cannot carry into another boundary.
+            guard let candidate = calendar.date(byAdding: .day, value: index-count+1, to: end),
+                  let day = calendar.dateInterval(of: .day, for: candidate) else { return nil }
+            return .init(calendarDate: formatter.string(from: day.start), calendarEnd: day.end,
+                         calendarRecordingComplete: complete, calendarStart: day.start)
         }
     }
 }

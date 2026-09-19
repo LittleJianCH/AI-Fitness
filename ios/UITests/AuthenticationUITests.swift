@@ -386,3 +386,73 @@ final class AuthenticationUITests: XCTestCase {
         add(attachment)
     }
 }
+
+// Fault controls are enabled only by the disposable integration harness.
+extension AuthenticationUITests {
+    @MainActor
+    func testRawMetricsAndPowerCurveSurviveAnalysisFailureAgainstBackend() async throws {
+        guard let server = ProcessInfo.processInfo.environment["FITNESS_TEST_SERVER"], server.hasPrefix("http://127.0.0.1:") else {
+            throw XCTSkip("Requires the disposable analysis-failure proxy.")
+        }
+        func setAnalysisFailure(_ enabled: Bool) async throws {
+            let url = try XCTUnwrap(URL(string: server + "/__test/analysis-failure/" + (enabled ? "on" : "off")))
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            let (_, response) = try await URLSession.shared.data(for: request)
+            XCTAssertEqual((response as? HTTPURLResponse)?.statusCode, 204)
+        }
+        try await setAnalysisFailure(true)
+        let app = XCUIApplication()
+        app.launchArguments = ["-serverOrigin", server]
+        app.launch()
+        if app.tabBars.buttons["设置"].waitForExistence(timeout: 2) {
+            openAccount(in: app)
+            app.buttons["logout"].tap()
+        }
+        let username = app.textFields["username"]
+        XCTAssertTrue(username.waitForExistence(timeout: 15))
+        username.tap()
+        username.typeText("ios_fixture_user")
+        app.secureTextFields["password"].tap()
+        app.secureTextFields["password"].typeText("synthetic ios fixture password")
+        app.buttons["login"].tap()
+        XCTAssertTrue(app.segmentedControls["sportFilter"].waitForExistence(timeout: 15))
+        let dense = app.staticTexts["Synthetic dense cycling"]
+        reveal(dense, in: app)
+        dense.tap()
+        let retry = app.buttons["重试分析"]
+        reveal(retry, in: app)
+        XCTAssertTrue(retry.exists)
+        capture(app, name: "Derived analysis failure remains localized")
+        let power = app.staticTexts["powerCurveSelected"]
+        reveal(power, in: app, searchingAbove: true)
+        XCTAssertTrue(power.label.contains("W"), power.label)
+        capture(app, name: "Independent power curve during analysis failure")
+        let raw = app.otherElements["metric-heartRate"].firstMatch
+        reveal(raw, in: app, searchingAbove: true)
+        let details = app.buttons["metricAnalysis-heartRate"]
+        reveal(details, in: app)
+        details.tap()
+        XCTAssertTrue(app.navigationBars["心率分析"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts["派生统计暂不可用，可返回运动详情重试分析。"].exists)
+        XCTAssertFalse(app.staticTexts["分布"].exists)
+        app.buttons["comparisonMetric"].tap()
+        app.buttons["功率"].tap()
+        XCTAssertTrue(app.staticTexts["两张图共享横轴位置，各自保留原始单位。"].waitForExistence(timeout: 5))
+        app.segmentedControls["metricAxis"].buttons["距离"].tap()
+        XCTAssertTrue(app.segmentedControls["metricAxis"].buttons["距离"].isSelected)
+        capture(app, name: "Raw metric comparison without derived analysis")
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+        reveal(retry, in: app)
+        try await setAnalysisFailure(false)
+        retry.tap()
+        let derived = app.staticTexts["心率与训练负荷"]
+        reveal(derived, in: app)
+        XCTAssertTrue(derived.exists)
+        XCTAssertFalse(retry.exists)
+        capture(app, name: "Derived analysis recovers after retry")
+        openAccount(in: app)
+        app.buttons["logout"].tap()
+        XCTAssertTrue(username.waitForExistence(timeout: 10))
+    }
+}

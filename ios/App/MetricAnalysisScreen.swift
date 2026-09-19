@@ -8,8 +8,8 @@ enum MetricAxis: String, CaseIterable { case time = "时间", distance = "距离
 struct MetricAnalysisScreen: View {
     let workout: Workout
     let metric: WorkoutMetric
-    let statistics: MetricAnalysis
-    let analysis: WorkoutAnalysis
+    let statistics: MetricAnalysis?
+    let analysis: WorkoutAnalysis?
     @State private var axis: MetricAxis = .time
     @State private var comparison = ""
     @State private var selection: Double?
@@ -36,37 +36,46 @@ struct MetricAnalysisScreen: View {
                         Text("两张图共享横轴位置，各自保留原始单位。")
                             .font(.caption).foregroundStyle(.secondary)
                     }
-                    LabeledContent("平均", value: metric.displayValue(statistics.metricStatistics.averageValue))
-                    LabeledContent("排除零平台的平均", value: metric.displayValue(statistics.metricAverageExcludingZeros))
-                    LabeledContent("最小", value: metric.displayValue(statistics.metricStatistics.minimumValue))
-                    LabeledContent("最大", value: metric.displayValue(statistics.metricStatistics.maximumValue))
-                    LabeledContent("有效覆盖", value: WorkoutFormat.duration(statistics.metricCoveredSeconds))
-                    LabeledContent("原始采样", value: "\(statistics.metricSampleCount) 个")
-                    if metric.id == "speed", workout.sportName == "跑步" {
-                        LabeledContent("平均配速", value: WorkoutFormat.pace(statistics.metricStatistics.averageValue))
-                        LabeledContent("最快采样配速", value: WorkoutFormat.pace(statistics.metricStatistics.maximumValue))
-                    }
-                }
-                AnalysisCard(title: "分布", color: metric.accent) {
-                    Chart(Array(statistics.metricDistribution.enumerated()), id: \.offset) { _, bin in
-                        BarMark(xStart: .value(metric.unit, bin.binLower * metric.canonicalScale),
-                                xEnd: .value(metric.unit, bin.binUpper * metric.canonicalScale),
-                                y: .value("分钟", bin.binSeconds / 60))
-                            .foregroundStyle(metric.accent.gradient)
-                    }.frame(height: 220)
-                    Text("横轴 \(metric.unit) · 纵轴分钟。基于有效时间覆盖，不按采样点数量计数。")
-                        .font(.footnote).foregroundStyle(.secondary)
-                }
-                if metric.id == "power", !analysis.analysisPowerZones.isEmpty {
-                    AnalysisCard(title: "功率区间", color: .purple) {
-                        ZoneChart(zones: analysis.analysisPowerZones, unit: "W")
-                        Text("阈值功率的 55%、75%、90%、105%、120%、150% 为区间边界。只计入有效功率覆盖。")
+                    if let statistics {
+                        LabeledContent("平均", value: metric.displayValue(statistics.metricStatistics.averageValue))
+                        LabeledContent("排除零平台的平均", value: metric.displayValue(statistics.metricAverageExcludingZeros))
+                        LabeledContent("最小", value: metric.displayValue(statistics.metricStatistics.minimumValue))
+                        LabeledContent("最大", value: metric.displayValue(statistics.metricStatistics.maximumValue))
+                        LabeledContent("有效覆盖", value: WorkoutFormat.duration(statistics.metricCoveredSeconds))
+                        LabeledContent("原始采样", value: "\(statistics.metricSampleCount) 个")
+                        if metric.id == "speed", workout.sportName == "跑步" {
+                            LabeledContent("平均配速", value: WorkoutFormat.pace(statistics.metricStatistics.averageValue))
+                            LabeledContent("最快采样配速", value: WorkoutFormat.pace(statistics.metricStatistics.maximumValue))
+                        }
+                    } else {
+                        Text("派生统计暂不可用，可返回运动详情重试分析。")
                             .font(.footnote).foregroundStyle(.secondary)
                     }
                 }
-                ForEach(Array(analysis.analysisRelationships.filter { $0.relationshipX.rawValue == metric.id + "Metric" }.enumerated()), id: \.offset) { _, relationship in
-                    if let other = workout.metrics.first(where: { $0.id + "Metric" == relationship.relationshipY.rawValue }) {
-                        RelationshipCard(metric: metric, other: other, relationship: relationship)
+                if let statistics {
+                    AnalysisCard(title: "分布", color: metric.accent) {
+                        Chart(Array(statistics.metricDistribution.enumerated()), id: \.offset) { _, bin in
+                            BarMark(xStart: .value(metric.unit, bin.binLower * metric.canonicalScale),
+                                    xEnd: .value(metric.unit, bin.binUpper * metric.canonicalScale),
+                                    y: .value("分钟", bin.binSeconds / 60))
+                                .foregroundStyle(metric.accent.gradient)
+                        }.frame(height: 220)
+                        Text("横轴 \(metric.unit) · 纵轴分钟。基于有效时间覆盖，不按采样点数量计数。")
+                            .font(.footnote).foregroundStyle(.secondary)
+                    }
+                }
+                if let analysis {
+                    if metric.id == "power", !analysis.analysisPowerZones.isEmpty {
+                        AnalysisCard(title: "功率区间", color: .purple) {
+                            ZoneChart(zones: analysis.analysisPowerZones, unit: "W")
+                            Text("阈值功率的 55%、75%、90%、105%、120%、150% 为区间边界。只计入有效功率覆盖。")
+                                .font(.footnote).foregroundStyle(.secondary)
+                        }
+                    }
+                    ForEach(Array(analysis.analysisRelationships.filter { $0.relationshipX.rawValue == metric.id + "Metric" }.enumerated()), id: \.offset) { _, relationship in
+                        if let other = workout.metrics.first(where: { $0.id + "Metric" == relationship.relationshipY.rawValue }) {
+                            RelationshipCard(metric: metric, other: other, relationship: relationship)
+                        }
                     }
                 }
             }.padding(20).frame(maxWidth: 760).frame(maxWidth: .infinity)
