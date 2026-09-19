@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+set -euo pipefail
+repo_root=$(cd "$(dirname "$0")/.." && pwd)
+cd "$repo_root"
+# Apple's python launcher must use the selected Xcode, not Nix's SDK environment.
+if [[ "$(uname -s)" == Darwin ]]; then unset SDKROOT DEVELOPER_DIR TOOLCHAINS; fi
+mode=${1:---host}
+[[ "$mode" == --host || "$mode" == --device ]] || { echo 'Usage: android_integration_test [--host|--device]' >&2; exit 2; }
+# Prepare the backend and generated contracts with the commands in android/README.md.
+for command in initdb pg_ctl createdb; do
+    command -v "$command" >/dev/null || { echo "Run in the root Nix backend shell; missing $command" >&2; exit 2; }
+done
+[[ -n "${JAVA_HOME:-}" && -x "$JAVA_HOME/bin/java" ]] || { echo 'Set JAVA_HOME to the pinned JDK17.' >&2; exit 2; }
+[[ -x backend/build/backend && -f backend/build/export-response.json && -f contracts/build/openapi.json ]] || {
+    echo 'Prepare backend all/contract/contract-test and contracts generation first; see android/README.md.' >&2; exit 2;
+}
+if [[ "$mode" == --device ]]; then
+    command -v adb >/dev/null || { echo 'Provide an authorized SDK and a running emulator/device.' >&2; exit 2; }
+    [[ $(adb get-state) == device ]]
+fi
+unset PGHOSTADDR PGSERVICE PGSERVICEFILE PGOPTIONS MINIMUM_REVISION
+export PGPORT=5432
+umask 077
+test_root=$(mktemp -d /tmp/ai-fitness-android.XXXXXX)
+server_pid=''
+cleanup() {
+    if [[ "$mode" == --device && -n "${PORT:-}" ]]; then adb reverse --remove "tcp:$PORT" >/dev/null 2>&1 || true; fi
+    if [[ -n "$server_pid" ]]; then kill "$server_pid" 2>/dev/null || true; wait "$server_pid" 2>/dev/null || true; fi
+    pg_ctl -D "$test_root/data" -m immediate -w stop >/dev/null 2>&1 || true
+    rm -rf -- "$test_root"
+}
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+mkdir -p "$test_root/socket" android/build
+export FIT_ARCHIVE_ROOT="$test_root/archive" AI_FITNESS_ANDROID_DISPOSABLE=1
+initdb -D "$test_root/data" --username=fitness_android_test --no-locale --encoding=UTF8 --auth-local=trust --auth-host=reject >"$test_root/init.log"
+pg_ctl -D "$test_root/data" -l "$test_root/postgres.log" -o "-k $test_root/socket -c listen_addresses=''" -w start >/dev/null
+createdb -h "$test_root/socket" -U fitness_android_test fitness_android_test
+export DATABASE_URL="host=$test_root/socket port=5432 dbname=fitness_android_test user=fitness_android_test"
+(cd backend && IHP_MIGRATION_DIR=Application/Migration/ migrate) >"$test_root/migrate.log" 2>&1 || { cat "$test_root/migrate.log"; exit 1; }
+PORT=$(python3 - <<'PY'
+import socket
+with socket.socket() as sock:
+    sock.bind(('127.0.0.1', 0))
+    print(sock.getsockname()[1])
+PY
+)
+export PORT REGISTRATION_OPEN=true APP_ORIGIN=https://localhost:5173 ARGON_MEMORY_KIB=19456 ARGON_ITERATIONS=2
+backend/build/backend >"$test_root/server.log" 2>&1 &
+server_pid=$!
+python3 scripts/android_test_account.py
+export AI_FITNESS_ANDROID_TEST_SERVER="http://127.0.0.1:$PORT"
+export GRADLE_USER_HOME="${GRADLE_USER_HOME:-$repo_root/android/.gradle-home}"
+if [[ "$mode" == --host ]]; then
+    android/gradlew -p android -PcontractOnly checkKotlinFormat :consumer:test --console=plain
+    echo 'Android shared Kotlin consumer integration passed against disposable PostgreSQL/API (not a device UI check).'
+else
+    adb reverse "tcp:$PORT" "tcp:$PORT"
+    android/gradlew -p android checkKotlinFormat :app:connectedDebugAndroidTest \
+        "-Pandroid.testInstrumentationRunnerArguments.server=$AI_FITNESS_ANDROID_TEST_SERVER" --console=plain
+    echo 'Android instrumented UI integration passed against disposable PostgreSQL/API.'
+fi

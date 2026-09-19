@@ -1,0 +1,171 @@
+package com.aifitness
+
+import com.aifitness.contract.*
+import java.io.File
+import java.time.Duration
+import java.time.LocalDate
+import java.time.ZoneId
+import org.json.JSONObject
+import org.junit.Assert.*
+import org.junit.Test
+
+class ContractTests {
+    private fun fixture(name: String): JSONObject =
+        JSONObject(File(System.getProperty("fixtureDir", "../../backend/build"), name).readText())
+
+    @Test
+    fun backendFixturesDecodeAndRoundTrip() {
+        val workout = Workout.fromJson(fixture("workout-response.json"))
+        assertEquals(workout, Workout.fromJson(workout.toJson()))
+        val list = Page_WorkoutCard.fromJson(fixture("list-response.json"))
+        assertTrue(list.items.isNotEmpty())
+        val analysis = WorkoutAnalysis.fromJson(fixture("analysis-response.json"))
+        assertEquals(analysis, WorkoutAnalysis.fromJson(analysis.toJson()))
+        val settings = UserSettings.fromJson(fixture("settings-response.json"))
+        assertEquals(settings, UserSettings.fromJson(settings.toJson()))
+        val curve = PowerCurve.fromJson(fixture("power-curve-response.json"))
+        assertEquals(curve, PowerCurve.fromJson(curve.toJson()))
+    }
+
+    @Test
+    fun requiredOptionalNullAndUnknownFieldsStayDistinct() {
+        val json = fixture("settings-response.json")
+        json.put("futureField", "ignored")
+        UserSettings.fromJson(json)
+        json.remove("settingsRevision")
+        rejected { UserSettings.fromJson(json) }
+        val statistics = JSONObject().put("averageValue", 0)
+        assertEquals(0.0, Statistics_Double.fromJson(statistics).averageValue!!, 0.0)
+        assertNull(Statistics_Double.fromJson(JSONObject()).averageValue)
+        rejected { Statistics_Double.fromJson(JSONObject().put("averageValue", JSONObject.NULL)) }
+        rejected { Statistics_Double.fromJson(JSONObject().put("averageValue", "42")) }
+        rejected {
+            SoftwareSettings.fromJson(JSONObject().put("softwareAppearance", "futureAppearance"))
+        }
+    }
+
+    @Test
+    fun revisionsRemainExactDecimalStrings() {
+        val json = fixture("settings-response.json")
+        json.put("settingsRevision", "18446744073709551615")
+        assertEquals("18446744073709551615", UserSettings.fromJson(json).settingsRevision)
+        for (value in listOf<Any>(1, "01", "-1", "1.0", "1e3", "")) {
+            json.put("settingsRevision", value)
+            rejected { UserSettings.fromJson(json) }
+        }
+    }
+
+    @Test
+    fun picosecondsDecodeWithoutRejectingValidServerTimes() {
+        assertEquals(
+            "2026-09-19T00:00:00.123456789Z",
+            parseInstant("2026-09-19T00:00:00.123456789123Z").toString(),
+        )
+    }
+
+    @Test
+    fun endpointPolicyRejectsCredentialAndRedirectDestinations() {
+        assertEquals(
+            "https://example.test",
+            FitnessApi.validateEndpoint("https://example.test/api/v1/", false),
+        )
+        assertEquals(
+            "http://10.0.2.2:8080",
+            FitnessApi.validateEndpoint("http://10.0.2.2:8080", true),
+        )
+        for (value in
+            listOf(
+                "http://example.test",
+                "https://user:password@example.test",
+                "https://example.test?token=x",
+                "https://example.test/path",
+                "file:///tmp/private",
+                "http://127.0.0.1.evil.test",
+            )) rejected { FitnessApi.validateEndpoint(value, true) }
+        rejected { FitnessApi.validateEndpoint("http://127.0.0.1:8080", false) }
+    }
+
+    @Test
+    fun calendarUsesDaylightSavingBoundaries() {
+        val zone = ZoneId.of("America/New_York")
+        for ((date, hours) in listOf("2026-03-08" to 23L, "2026-11-01" to 25L)) {
+            val day = trainingCalendar(LocalDate.parse(date), 1, zone, false).single()
+            assertEquals(
+                hours,
+                Duration.between(parseInstant(day.calendarStart), parseInstant(day.calendarEnd))
+                    .toHours(),
+            )
+            assertFalse(day.calendarRecordingComplete)
+        }
+        val days = trainingCalendar(LocalDate.parse("2026-03-09"), 3, zone, true)
+        assertEquals(days[0].calendarEnd, days[1].calendarStart)
+        rejected { trainingCalendar(LocalDate.now(), 367, zone, true) }
+    }
+
+    @Test
+    fun downsamplingPreservesHiddenGapAndFullInput() {
+        val source =
+            (0..2000).map {
+                ChartPoint(it.toDouble() + if (it > 503) 300 else 0, it.toDouble(), "sample")
+            }
+        val visible = renderingPoints(source, max = 100, gap = 120.0)
+        assertTrue(visible.size <= 101)
+        assertTrue(visible.any { it.breakBefore })
+        assertEquals(source.last().x, visible.last().x, 0.0)
+        assertEquals(2001, source.size)
+    }
+
+    @Test
+    fun independentDistanceSamplesDoNotExtrapolateOrBridgeGaps() {
+        val original = Workout.fromJson(fixture("workout-response.json"))
+        val start = parseInstant(original.workoutObservation.observationRange.rangeStart)
+        val sport = original.workoutObservation.observationSport as SportCycling
+        val motion =
+            sport.data.cyclingMotion.copy(
+                motionDistance =
+                    listOf(
+                        Timed_Distance(start.toString(), 0.0),
+                        Timed_Distance(start.plusSeconds(10).toString(), 100.0),
+                        Timed_Distance(start.plusSeconds(300).toString(), 3000.0),
+                    )
+            )
+        val workout =
+            original.copy(
+                workoutObservation =
+                    original.workoutObservation.copy(
+                        observationSport =
+                            sport.copy(data = sport.data.copy(cyclingMotion = motion))
+                    )
+            )
+        val points =
+            workout.distanceAxis(
+                listOf(-1.0, 5.0, 20.0, 300.0, 301.0).map { ChartPoint(it, 100.0, "point") },
+                120.0,
+            )
+        assertEquals(2, points.size)
+        assertEquals(.05, points.first().x, 1e-9)
+        assertTrue(points.last().breakBefore)
+    }
+
+    @Test
+    fun analysisErrorsHaveActionableMessagesBeforeGenericValidation() {
+        assertEquals(
+            "这段历史的数据量超过处理上限，请缩短日期范围后重试。",
+            userMessage(ApiFailure(422, "analysis_too_large")),
+        )
+        assertEquals(
+            "当前历史数据暂时无法完成分析，请检查记录与个人参数。",
+            userMessage(ApiFailure(422, "analysis_unavailable")),
+        )
+        assertTrue(userMessage(StaleWorkoutAnalysis()).contains("刷新运动详情"))
+    }
+
+    private fun rejected(block: () -> Unit) {
+        try {
+            block()
+        } catch (_: Exception) {
+            return
+        }
+        fail("Invalid contract input was accepted")
+    }
+}

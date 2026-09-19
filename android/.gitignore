@@ -1,0 +1,9 @@
+/.gradle/
+/.gradle-home/
+/.kotlin/
+/build/
+/**/build/
+/local.properties
+/.tooling/
+*.hprof
+/*.log

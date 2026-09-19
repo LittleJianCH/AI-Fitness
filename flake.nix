@@ -63,6 +63,10 @@
           web = stable.mkShell {
             packages = [ stable.nodejs stable.pnpm stable.openssl ];
           };
+          android = stable.mkShell {
+            packages = [ stable.jdk17 stable.unzip ];
+            JAVA_HOME = "${stable.jdk17.home}";
+          };
           default = stable.mkShell {
             packages = [
               (haskell.ghc.withPackages (p: [
