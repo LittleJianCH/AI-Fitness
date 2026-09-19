@@ -19,10 +19,9 @@ import Data.Text (Text)
 import qualified Data.Text as Text
 import Data.Time
     ( Day
-    , UTCTime
+    , UTCTime (..)
     , addDays
     , defaultTimeLocale
-    , diffDays
     , diffUTCTime
     , parseTimeM
     , utctDay
@@ -97,10 +96,16 @@ validateRequest request = do
         require
             ( duration >= 18 * 3600
                 && duration <= 30 * 3600
-                && abs (diffDays day (utctDay (calendarStart entry))) <= 1
+                && plausibleMidnight day (calendarStart entry)
+                && plausibleMidnight (addDays 1 day) (calendarEnd entry)
             )
             "Invalid civil-day boundaries"
         pure (day, entry)
+    -- Civil midnight can be at UTC-12 through UTC+14. Validate both ends;
+    -- comparing UTC dates alone admits boundaries displaced by almost 48 hours.
+    plausibleMidnight day time =
+        let offset = diffUTCTime time (UTCTime day 0)
+         in offset >= -(14 * 3600) && offset <= 12 * 3600
 
 initialState :: TrainingHistoryRequest -> Either Text InitialState
 initialState request = case (historyAssumeNoPriorLoad request, historyPriorFitness request, historyPriorFatigue request) of

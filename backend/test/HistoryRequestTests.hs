@@ -4,7 +4,7 @@ module HistoryRequestTests (cases) where
 
 import Analysis.Fatigue.Request
 import AnalysisFixtures (epoch)
-import Data.Either (isLeft)
+import Data.Either (isLeft, isRight)
 import Data.Time (addUTCTime)
 import qualified Data.Vector as V
 import Profile.Settings (emptySettings)
@@ -75,6 +75,46 @@ cases =
             (request {historyCalendar = V.singleton (day {calendarEnd = addUTCTime (23 * 3600) epoch})}) of
             Right _ -> True
             _ -> False
+        )
+    ,
+        ( "history request: rejects boundaries shifted 47 hours from date"
+        , isLeft
+            ( validateRequest
+                ( request
+                    { historyCalendar =
+                        V.singleton
+                            (day {calendarStart = addUTCTime (47 * 3600) epoch, calendarEnd = addUTCTime (71 * 3600) epoch})
+                    }
+                )
+            )
+        )
+    ,
+        ( "history request: validates end against following midnight"
+        , isLeft
+            ( validateRequest
+                ( request
+                    { historyCalendar =
+                        V.singleton
+                            (day {calendarStart = addUTCTime (12 * 3600) epoch, calendarEnd = addUTCTime (37 * 3600) epoch})
+                    }
+                )
+            )
+        )
+    ,
+        ( "history request: supports UTC plus 14 and minus 12"
+        , all
+            ( \offset ->
+                isRight
+                    ( validateRequest
+                        ( request
+                            { historyCalendar =
+                                V.singleton
+                                    (day {calendarStart = addUTCTime offset epoch, calendarEnd = addUTCTime (86400 + offset) epoch})
+                            }
+                        )
+                    )
+            )
+            [-(14 * 3600), 12 * 3600]
         )
     ]
   where

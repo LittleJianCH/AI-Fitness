@@ -19,6 +19,7 @@ module Workout.Analysis.Series
     , excludingZeros
     , distribution
     , relationships
+    , deriveSegments
     ) where
 
 import Data.Coerce (Coercible, coerce)
@@ -117,6 +118,26 @@ numericStatistics xs = Statistics lo (average (segments 120 xs)) hi
 -- measure zero and do not delete adjacent positive ramps.
 excludingZeros :: [Segment] -> Maybe Double
 excludingZeros = average . filter (\s -> fromValue s /= 0 || toValue s /= 0)
+
+-- Derive at every breakpoint of both clocks. Intersect supported segments
+-- directly so missing/invalid intervals cannot be bridged by surviving points.
+deriveSegments :: (Double -> Double -> Maybe Double) -> Samples -> Samples -> [Segment]
+deriveSegments derive xs ys = align (segments 120 xs) (segments 120 ys)
+  where
+    align [] _ = []
+    align _ [] = []
+    align left@(x : restX) right@(y : restY) =
+        let lo = max (fromTime x) (fromTime y)
+            hi = min (toTime x) (toTime y)
+            result = do
+                a <- derive (valueAt lo x) (valueAt lo y) >>= finite
+                b <- derive (valueAt hi x) (valueAt hi y) >>= finite
+                pure (Segment lo hi a b)
+            next = case compare (toTime x) (toTime y) of
+                LT -> align restX right
+                EQ -> align restX restY
+                GT -> align left restY
+         in if hi <= lo then next else maybe next (: next) result
 
 distribution :: Double -> Samples -> V.Vector DistributionBin
 distribution base xs

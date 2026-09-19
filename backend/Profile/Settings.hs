@@ -15,17 +15,20 @@ emptySettings :: UserSettings
 emptySettings = UserSettings (SettingsRevision 0) (SoftwareSettings SystemAppearance) V.empty V.empty
 
 validate :: UserSettings -> [Text]
-validate settings =
-    ["bodyProfiles must have distinct non-nil IDs and increasing effective times" | not validHistory]
-        <> ["bodyProfiles exceed the 1000-entry limit" | length profiles > 1000]
-        <> [ "body parameters must be finite positive values; resting < threshold <= maximum heart rate"
-           | not (all validBody profiles)
-           ]
-        <> [ "equipment must have distinct non-nil IDs, a name, and a finite positive optional mass"
-           | not validEquipment
-           ]
-        <> ["equipment exceeds the 200-entry limit" | length equipment > 200]
+validate settings
+    | not (null limits) = limits
+    | otherwise =
+        ["bodyProfiles must have distinct non-nil IDs and increasing effective times" | not validHistory]
+            <> [ "body parameters must be finite positive values; resting < threshold <= maximum heart rate"
+               | not (all validBody profiles)
+               ]
+            <> [ "equipment must have distinct non-nil IDs, a name, and a finite positive optional mass"
+               | not validEquipment
+               ]
   where
+    limits =
+        ["bodyProfiles exceed the 1000-entry limit" | V.length (settingsBodyProfiles settings) > 1000]
+            <> ["equipment exceeds the 200-entry limit" | V.length (settingsEquipment settings) > 200]
     profiles = V.toList (settingsBodyProfiles settings)
     equipment = V.toList (settingsEquipment settings)
     uniqueIds ids = UUID.nil `notElem` ids && length (nub ids) == length ids
@@ -58,14 +61,15 @@ validate settings =
 -- The request carries the expected revision; only the server increments it.
 replace :: UserSettings -> UserSettings -> Either [Text] UserSettings
 replace current proposed
+    | not (null validationErrors) = Left validationErrors
     | not (null errors) = Left errors
     | otherwise = Right proposed {settingsRevision = SettingsRevision (revision + 1)}
   where
     SettingsRevision revision = settingsRevision current
     history = settingsBodyProfiles current
+    validationErrors = validate proposed
     errors =
-        validate proposed
-            <> ["revision conflict" | settingsRevision current /= settingsRevision proposed]
+        ["revision conflict" | settingsRevision current /= settingsRevision proposed]
             <> [ "existing body profile history is immutable"
                | V.take (V.length history) (settingsBodyProfiles proposed) /= history
                ]

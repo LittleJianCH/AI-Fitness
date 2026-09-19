@@ -18,6 +18,18 @@ cases =
         )
     , ("settings: effective boundary is inclusive", profileAt F.start initial == Just first)
     ,
+        ( "settings: oversized profiles rejected without inspecting entries"
+        , let oversized = emptySettings {settingsBodyProfiles = V.replicate 1001 (error "oversized entries evaluated")}
+           in validate oversized == ["bodyProfiles exceed the 1000-entry limit"]
+                && replace emptySettings oversized == Left ["bodyProfiles exceed the 1000-entry limit"]
+        )
+    ,
+        ( "settings: oversized equipment rejected without inspecting entries"
+        , let oversized = equipped {settingsEquipment = V.replicate 201 (error "oversized entries evaluated")}
+           in validate oversized == ["equipment exceeds the 200-entry limit"]
+                && replace equipped oversized == Left ["equipment exceeds the 200-entry limit"]
+        )
+    ,
         ( "settings: later profile is not applied to earlier workouts"
         , profileAt (F.at 30) history == Just first
         )

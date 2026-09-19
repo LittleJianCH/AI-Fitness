@@ -3,7 +3,6 @@
 module Workout.Analysis.Calculate (calculate, calculateWithSettings) where
 
 import Control.Applicative ((<|>))
-import Data.Maybe (mapMaybe)
 import Data.Time (diffUTCTime)
 import qualified Data.Vector as V
 import qualified Profile.Settings as Settings
@@ -111,33 +110,16 @@ calculateWithSettings settings workout =
                 contact = samples origin (groundContactTime dynamics)
                 stride = samples origin (stepLength dynamics)
                 oscillation = samples origin (verticalOscillation dynamics)
-                flightSamples =
-                    V.fromList $
-                        mapMaybe
-                            ( \(t, c) -> do
-                                stepsPerMinute <- at 120 cadence t
-                                period <- ratio 60 stepsPerMinute
-                                if c <= period then Just (t, period - c) else Nothing
-                            )
-                            (V.toList contact)
-                verticalSamples =
-                    V.fromList $
-                        mapMaybe
-                            ( \(t, v) -> do
-                                lengthMetres <- at 120 stride t
-                                value <- (* 100) <$> ratio v lengthMetres
-                                pure (t, value)
-                            )
-                            (V.toList oscillation)
-                flightRatioSamples =
-                    V.fromList $
-                        mapMaybe
-                            ( \(t, f) -> do
-                                c <- at 120 contact t
-                                value <- (* 100) <$> ratio f (f + c)
-                                pure (t, value)
-                            )
-                            (V.toList flightSamples)
+                flight c stepsPerMinute = do
+                    period <- ratio 60 stepsPerMinute
+                    if c <= period then Just (period - c) else Nothing
+                flightSpans = deriveSegments flight contact cadence
+                verticalSpans = deriveSegments (\v s -> (* 100) <$> ratio v s) oscillation stride
+                flightRatioSpans =
+                    deriveSegments
+                        (\c stepsPerMinute -> flight c stepsPerMinute >>= \f -> (* 100) <$> ratio f (f + c))
+                        contact
+                        cadence
                 cadSpans = segments 120 cadence
                 count =
                     if abs (covered cadSpans - elapsed) <= 1e-6 && elapsed > 0
@@ -152,8 +134,8 @@ calculateWithSettings settings workout =
              in Just
                     ( RunningAnalysis
                         count
-                        (avg flightSamples)
-                        (avg verticalSamples)
-                        (avg flightRatioSamples)
+                        (average flightSpans)
+                        (average verticalSpans)
+                        (average flightRatioSpans)
                         effectiveness
                     )

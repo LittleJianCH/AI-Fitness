@@ -9,7 +9,7 @@ No personal observations, routes or screenshots are stored as fixtures.
 The detail experience combines a route, metric overview, typed statistics,
 distance splits, source laps and dedicated metric analysis pages. Cycling adds
 power distribution, duration curve and cadence analysis. Running adds pace,
-power and running dynamics. Analytical results are owned by Haskell; Swift owns
+power and running dynamics. Analytical results are owned by Haskell; clients own
 formatting, chart selection, navigation and map interaction.
 
 Recorded summaries remain distinct from recomputed measurements. Missing inputs
@@ -19,6 +19,25 @@ and coverage policy. Client identity/revision checks protect concurrent refreshe
 
 These are versioned AI Fitness calculations, not a claim of numerical equivalence
 with HealthFit's undisclosed algorithms.
+
+## Shared client behavior
+
+The Web, iOS and Android implementations share this information order: route and
+recorded overview; sensor metrics; cycling power or running dynamics; heart-rate
+load; distance splits and source laps; recorded source/context. Training history
+is reachable from the load section. Settings group software preferences, body
+parameter history, equipment and account/session controls.
+
+Desktop and mobile layouts may differ. The Web retains its existing visual
+language; SwiftUI and Jetpack Compose use native mobile controls and navigation.
+All clients consume the same server projections and preserve their unavailable,
+partial-coverage and revision states. They do not reimplement load, normalized
+power, distribution, split or fatigue calculations.
+
+Client verification must connect to a disposable real backend, including settings
+save/reload and workout analysis. Mock and contract tests complement those checks;
+they do not replace them. Runtime-specific verification and any unavailable
+device/toolchain are reported separately.
 
 ## Calculation definitions
 
@@ -34,7 +53,9 @@ profile. It never changes observations or recorded summaries.
 * Power uses five-second gaps. Normalized power integrates complete 30-second
   rolling windows at one-second endpoints, averages fourth powers, then takes
   the fourth root. Gaps reset windows and startup padding is not invented.
-  Values are scaled before exponentiation. The returned normalization duration
+  The fourth moment is scaled by contributing windows; isolated observations,
+  short disconnected runs and fractional tails cannot change that scale.
+  The returned normalization duration
   counts one-second rolling endpoints; seven days of supported power is the
   processing limit.
 * Variability is normalized/mean power; intensity is normalized power/FTP.
@@ -51,7 +72,9 @@ profile. It never changes observations or recorded summaries.
 * Running steps require full cadence coverage. Flight time is
   `60 / steps_per_minute - contact_seconds` when nonnegative. Vertical ratio is
   oscillation/step length. Flight ratio is flight/(flight+contact). Running
-  effectiveness needs full speed/power coverage and mass.
+  effectiveness needs full speed/power coverage and mass. Derived flight/ratio
+  means use linear segments between the combined breakpoints of both contributing
+  sensor clocks, intersecting supported intervals without bridging gaps.
 * Relationships align sensor timestamps without extrapolation across gaps.
   Correlation uses all aligned pairs and is sample-based; constant signals have
   no coefficient. At most 600 points are rendered.
@@ -66,7 +89,8 @@ classify physiological readiness or health risk.
 `GET/PUT /api/v1/settings` is scoped to the authenticated owner. PUT carries the
 expected decimal-string revision and the server increments it. Account locking
 serializes both creation and updates; stale writes return 409, invalid documents
-422. Migration `1789776000-user-settings.sql` adds a versioned JSONB document.
+422. Collection limits are checked before entry/history validation. Migration
+`1789776000-user-settings.sql` adds a versioned JSONB document.
 
 Software preferences control system/light/dark appearance; display units remain
 metric. Body profiles contain an immutable UUID, effective UTC start, optional
@@ -101,8 +125,9 @@ at/above-maximum bands. Power zones use FTP boundaries 55/75/90/105/120/150%.
 `POST /api/v1/analysis/training-history` accepts 1–366 consecutive civil days,
 each with a date label, UTC bounds and explicit recording completeness. iOS's
 timezone-aware Gregorian calendar supplies real daylight-saving boundaries.
-The backend validates contiguous intervals, consecutive dates and plausible
-day/date bounds; it does not infer an IANA timezone from an offset. These are
+The backend validates contiguous intervals, consecutive dates, day lengths, and
+each boundary's UTC-12 through UTC+14 displacement from its labelled midnight;
+it does not infer an IANA timezone from an offset. These are
 analysis inputs, not changes to workout timestamps. Up to 1,000 owner-filtered
 workouts are loaded; a workout belongs to its local start date across midnight.
 

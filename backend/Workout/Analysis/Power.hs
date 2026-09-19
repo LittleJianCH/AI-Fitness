@@ -18,27 +18,36 @@ normalizedPower xs
   where
     spans = segments 5 xs
     totalDuration = covered spans
-    scale = V.maximum (V.map snd xs)
     runs = reverse (foldl' collect [] spans)
     collect [] s = [[s]]
     collect (run@(prior : _) : rest) s
         | toTime prior == fromTime s = (s : run) : rest
     collect rest s = [s] : rest
     windows = concatMap (rolling . reverse) runs
-    (!count, !fourthMean) = foldl' accumulate (0 :: Int, 0) windows
-    accumulate (!n, !m) p =
-        let next = n + 1; !new = m * (fromIntegral n / fromIntegral next) + p ** 4 / fromIntegral next
-         in (next, new)
+    (!count, !scale, !fourthMean) = foldl' accumulate (0 :: Int, 0, 0) windows
+    -- Scale the fourth moment by contributing rolling windows, not isolated
+    -- observations or runs too short to supply a window.
+    accumulate (!n, !oldScale, !m) p =
+        let next = n + 1
+            newScale = max oldScale p
+            oldRatio = if newScale == 0 then 0 else oldScale / newScale
+            newRatio = if newScale == 0 then 0 else p / newScale
+            !new = m * oldRatio ** 4 * (fromIntegral n / fromIntegral next) + newRatio ** 4 / fromIntegral next
+         in (next, newScale, new)
     result
         | count == 0 = Nothing
         | scale == 0 = Just 0
         | otherwise = finite (fourthMean ** 0.25 * scale)
     rolling [] = []
-    rolling ss@(first : _) =
+    rolling original@(first : _) =
         let origin = fromTime first
-            end = foldl' (\_ s -> toTime s) origin ss
+            end = foldl' (\_ s -> toTime s) origin original
             n = floor (end - origin) :: Int
-            divided x = if scale == 0 then 0 else x / scale
+            -- A fractional tail beyond the final one-second endpoint does not
+            -- contribute to any complete window and must not change scaling.
+            ss = clip origin (origin + fromIntegral n) original
+            runScale = foldl' (\m s -> max m (max (fromValue s) (toValue s))) 0 ss
+            divided x = if runScale == 0 then 0 else x / runScale
             knots = V.fromList (scanl add (origin, divided (fromValue first), 0) ss)
             add (_, _, area) s =
                 ( toTime s
@@ -57,7 +66,8 @@ normalizedPower xs
                         else
                             let (a, x, prior) = knots V.! (i - 1); f = (t - a) / (b - a)
                              in prior + (t - a) * (x / 2 + (x * (1 - f) + y * f) / 2)
-         in [ max 0 (min 1 ((areaAt (origin + fromIntegral k) - areaAt (origin + fromIntegral (k - 30))) / 30))
+         in [ runScale
+                * max 0 (min 1 ((areaAt (origin + fromIntegral k) - areaAt (origin + fromIntegral (k - 30))) / 30))
             | k <- [30 .. n]
             ]
 

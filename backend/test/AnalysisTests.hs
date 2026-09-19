@@ -35,7 +35,13 @@ cases =
         , let result =
                 distanceSplits
                     ( V.head
-                        (splitSets (V.fromList [(0, 0), (100, 2000)]) (V.fromList [(0, 100), (100, 200)]) V.empty V.empty V.empty)
+                        ( splitSets
+                            (V.fromList [(0, 0), (100, 2000)])
+                            (V.fromList [(0, 100), (100, 200)])
+                            V.empty
+                            V.empty
+                            V.empty
+                        )
                     )
            in V.length result == 2
                 && nearMaybe 125 (splitHeartRate (result V.! 0))
@@ -93,6 +99,39 @@ cases =
         , isNothing (relationshipCorrelation (relationships PowerMetric HeartRateMetric plateau plateau))
         )
     , ("analysis: normalized constant power", nearMaybe 200 (fst (normalizedPower plateau)))
+    ,
+        ( "analysis: isolated extreme power cannot change supported windows"
+        , nearMaybe 200 (fst (normalizedPower (plateau <> V.singleton (100, 1e100))))
+        )
+    ,
+        ( "analysis: short extreme run cannot change supported windows"
+        , nearMaybe 200 (fst (normalizedPower (plateau <> V.fromList [(100, 1e100), (101, 1e100)])))
+        )
+    ,
+        ( "analysis: fractional tail cannot change supported windows"
+        , nearMaybe 200 (fst (normalizedPower (plateau <> V.singleton (60.5, 1e100))))
+        )
+    ,
+        ( "analysis: derived streams include both sensor breakpoints"
+        , nearMaybe
+            (6.9 / 60)
+            ( average
+                ( deriveSegments
+                    ratio
+                    (V.fromList [(0, 1), (60, 1)])
+                    (V.fromList [(0, 1), (1, 10), (59, 10), (60, 1)])
+                )
+            )
+        )
+    ,
+        ( "analysis: derived streams preserve unsupported intervals"
+        , let derived =
+                deriveSegments
+                    ratio
+                    (V.fromList [(0, 1), (120, 1), (240, 1)])
+                    (V.fromList [(0, 2), (10, 2), (200, 2), (240, 2)])
+           in near 50 (covered derived) && nearMaybe 0.5 (average derived)
+        )
     ,
         ( "analysis: normalized real zero remains zero"
         , fst (normalizedPower (V.map (\(t, _) -> (t, 0)) plateau)) == Just 0
@@ -155,6 +194,23 @@ cases =
                     && nearMaybe (100 / 3) (runningFlightRatioPercent result)
                     && nearMaybe 160 (runningSteps result)
             Nothing -> False
+        )
+    ,
+        ( "analysis: running flight follows intermediate cadence changes"
+        , let original = workoutObservation runWorkout
+              changed = case observationSport original of
+                Running dat ->
+                    Running
+                        dat
+                            { runningCadence =
+                                V.fromList
+                                    [Timed (F.at t) (RunningCadence c) | (t, c) <- [(0, 160), (1, 240), (59, 240), (60, 160)]]
+                            }
+                cycling -> cycling
+           in case analysisRunning
+                (calculate (runWorkout {workoutObservation = original {observationSport = changed}})) of
+                Just result -> nearMaybe (0.125 / 60) (runningFlightSeconds result)
+                Nothing -> False
         )
     ]
   where
