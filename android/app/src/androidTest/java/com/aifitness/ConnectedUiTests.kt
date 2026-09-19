@@ -1,11 +1,10 @@
 package com.aifitness
 
-import androidx.compose.ui.semantics.SemanticsProperties
-import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.test.core.app.ActivityScenario
 import androidx.test.platform.app.InstrumentationRegistry
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
@@ -47,8 +46,7 @@ class ConnectedUiTests {
             compose.onNodeWithTag("loadMore").performClick()
             waitIdle()
             compose.onNodeWithTag("loadMore").assertDoesNotExist()
-            compose.onNodeWithTag("workoutList").performScrollToIndex(1)
-            compose.onAllNodes(hasTestTagPrefix("workout-"))[0].performClick()
+            openWorkout("Android synthetic cycling 00")
             waitForTag("workoutDetail")
             waitIdle()
             compose
@@ -64,6 +62,32 @@ class ConnectedUiTests {
             compose.onNodeWithText("返回").performClick()
             waitForTag("workoutDetail")
             waitIdle()
+            compose.onNodeWithText("运动", useUnmergedTree = true).performClick()
+            openWorkout("Android synthetic running 01")
+            for ((metric, expected) in
+                listOf(
+                    "stepLengthMetric" to "1.10 m",
+                    "verticalOscillationMetric" to "0.080 m",
+                    "groundContactTimeMetric" to "0.250 s",
+                )) {
+                compose
+                    .onNodeWithTag("workoutDetail")
+                    .performScrollToNode(hasTestTag("metric-$metric"))
+                compose.onNodeWithTag("metric-$metric").performClick()
+                waitForTag("selectedPoint")
+                compose
+                    .onAllNodesWithTag("selectedPoint")[0]
+                    .assertTextContains(expected, substring = true)
+                compose.onNodeWithText("距离", useUnmergedTree = true).performClick()
+                compose
+                    .onAllNodesWithTag("selectedPoint")[0]
+                    .assertTextContains(expected, substring = true)
+                compose.onNodeWithText("返回").performClick()
+                waitForTag("workoutDetail")
+                waitIdle()
+            }
+            compose.onNodeWithTag("workoutDetail").performScrollToNode(hasText("跑步动态 · 后端计算"))
+            compose.onNodeWithText("跑步动态 · 后端计算").assertExists()
             compose.onNodeWithText("设置", useUnmergedTree = true).performClick()
             compose.onNodeWithText("个人身体参数").performClick()
             waitIdle()
@@ -75,6 +99,10 @@ class ConnectedUiTests {
             compose.onNodeWithTag("bodySettings").performScrollToNode(hasTestTag("saveBody"))
             compose.onNodeWithTag("saveBody").performClick()
             waitIdle()
+            val persistedBody = runBlocking {
+                FitnessApi(endpoint).settings(saved.token)
+            }
+            assertEquals(70.0, persistedBody.settingsBodyProfiles.single().bodyMassKilograms!!, 0.0)
             compose.onNodeWithText("返回").performClick()
             waitIdle()
             compose.onNodeWithText("器材").performClick()
@@ -110,13 +138,17 @@ class ConnectedUiTests {
             compose.onAllNodesWithTag(tag).fetchSemanticsNodes().isNotEmpty()
         }
 
+    private fun openWorkout(title: String) {
+        waitForTag("workoutList")
+        waitIdle()
+        compose.onNodeWithTag("workoutList").performScrollToNode(hasText(title))
+        compose.onNodeWithText(title).performClick()
+        waitForTag("workoutDetail")
+        waitIdle()
+    }
+
     private fun waitIdle() =
         compose.waitUntil(30_000) {
             compose.onAllNodesWithTag("busy").fetchSemanticsNodes().isEmpty()
         }
 }
-
-private fun hasTestTagPrefix(prefix: String): SemanticsMatcher =
-    SemanticsMatcher("test tag begins with $prefix") {
-        it.config.getOrNull(SemanticsProperties.TestTag)?.startsWith(prefix) == true
-    }

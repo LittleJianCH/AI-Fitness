@@ -26,6 +26,39 @@ Do not accept licenses automatically or install Android tooling globally.
 The current host is macOS arm64; use an arm64 emulator image if an emulator is
 provisioned. SDK/emulator packages are not installed by these scripts.
 
+For a local SDK, download the Mac ARM command-line tools from the
+[official Android download page](https://developer.android.com/studio#command-tools),
+verify its published SHA-256, and extract the `cmdline-tools` directory as
+`android/.tooling/sdk/cmdline-tools/latest`. This ignored directory keeps the SDK
+and disposable emulator outside maintained source files. In the Android Nix shell:
+
+```sh
+export ANDROID_HOME="$PWD/android/.tooling/sdk"
+export ANDROID_SDK_ROOT="$ANDROID_HOME"
+export ANDROID_USER_HOME="$PWD/android/.tooling/android-user"
+export ANDROID_AVD_HOME="$PWD/android/.tooling/avd"
+export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$PATH"
+mkdir -p "$ANDROID_USER_HOME" "$ANDROID_AVD_HOME"
+"$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$ANDROID_HOME" \
+  'platform-tools' 'platforms;android-35' 'build-tools;35.0.0' \
+  'emulator' 'system-images;android-35;default;arm64-v8a'
+```
+
+Review and accept the displayed license only with the operator's authorization.
+To create a dedicated test emulator, run the following once, decline a custom
+hardware profile when prompted, then launch it:
+
+```sh
+"$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd \
+  --name healthfit_api35 --package 'system-images;android-35;default;arm64-v8a' \
+  --device medium_phone
+emulator -avd healthfit_api35 -no-snapshot -no-audio
+```
+
+Wait for `adb shell getprop sys.boot_completed` to return `1` before the device
+harness. If other devices are connected, select this emulator with `ANDROID_SERIAL`.
+Keep these SDK variables when entering the backend Nix shell for integration.
+
 ## Contract generation and local checks
 
 Prepare the backend executable, contract fixtures and OpenAPI artifact with
