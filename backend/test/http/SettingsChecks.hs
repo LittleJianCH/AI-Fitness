@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TypeApplications #-}
 
 module SettingsChecks (checks) where
@@ -7,12 +8,14 @@ import Analysis.Fatigue.Request
 import qualified Api
 import Api.Analysis.Codec ()
 import Api.Auth.Types (NativeSession (..))
+import qualified Api.Auth.Types as Auth
 import Api.Common.Types (Id (..))
 import Api.Settings.Codec ()
 import qualified Api.Workout.Types as Api
-import App.Types (Environment)
+import App.Types (Environment (..))
 import Control.Concurrent.Async (concurrently)
 import Control.Monad (void)
+import Control.Monad.Trans.Class (lift)
 import Data.Aeson (encode)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as Text
@@ -21,12 +24,20 @@ import qualified Data.UUID as UUID
 import qualified Data.UUID.V4 as UUID
 import qualified Data.Vector as V
 import qualified Fixtures as F
+import qualified Hasql.Pool as Pool
+import qualified Hasql.TH as TH
+import qualified Hasql.Transaction as Transaction
 import HttpSupport
 import Network.HTTP.Types (statusCode)
 import Network.Wai (isSecure, requestHeaders, requestMethod)
 import Network.Wai.Test (SRequest (..), defaultRequest, runSession, setPath, simpleStatus, srequest)
 import Profile.Settings (emptySettings)
 import Profile.Types
+import qualified Storage.Database as Database
+import Storage.Types (StorageError (..))
+import Storage.User.Types (UserId (..))
+import qualified Storage.Workout as Workouts
+import qualified Storage.Workout.Query as Query
 import Workout.Analysis.Types
 import Workout.Empty (emptyUserData)
 import Workout.Types
@@ -35,8 +46,8 @@ checks :: Environment -> IO ()
 checks env = do
     registerUser env "settings.alice"
     registerUser env "settings.bob"
-    NativeSession _ _ alice <- loginNative env "settings.alice" testPassword
-    NativeSession _ _ bob <- loginNative env "settings.bob" testPassword
+    NativeSession (Auth.User (Id owner) _ _) _ alice <- loginNative env "settings.alice" testPassword
+    NativeSession (Auth.User (Id otherOwner) _ _) _ bob <- loginNative env "settings.bob" testPassword
     void (rawCall env "GET" path [] "" 401)
     void (call env "PUT" path [] emptySettings 401)
     initial <- rawCall env "GET" path (bearer alice) "" 200 >>= decoded
@@ -113,6 +124,45 @@ checks env = do
         "Other owner's complete rest remains zero"
         (all ((== Just 0) . trainingTotalLoad) (trainingDays otherHistory))
     void (call env "POST" historyPath (bearer alice) (historyRequest {historyCalendar = V.empty}) 422)
+    candidates <- db env (Query.historyIds (UserId owner) midnight (calendarEnd day))
+    assert
+        "History selects only owner IDs before loading payloads"
+        (candidates == V.singleton (workoutId workout))
+    bytes <- db env (Query.historyBytes (UserId owner) candidates)
+    assert "History measures expanded payload bytes" (bytes > 0)
+    admitted <- db env (Workouts.loadWorkouts bytes (UserId owner) candidates)
+    assert
+        "History bulk load preserves the canonical workout at its exact byte budget"
+        (admitted == V.singleton workout)
+    rejected <-
+        Pool.use
+            (databasePool env)
+            (Database.transaction (Workouts.loadWorkouts (bytes - 1) (UserId owner) candidates))
+    assert
+        "History rejects an over-budget selection before publishing results"
+        (case rejected of Right (Left AnalysisTooLarge) -> True; _ -> False)
+    otherBytes <- db env (Query.historyBytes (UserId otherOwner) candidates)
+    assert "History payload sizes never expose a foreign workout" (otherBytes == 0)
+    foreignLoad <-
+        Pool.use
+            (databasePool env)
+            (Database.transaction (Workouts.loadWorkouts bytes (UserId otherOwner) candidates))
+    assert
+        "History bulk read cannot load another owner's IDs"
+        (case foreignLoad of Right (Left WorkoutNotFound) -> True; _ -> False)
+    void $
+        db env $
+            lift $
+                Transaction.statement
+                    (owner, wid)
+                    [TH.rowsAffectedStatement|
+            INSERT INTO workouts (id, user_id, revision, storage_version, observation, user_data)
+            SELECT gen_random_uuid(), user_id, revision, storage_version, observation, user_data
+            FROM workouts CROSS JOIN generate_series(1, 1000)
+            WHERE user_id = $1 :: uuid AND id = $2 :: uuid
+        |]
+    void (call env "POST" historyPath (bearer alice) historyRequest 422)
+    void (call env "POST" historyPath (bearer bob) historyRequest 200)
     putStrLn "Settings persistence, revision races, profile history and analysis owner isolation passed"
   where
     path = "/api/v1/settings"

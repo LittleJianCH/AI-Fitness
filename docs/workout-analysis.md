@@ -130,8 +130,18 @@ timezone-aware Gregorian calendar supplies real daylight-saving boundaries.
 The backend validates contiguous intervals, consecutive dates, day lengths, and
 each boundary's UTC-12 through UTC+14 displacement from its labelled midnight;
 it does not infer an IANA timezone from an offset. These are
-analysis inputs, not changes to workout timestamps. Up to 1,000 owner-filtered
-workouts are loaded; a workout belongs to its local start date across midnight.
+analysis inputs, not changes to workout timestamps. History admits at most 1,000
+owner-filtered workouts and 128 MiB of expanded observation/user-data JSON. It
+selects IDs first, measures bytes, then bulk-loads the admitted records under the
+same account lock. Oversized requests fail entirely with `analysis_too_large`;
+clients should offer a smaller calendar instead of silently truncating history.
+A workout belongs to its local start date across midnight.
+
+The byte guard bounds input size, not decoded heap or query duration. A local
+synthetic probe decoding eight dense eight-hour rides (about 64.4 MiB JSON) and
+calculating history used about 1.47 GiB of total GHC runtime memory. PostgreSQL's
+expanded-size calculation also performs work while holding the account lock.
+These are current processing limits, not a memory/concurrency guarantee.
 
 The request explicitly chooses zero prior load or supplies both prior CTL and
 ATL in the same HRSS scale. Confirmed complete empty days are rest; unconfirmed

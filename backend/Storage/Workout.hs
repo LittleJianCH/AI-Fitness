@@ -4,6 +4,7 @@
 module Storage.Workout
     ( createWorkout
     , loadWorkout
+    , loadWorkouts
     , replaceUserData
     , replaceObservation
     , updateWorkout
@@ -12,20 +13,24 @@ module Storage.Workout
     ) where
 
 import Api.Workout.Codec ()
-import Control.Monad.Trans.Except (ExceptT (..), runExceptT)
+import Control.Monad (when)
+import Control.Monad.Trans.Except (ExceptT (..), runExceptT, throwE)
 import Data.Aeson (Result (..), Value, fromJSON, toJSON)
 import Data.Coerce (coerce)
-import Data.Int (Int16)
+import Data.Int (Int16, Int64)
 import Data.Maybe (isJust)
 import Data.Profunctor (dimap, lmap)
 import Data.Text (Text)
 import qualified Data.Text as Text
 import Data.UUID.Types (UUID)
+import Data.Vector (Vector)
+import qualified Data.Vector as V
 import qualified Hasql.TH as TH
 import qualified Hasql.Transaction as T
 import Storage.Codec
 import Storage.Types
 import Storage.User.Types (UserId (..))
+import qualified Storage.Workout.Query as Query
 import Text.Read (readMaybe)
 import Workout.Types
 import qualified Workout.Update as Update
@@ -55,6 +60,26 @@ createWorkout uid workout = ExceptT $ case Validation.validateWorkout workout <>
 
 loadWorkout :: UserId -> WorkoutId -> Store (Maybe Workout)
 loadWorkout uid wid = ExceptT (selectWorkout False uid wid)
+
+-- The caller holds the account lock across candidate selection and this read.
+-- Reject the whole request before decoding any payload; never truncate history.
+loadWorkouts :: Int64 -> UserId -> Vector WorkoutId -> Store (Vector Workout)
+loadWorkouts maximumBytes uid ids = do
+    bytes <- Query.historyBytes uid ids
+    when (bytes > maximumBytes) (throwE AnalysisTooLarge)
+    workouts <- ExceptT $ do
+        rows <-
+            T.statement
+                (coerce uid, V.map coerce ids)
+                [TH.vectorStatement|
+                SELECT id :: uuid, revision :: text, storage_version :: int2,
+                    observation :: jsonb, user_data :: jsonb
+                FROM workouts WHERE user_id = $1 :: uuid AND id = ANY($2 :: uuid[])
+                ORDER BY start_key DESC, id DESC
+            |]
+        pure (traverse decodeWorkout rows)
+    when (V.length workouts /= V.length ids) (throwE WorkoutNotFound)
+    pure workouts
 
 replaceUserData :: UserId -> WorkoutId -> WorkoutRevision -> WorkoutUserData -> Store Workout
 replaceUserData uid wid revision = updateWorkout uid wid revision . Update.replaceUserData revision

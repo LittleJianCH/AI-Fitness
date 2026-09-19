@@ -49,7 +49,12 @@ storage environment context work = do
                         )
                 }
     translate CorruptSettings = problem context 500 "internal_error" "Stored settings cannot be read"
-    translate AnalysisTooLarge = problem context 422 "analysis_too_large" "Select a calendar containing at most 1000 workouts"
+    translate AnalysisTooLarge =
+        problem
+            context
+            422
+            "analysis_too_large"
+            "Select a smaller calendar: history is limited to 1000 workouts and 128 MiB of expanded JSON"
     translate SessionConflict = problem context 409 "session_conflict" "Session state changed; retry the request"
     translate AuthenticationFailed = problem context 401 "unauthenticated" "Invalid or expired credentials"
     translate WorkoutConflict = problem context 409 "revision_conflict" "Workout changed; reload before editing"

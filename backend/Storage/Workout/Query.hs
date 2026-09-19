@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
 
-module Storage.Workout.Query (listWorkouts, timeKey) where
+module Storage.Workout.Query (listWorkouts, historyIds, historyBytes, timeKey) where
 
 import Api.Workout.Types (WorkoutCard)
 import Control.Monad.Trans.Except (ExceptT (..))
@@ -14,11 +14,43 @@ import qualified Data.Text as Text
 import Data.Time (UTCTime, defaultTimeLocale, formatTime)
 import Data.UUID.Types (UUID)
 import Data.Vector (Vector)
+import qualified Data.Vector as V
 import qualified Hasql.TH as TH
 import qualified Hasql.Transaction as T
 import Storage.Types
 import Storage.User.Types (UserId (..))
 import Storage.Workout.Types
+import Workout.Identity.Types (WorkoutId (..))
+
+-- History selection must not fetch notes, summaries or observations before its
+-- count and byte budgets have been checked under the owner's account lock.
+historyIds :: UserId -> UTCTime -> UTCTime -> Store (Vector WorkoutId)
+historyIds uid from before =
+    ExceptT $
+        Right . fmap WorkoutId
+            <$> T.statement
+                (coerce uid, timeKey from, timeKey before)
+                [TH.vectorStatement|
+            SELECT id :: uuid FROM workouts
+            WHERE user_id = $1 :: uuid
+                AND start_key >= ($2 :: text) :: numeric
+                AND start_key < ($3 :: text) :: numeric
+            ORDER BY start_key DESC, id DESC LIMIT 1001
+        |]
+
+-- Measure expanded JSON, not compressed TOAST storage size. This bounds the
+-- admitted input; it is not a bound on PostgreSQL work or decoded heap size.
+historyBytes :: UserId -> Vector WorkoutId -> Store Int64
+historyBytes uid ids =
+    ExceptT $
+        Right
+            <$> T.statement
+                (coerce uid, V.map coerce ids)
+                [TH.singletonStatement|
+            SELECT COALESCE(SUM(octet_length(observation::text)::bigint
+                + octet_length(user_data::text)::bigint), 0)::int8
+            FROM workouts WHERE user_id = $1 :: uuid AND id = ANY($2 :: uuid[])
+        |]
 
 -- Decimal calendar key, not an epoch timestamp: this only supplies UTC ordering
 -- and retains the same precision as the canonical timestamp's decimal seconds.
