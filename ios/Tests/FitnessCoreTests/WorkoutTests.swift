@@ -133,6 +133,34 @@ final class WorkoutTests: XCTestCase {
         XCTAssertEqual(WorkoutFormat.duration(.infinity), "无数据")
     }
 
+    func testGradeAndTemperaturePresentationPreserveCanonicalUnitsAndNegativeValues() async throws {
+        var document = try XCTUnwrap(JSONSerialization.jsonObject(with: fixtureData("workout-response")) as? [String: Any])
+        var observation = try XCTUnwrap(document["workoutObservation"] as? [String: Any])
+        var sport = try XCTUnwrap(observation["observationSport"] as? [String: Any])
+        var data = try XCTUnwrap(sport["data"] as? [String: Any])
+        var motion = try XCTUnwrap(data["cyclingMotion"] as? [String: Any])
+        var environment = try XCTUnwrap(motion["motionEnvironment"] as? [String: Any])
+        environment["ambientTemperature"] = [["timestamp": "2026-09-05T05:55:32Z", "value": -3.5]]
+        motion["motionEnvironment"] = environment
+        data["cyclingMotion"] = motion
+        sport["data"] = data
+        observation["observationSport"] = sport
+        document["workoutObservation"] = observation
+        let bytes = try JSONSerialization.data(withJSONObject: document)
+        let api = FitnessAPI(endpoint: try ServerEndpoint("https://fitness.invalid"), transport: FixtureTransport { _, _, _ in
+            (HTTPResponse(status: .ok, headerFields: [.contentType: "application/json; charset=utf-8"]), HTTPBody(bytes))
+        })
+        let workout = try await api.workout(token: "synthetic", id: "fixture")
+        let grade = try XCTUnwrap(workout.metrics.first { $0.id == "grade" })
+        XCTAssertEqual(grade.points.map(\.value), workout.motion.motionGrade.map(\.value))
+        XCTAssertEqual(grade.unit, "%")
+        XCTAssertEqual(grade.canonicalScale, 1)
+        let temperature = try XCTUnwrap(workout.metrics.first { $0.id == "temperature" })
+        XCTAssertEqual(temperature.points.map(\.value), [-3.5])
+        XCTAssertEqual(temperature.unit, "°C")
+        XCTAssertEqual(temperature.displayValue(-3.5), "-3.5 °C")
+    }
+
     @MainActor
     func testDetailFailureRetryAndSessionIsolation() async throws {
         let bytes = try fixtureData("workout-response")

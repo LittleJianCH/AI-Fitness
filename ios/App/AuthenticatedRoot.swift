@@ -5,6 +5,7 @@ import SwiftUI
     let endpoint: ServerEndpoint
     let changeServer: () -> Void
     @State private var session: SessionStore
+    @State private var settings: SettingsStore
     @State private var username = ""
     @State private var password = ""
     @State private var action: Task<Void, Never>?
@@ -13,7 +14,10 @@ import SwiftUI
     init(endpoint: ServerEndpoint, changeServer: @escaping () -> Void) {
         self.endpoint = endpoint
         self.changeServer = changeServer
-        _session = State(initialValue: SessionStore(service: FitnessAPI(endpoint: endpoint), vault: KeychainVault(endpoint: endpoint)))
+        let api = FitnessAPI(endpoint: endpoint)
+        let session = SessionStore(service: api, vault: KeychainVault(endpoint: endpoint))
+        _session = State(initialValue: session)
+        _settings = State(initialValue: SettingsStore(service: api, session: session))
     }
 
     var body: some View {
@@ -26,12 +30,14 @@ import SwiftUI
                     HealthImportScreen(api: FitnessAPI(endpoint: endpoint), session: session)
                         .tabItem { Label("健康", systemImage: "heart") }
                         .tag("health")
-                    authenticationForm
-                        .tabItem { Label("账号", systemImage: "person.crop.circle") }
+                    SettingsScreen(store: settings, server: endpoint.url.absoluteString) { authenticationContent }
+                        .tabItem { Label("设置", systemImage: "gearshape") }
                         .tag("account")
                 }
                 .id(session.generation)
                 .tint(.blue)
+                .preferredColorScheme(colorScheme)
+                .task(id: session.generation) { await settings.load() }
             } else {
                 authenticationForm
             }
@@ -41,8 +47,19 @@ import SwiftUI
     }
 
     private var authenticationForm: some View {
-        NavigationStack {
-            Form {
+        NavigationStack { authenticationContent }
+    }
+
+    private var colorScheme: ColorScheme? {
+        switch settings.settings?.settingsSoftware.softwareAppearance {
+        case .lightAppearance: .light
+        case .darkAppearance: .dark
+        default: nil
+        }
+    }
+
+    private var authenticationContent: some View {
+        Form {
                 switch session.phase {
                 case .signedOut, .signingIn:
                     Section {
@@ -102,6 +119,5 @@ import SwiftUI
             }
             .scrollContentBackground(.hidden).background(FitnessStyle.background)
             .navigationTitle(session.user == nil ? "AI Fitness" : "账号")
-        }
     }
 }

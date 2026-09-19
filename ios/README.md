@@ -5,6 +5,13 @@ It implements native login, Keychain-backed session restoration, server-confirme
 logout, backend workout browsing, explicit HealthKit-to-backend import, and
 user-confirmed backend-to-HealthKit export with durable recovery and receipts.
 
+The Settings tab groups appearance, effective-dated body/training parameters,
+bicycle/shoe management and account controls. Workout details include backend
+statistics, metric analysis, distance splits, power/heart-rate zones, running
+dynamics, fitness-history analysis and full-screen routes. See
+[the analysis definitions](../docs/workout-analysis.md) for coverage policies,
+parameter precedence, algorithm assumptions and explicit remaining feature gaps.
+
 ## Build
 
 The current baseline is Xcode 15.4, Swift 5.10, and iOS 17 or later. Select Xcode
@@ -81,10 +88,13 @@ and session changes invalidate earlier responses. No workout data is cached on d
 
 Details show the recorded summary separately from any backend-calculated summary,
 user metadata, data-quality notes, a WGS84 route, and independent heart-rate,
-power, speed, altitude and sport-specific cadence plots. Display conversions use
+power, speed, grade, ambient temperature, altitude and sport-specific cadence plots.
+Grade remains signed percentage points and temperature remains Celsius. Display conversions use
 kilometres and km/h; running cadence remains total steps/minute and average pace
 uses min/km. Missing values remain visibly missing. Sample timestamps are retained;
 chart lines are visual guides across samples, not additional measurements.
+Chart lines use at most 600 samples; selection searches the full original stream
+on the chosen time/distance axis and displays the actual sample timestamp.
 
 Core tests consume the synthetic backend contract fixtures generated above. They
 cover pagination retry/deduplication, late filter/session responses, cancellation,
@@ -98,9 +108,18 @@ The script creates a private PostgreSQL cluster with no TCP listener, migrates i
 starts the actual backend on a temporary loopback port, registers a synthetic
 account with synthetic cycling/running records, and creates a dedicated iPhone 15 /
 iOS 17.5 simulator. It runs the XCUITest login, wrong-password, workout list/filter/
-detail, relaunch/restoration and logout scenarios, then removes the
-server, database and simulator. Existing `DATABASE_URL` values and devices are not
-used. Logs and Xcode results remain in ignored `ios/build` and `ios/DerivedData`.
+detail, relaunch/restoration and logout scenarios. It also verifies body mass/height
+and equipment name/mass after relaunch, persisted body mass/FTP in backend
+analysis, metric comparison and axis switching, negative grade/temperature analysis, and explicit training-history assumptions
+with unknown daily loads. The harness then removes the server, database and
+simulator. A profile-fallback fixture starts one hour after test setup and omits
+imported athlete parameters, so the newly effective profile can be tested without
+changing real timestamps or depending on the current calendar date. Existing
+`DATABASE_URL` values and devices are not used. Logs and Xcode results remain in ignored `ios/build` and `ios/DerivedData`.
+The result bundle retains screenshots of settings editors, saved history, metric
+comparison, distributions and training history for native UI review.
+History capacity errors ask for a shorter date range. Unavailable calculations
+are reported separately from connection failures; server diagnostics stay hidden.
 Running the UI suite without the harness skips the real-backend scenario; that
 skip is not evidence of successful integration.
 

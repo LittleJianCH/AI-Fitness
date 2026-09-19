@@ -1,4 +1,3 @@
-import Charts
 import ContractClient
 import FitnessCore
 import MapKit
@@ -28,18 +27,9 @@ struct WorkoutDetailScreen: View {
                     workoutHeader(workout)
                     SummarySection(title: "记录摘要", summary: workout.recordedCommonSummary, isRunning: workout.sportName == "跑步")
                     RouteSection(positions: workout.motion.motionPosition)
-                    ForEach(workout.metrics.filter {
-                        !$0.points.isEmpty || ($0.id == "power" && (
-                            workout.recordedCommonSummary.summaryPower.averageValue != nil ||
-                            workout.recordedCommonSummary.summaryPower.maximumValue != nil
-                        ))
-                    }) { metric in
-                        MetricSection(metric: metric)
-                        if metric.id == "power" {
-                            PowerCurveSection(workout: workout, api: api, session: session, refreshWorkout: reloadWorkout)
-                                .id(curveReload)
-                        }
-                    }
+                    WorkoutAnalysisSection(workout: workout, api: api, session: session, refreshWorkout: reloadWorkout)
+                        .id(curveReload)
+                    RecordedDetailsSection(workout: workout)
                     if workout.metrics.contains(where: { $0.points.isEmpty }) {
                         DisclosureGroup("未记录的指标") {
                             ForEach(workout.metrics.filter { $0.points.isEmpty }) { metric in
@@ -181,77 +171,11 @@ struct SummarySection: View {
     }
 }
 
-struct MetricSection: View {
-    let metric: WorkoutMetric
-    private var accent: Color {
-        switch metric.id {
-        case "heartRate": .red
-        case "power": .purple
-        case "speed": .blue
-        case "altitude": .secondary
-        default: .teal
-        }
-    }
-    private var symbol: String {
-        switch metric.id {
-        case "heartRate": "heart.fill"
-        case "power": "bolt.fill"
-        case "speed": "speedometer"
-        case "altitude": "mountain.2.fill"
-        default: "metronome.fill"
-        }
-    }
-    var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            FitnessSectionTitle(title: metric.title, color: accent)
-            VStack(alignment: .leading, spacing: 18) {
-                if metric.points.isEmpty {
-                    Label("无采样数据", systemImage: symbol).font(.subheadline).foregroundStyle(.secondary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                } else {
-                    let chartPoints = metric.chartPoints
-                    if let last = metric.points.last {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Label("最后采样", systemImage: symbol).font(.subheadline).foregroundStyle(.secondary)
-                            Text(WorkoutFormat.number(last.value, unit: metric.unit, fractionDigits: metric.id == "speed" ? 1 : 0))
-                                .font(.system(.title, design: .rounded, weight: .semibold)).monospacedDigit().foregroundStyle(accent)
-                        }
-                    }
-                    Chart(chartPoints) { point in
-                        LineMark(x: .value("时间", point.timestamp), y: .value(metric.unit, point.value))
-                            .foregroundStyle(accent).lineStyle(StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round))
-                            .interpolationMethod(.linear).symbol(.circle)
-                            .symbolSize(chartPoints.count == metric.points.count ? 16 : 0)
-                    }
-                    .chartYScale(domain: .automatic(includesZero: false))
-                    .chartYAxis {
-                        AxisMarks(position: .trailing) { _ in
-                            AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [3, 4])).foregroundStyle(Color(uiColor: .separator))
-                            AxisValueLabel().foregroundStyle(Color.secondary)
-                        }
-                    }
-                    .chartXAxis { AxisMarks(values: .automatic(desiredCount: 3)) { _ in AxisValueLabel().foregroundStyle(Color.secondary) } }
-                    .frame(height: 180).accessibilityLabel(metric.title)
-                    Text("\(metric.points.count) 个采样点 · \(metric.unit)").font(.subheadline).foregroundStyle(.secondary)
-                    if chartPoints.count < metric.points.count {
-                        Text("概览保留分段峰谷，原始采样完整保留。")
-                            .font(.subheadline).foregroundStyle(.secondary)
-                    }
-                }
-            }
-            .padding(20).fitnessCard()
-            if !metric.points.isEmpty {
-                Text("连线仅辅助阅读，空档不代表有记录。")
-                    .font(.subheadline).foregroundStyle(.secondary).padding(.horizontal, 4)
-            }
-        }
-        .accessibilityIdentifier("metric-\(metric.id)")
-    }
-}
 
 struct RouteSection: View {
     let positions: [Components.Schemas.Timed_Position]
     var inCard = true
+    @State private var fullScreen = false
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             FitnessSectionTitle(title: "路线", color: .blue)
@@ -262,13 +186,11 @@ struct RouteSection: View {
                     .background(inCard ? FitnessStyle.surface : Color.clear, in: RoundedRectangle(cornerRadius: FitnessStyle.radius, style: .continuous))
             } else {
                 VStack(spacing: 0) {
-                    Map {
-                        MapPolyline(coordinates: positions.map { CLLocationCoordinate2D(latitude: $0.value.latitude, longitude: $0.value.longitude) })
-                            .stroke(.blue, style: StrokeStyle(lineWidth: 4, lineCap: .round, lineJoin: .round))
-                    }
+                    WorkoutRouteMap(positions: positions)
                     .frame(height: 270).accessibilityLabel("运动记录路线")
                     HStack {
-                        Label("记录路线", systemImage: "map")
+                        Button { fullScreen = true } label: { Label("展开地图", systemImage: "arrow.up.left.and.arrow.down.right") }
+                            .accessibilityIdentifier("expandRoute")
                         Spacer()
                         Text("\(positions.count) 个位置点").monospacedDigit()
                     }.font(.subheadline).foregroundStyle(.secondary).padding(16)
@@ -278,5 +200,112 @@ struct RouteSection: View {
             }
         }
         .accessibilityIdentifier("workoutRoute")
+        .sheet(isPresented: $fullScreen) {
+            NavigationStack {
+                WorkoutRouteMap(positions: positions, controls: true)
+                    .navigationTitle("运动路线").navigationBarTitleDisplayMode(.inline)
+                    .toolbar { ToolbarItem(placement: .confirmationAction) { Button("完成") { fullScreen = false } } }
+            }
+        }
+    }
+}
+
+private struct WorkoutRouteMap: View {
+    let positions: [Components.Schemas.Timed_Position]
+    var controls = false
+    @State private var satellite = false
+
+    private var segments: [[CLLocationCoordinate2D]] {
+        var result: [[CLLocationCoordinate2D]] = []
+        var current: [CLLocationCoordinate2D] = []
+        var previous: Date?
+        for point in positions {
+            if let previous, point.timestamp.timeIntervalSince(previous) > 120 {
+                if !current.isEmpty { result.append(current) }
+                current = []
+            }
+            current.append(.init(latitude: point.value.latitude, longitude: point.value.longitude))
+            previous = point.timestamp
+        }
+        if !current.isEmpty { result.append(current) }
+        return result
+    }
+
+    var body: some View {
+        Map {
+            ForEach(Array(segments.enumerated()), id: \.offset) { _, coordinates in
+                MapPolyline(coordinates: coordinates).stroke(.blue, style: StrokeStyle(lineWidth: 4, lineCap: .round, lineJoin: .round))
+            }
+            if let first = positions.first {
+                Marker("起点", coordinate: .init(latitude: first.value.latitude, longitude: first.value.longitude)).tint(.green)
+            }
+            if let last = positions.last {
+                Marker("终点", coordinate: .init(latitude: last.value.latitude, longitude: last.value.longitude)).tint(.red)
+            }
+        }
+        .mapStyle(satellite ? .hybrid : .standard)
+        .overlay(alignment: .topTrailing) {
+            if controls {
+                Button(satellite ? "标准地图" : "卫星地图") { satellite.toggle() }
+                    .buttonStyle(.borderedProminent).padding()
+            }
+        }
+    }
+}
+
+private struct RecordedDetailsSection: View {
+    let workout: Workout
+    private struct Lap: Identifiable {
+        let id: Int
+        let range: Components.Schemas.TimeRange
+        let summary: Components.Schemas.CommonSummary
+    }
+    private var laps: [Lap] {
+        switch workout.workoutObservation.observationSport {
+        case .case1(let sport): sport.data.cyclingLaps.enumerated().map { .init(id: $0.offset, range: $0.element.lapRange, summary: $0.element.lapSummary.recordedSummary.cyclingCommonSummary) }
+        case .case2(let sport): sport.data.runningLaps.enumerated().map { .init(id: $0.offset, range: $0.element.lapRange, summary: $0.element.lapSummary.recordedSummary.runningCommonSummary) }
+        }
+    }
+
+    var body: some View {
+        let summary = workout.recordedCommonSummary
+        AnalysisCard(title: "海拔、能量与环境", color: .teal) {
+            analysisRow("累计爬升", summary.summaryAscent, "m")
+            analysisRow("累计下降", summary.summaryDescent, "m")
+            analysisRow("最低海拔", summary.summaryAltitude.minimumValue, "m")
+            analysisRow("最高海拔", summary.summaryAltitude.maximumValue, "m")
+            analysisRow("代谢能量", summary.summaryMetabolicEnergy.map { $0 / 4184 }, "kcal")
+            analysisRow("机械功", summary.summaryMechanicalWork.map { $0 / 1000 }, "kJ")
+            analysisRow("平均气温", summary.summaryTemperature.averageValue, "°C", digits: 1)
+            Text("以上保留源记录的摘要，代谢能量与机械功分别展示。没有记录的指标不会用估值补齐。")
+                .font(.footnote).foregroundStyle(.secondary)
+        }
+        if !laps.isEmpty {
+            AnalysisCard(title: "设备记录的分段") {
+                NavigationLink("查看 \(laps.count) 个记录分段") {
+                    List(laps) { lap in
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("分段 \(lap.id + 1)").font(.headline)
+                            Text(lap.range.rangeStart.formatted(date: .omitted, time: .standard) + "–" + lap.range.rangeEnd.formatted(date: .omitted, time: .standard)).font(.caption).foregroundStyle(.secondary)
+                            LabeledContent("距离", value: WorkoutFormat.distance(lap.summary.summaryDistance))
+                            LabeledContent("计时时间", value: WorkoutFormat.duration(lap.summary.summaryTimerTime))
+                            analysisRow("平均功率", lap.summary.summaryPower.averageValue, "W")
+                            analysisRow("平均心率", lap.summary.summaryHeartRate.averageValue, "bpm")
+                            LabeledContent("平均配速", value: WorkoutFormat.pace(lap.summary.summarySpeed.averageValue))
+                        }.padding(.vertical, 8)
+                    }.navigationTitle("设备分段")
+                }
+            }
+        }
+        if case .case1(let sport) = workout.workoutObservation.observationSport {
+            let context = sport.data.cyclingContext
+            if context.bicycleName != nil || context.bicycleMass != nil || context.cyclingDiscipline != nil {
+                AnalysisCard(title: "运动中的器材") {
+                    if let name = context.bicycleName { LabeledContent("自行车", value: name) }
+                    if let discipline = context.cyclingDiscipline { LabeledContent("骑行类型", value: discipline) }
+                    analysisRow("自行车重量", context.bicycleMass, "kg", digits: 1)
+                }
+            }
+        }
     }
 }

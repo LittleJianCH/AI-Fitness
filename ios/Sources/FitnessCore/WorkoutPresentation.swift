@@ -13,6 +13,23 @@ public struct WorkoutMetric: Identifiable, Sendable {
     public let unit: String
     public let points: [MetricPoint]
 
+    /// Select an observed value from the full stream, independently of chart decimation.
+    /// The coordinate is a presentation axis; samples without that axis are skipped.
+    public func nearestPoint(to selection: Double, coordinate: (Date) -> Double?) -> MetricPoint? {
+        guard selection.isFinite else { return nil }
+        var nearest: MetricPoint?
+        var separation = Double.infinity
+        for point in points {
+            guard let position = coordinate(point.timestamp), position.isFinite else { continue }
+            let distance = abs(position - selection)
+            if distance < separation {
+                nearest = point
+                separation = distance
+            }
+        }
+        return nearest
+    }
+
     /// Bound overview rendering while retaining original samples for all data operations.
     /// Each bucket contributes its extrema in timestamp order, including zero troughs.
     public var chartPoints: [MetricPoint] {
@@ -84,6 +101,8 @@ public extension Workout {
             WorkoutMetric(id: "heartRate", title: "心率", unit: "bpm", points: data.motionHeartRate.map { .init(timestamp: $0.timestamp, value: $0.value) }),
             WorkoutMetric(id: "power", title: "功率", unit: "W", points: data.motionPower.map { .init(timestamp: $0.timestamp, value: $0.value) }),
             WorkoutMetric(id: "speed", title: "速度", unit: "km/h", points: data.motionSpeed.map { .init(timestamp: $0.timestamp, value: $0.value * 3.6) }),
+            WorkoutMetric(id: "grade", title: "坡度", unit: "%", points: data.motionGrade.map { .init(timestamp: $0.timestamp, value: $0.value) }),
+            WorkoutMetric(id: "temperature", title: "环境温度", unit: "°C", points: data.motionEnvironment.ambientTemperature.map { .init(timestamp: $0.timestamp, value: $0.value) }),
             WorkoutMetric(id: "altitude", title: "海拔", unit: "m", points: data.motionAltitude.map { .init(timestamp: $0.timestamp, value: $0.value) }),
         ]
         switch workoutObservation.observationSport {
@@ -91,8 +110,25 @@ public extension Workout {
             result.append(.init(id: "cadence", title: "踏频", unit: "rpm", points: sport.data.cyclingCadence.map { .init(timestamp: $0.timestamp, value: $0.value) }))
         case .case2(let sport):
             result.append(.init(id: "cadence", title: "步频", unit: "步/分", points: sport.data.runningCadence.map { .init(timestamp: $0.timestamp, value: $0.value) }))
+            let dynamics = sport.data.runningDynamics
+            result.append(.init(id: "stepLength", title: "步长", unit: "m", points: dynamics.stepLength.map { .init(timestamp: $0.timestamp, value: $0.value) }))
+            result.append(.init(id: "verticalOscillation", title: "垂直振幅", unit: "cm", points: dynamics.verticalOscillation.map { .init(timestamp: $0.timestamp, value: $0.value * 100) }))
+            result.append(.init(id: "groundContactTime", title: "触地时间", unit: "ms", points: dynamics.groundContactTime.map { .init(timestamp: $0.timestamp, value: $0.value * 1000) }))
         }
         return result
+    }
+}
+
+public extension WorkoutMetric {
+    /// Presentation conversion only; the backend owns statistics in canonical units.
+    var canonicalScale: Double {
+        switch id { case "speed": 3.6; case "verticalOscillation": 100; case "groundContactTime": 1000; default: 1 }
+    }
+
+    var fractionDigits: Int { ["speed", "stepLength", "verticalOscillation", "grade", "temperature"].contains(id) ? 1 : 0 }
+
+    func displayValue(_ canonical: Double?) -> String {
+        WorkoutFormat.number(canonical.map { $0 * canonicalScale }, unit: unit, fractionDigits: fractionDigits)
     }
 }
 

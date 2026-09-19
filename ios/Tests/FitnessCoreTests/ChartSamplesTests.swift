@@ -40,6 +40,29 @@ final class ChartSamplesTests: XCTestCase {
         }
     }
 
+    func testSelectionUsesOriginalSampleOmittedFromDenseRendering() throws {
+        let metric = makeMetric((0..<12_001).map { Double($0 % 30) })
+        let rendered = Set(metric.chartPoints.map(\.timestamp))
+        let omitted = try XCTUnwrap(metric.points.first { !rendered.contains($0.timestamp) })
+        let selected = try XCTUnwrap(metric.nearestPoint(to: omitted.timestamp.timeIntervalSince1970) { $0.timeIntervalSince1970 })
+        XCTAssertEqual(selected.timestamp, omitted.timestamp)
+        XCTAssertEqual(selected.value, omitted.value)
+        XCTAssertLessThanOrEqual(metric.chartPoints.count, 600)
+    }
+
+    func testSelectionSkipsMissingDistanceCoordinatesAndKeepsEarlierTie() throws {
+        let metric = makeMetric([10, 20, 30, 40])
+        let selected = metric.nearestPoint(to: 1.5) { time in
+            let second = time.timeIntervalSince1970
+            return second == 1 ? nil : second
+        }
+        XCTAssertEqual(selected?.value, 30)
+        XCTAssertEqual(metric.nearestPoint(to: 1.5) { $0.timeIntervalSince1970 }?.value, 20)
+        XCTAssertNil(metric.nearestPoint(to: 1) { _ in nil })
+        XCTAssertNil(metric.nearestPoint(to: .nan) { $0.timeIntervalSince1970 })
+        XCTAssertNil(makeMetric([]).nearestPoint(to: 0) { $0.timeIntervalSince1970 })
+    }
+
     private func makeMetric(_ values: [Double]) -> WorkoutMetric {
         WorkoutMetric(id: "power", title: "Power", unit: "W", points: values.enumerated().map {
             MetricPoint(timestamp: Date(timeIntervalSince1970: Double($0.offset)), value: $0.element)

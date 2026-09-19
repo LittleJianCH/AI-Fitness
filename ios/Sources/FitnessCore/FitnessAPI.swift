@@ -74,7 +74,12 @@ public func userFacingError(_ error: any Error) -> String {
         case 404: return "记录不存在或已被删除。"
         case 409: return "数据已经变化，请刷新后重试。"
         case 413: return "数据量超过服务器限制，暂时无法提交。"
-        case 422: return "提交的数据不符合要求，请检查后重试。"
+        case 422:
+            switch response.problem?.code {
+            case "analysis_too_large": return "这段历史的数据量超过处理上限，请缩短日期范围后重试。"
+            case "analysis_unavailable": return "当前历史数据无法计算，请调整分析条件后重试。"
+            default: return "提交的数据不符合要求，请检查后重试。"
+            }
         case 429: return "请求过于频繁，请稍后重试。"
         default: return "服务器暂时无法完成请求，请重试。"
         }

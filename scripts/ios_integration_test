@@ -57,6 +57,58 @@ export ARGON_MEMORY_KIB=19456 ARGON_ITERATIONS=2
 backend/build/backend >"$test_root/server.log" 2>&1 &
 server_pid=$!
 native /usr/bin/python3 scripts/ios_test_account.py
+# Add a minimal environment-metric fixture through the actual API. Its negative
+# values distinguish canonical percent/Celsius from ratios or Kelvin conversions.
+native /usr/bin/python3 - <<'PY'
+import json
+import os
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+import urllib.request
+import uuid
+
+base = f"http://127.0.0.1:{int(os.environ['PORT'])}/api/v1"
+def request(path, body, token=None):
+    headers = {'Content-Type': 'application/json'}
+    if token:
+        headers['Authorization'] = 'Bearer ' + token
+    req = urllib.request.Request(base + path, data=json.dumps(body).encode(), headers=headers, method='POST')
+    with urllib.request.urlopen(req, timeout=10) as response:
+        payload = response.read()
+        return json.loads(payload) if payload else None
+
+token = request('/auth/native/login', {'username': 'ios_fixture_user',
+    'password': 'synthetic ios fixture password', 'deviceName': 'Environment fixture setup'})['token']
+try:
+    workout = json.loads(Path('backend/build/workout-response.json').read_text())
+    observation = workout['workoutObservation']
+    motion = observation['observationSport']['data']['cyclingMotion']
+    timestamp = observation['observationRange']['rangeStart']
+    motion['motionGrade'] = [{'timestamp': timestamp, 'value': -8.23}]
+    motion['motionEnvironment']['ambientTemperature'] = [{'timestamp': timestamp, 'value': -3.5}]
+    user_data = workout['workoutUserData']
+    user_data['workoutTitle'] = 'Synthetic environment cycling'
+    request('/workouts', {'submissionId': str(uuid.uuid4()), 'observation': observation, 'userData': user_data}, token)
+    # A synthetic workout after the profile editor's effective time verifies
+    # server fallback without relying on today's date or imported athlete data.
+    start = datetime.fromisoformat(observation['observationRange']['rangeStart'].replace('Z', '+00:00'))
+    shift = datetime.now(timezone.utc) + timedelta(hours=1) - start
+    def move_times(value):
+        if isinstance(value, dict):
+            return {key: move_times(item) for key, item in value.items()}
+        if isinstance(value, list):
+            return [move_times(item) for item in value]
+        if isinstance(value, str) and value.endswith('Z') and 'T' in value:
+            return (datetime.fromisoformat(value.replace('Z', '+00:00')) + shift).isoformat()
+        return value
+    observation = move_times(observation)
+    observation['observationAthlete'] = {}
+    user_data['workoutTitle'] = 'Synthetic profile fallback cycling'
+    request('/workouts', {'submissionId': str(uuid.uuid4()), 'observation': observation, 'userData': user_data}, token)
+finally:
+    request('/auth/logout', {}, token)
+print('Synthetic grade and temperature fixture created.')
+PY
 native /usr/bin/python3 scripts/ios_test_proxy.py "$test_root/proxy-port" >"$test_root/proxy.log" 2>&1 &
 proxy_pid=$!
 for _ in {1..100}; do
@@ -78,7 +130,7 @@ native /usr/bin/python3 - <<'PY'
 import json
 with open('ios/build/integration-result.json') as source:
     metrics = json.load(source)['metrics']
-assert int(metrics['testsCount']['_value']) >= 2, 'Required UI tests did not run'
+assert int(metrics['testsCount']['_value']) >= 5, 'Required UI tests did not run'
 assert int(metrics.get('testsSkippedCount', {}).get('_value', '0')) == 0, 'UI integration tests were skipped'
 assert int(metrics.get('testsFailedCount', {}).get('_value', '0')) == 0, 'UI integration tests failed'
 PY

@@ -53,6 +53,34 @@ final class APITests: XCTestCase {
         }
     }
 
+    func testHistoryProblemCodesProduceActionableMessagesWithoutServerDiagnostics() async throws {
+        let cases = [
+            ("analysis_too_large", "这段历史的数据量超过处理上限，请缩短日期范围后重试。"),
+            ("analysis_unavailable", "当前历史数据无法计算，请调整分析条件后重试。"),
+            ("invalid_input", "提交的数据不符合要求，请检查后重试。"),
+        ]
+        for (code, message) in cases {
+            let body = try JSONSerialization.data(withJSONObject: [
+                "code": code, "message": "sensitive diagnostic", "requestId": "synthetic", "fields": [],
+            ] as [String: Any])
+            let api = FitnessAPI(endpoint: try ServerEndpoint("https://fitness.invalid"), transport: FixtureTransport { request, _, _ in
+                XCTAssertEqual(request.path, "/api/v1/analysis/training-history")
+                return (HTTPResponse(status: .init(code: 422), headerFields: [.contentType: "application/json"]), HTTPBody(body))
+            })
+            let input = TrainingHistoryRequest(historyAssumeNoPriorLoad: true,
+                historyCalendar: TrainingCalendar.days(ending: Date(), count: 1, timeZone: .current, complete: false))
+            do {
+                _ = try await api.trainingHistory(token: "synthetic", request: input)
+                XCTFail("Expected history analysis failure")
+            } catch let error as APIResponseError {
+                XCTAssertEqual(error.status, 422)
+                XCTAssertEqual(error.problem?.code, code)
+                XCTAssertEqual(userFacingError(error), message)
+                XCTAssertFalse(userFacingError(error).contains("sensitive"))
+            }
+        }
+    }
+
     #if os(macOS)
     func testRealURLSessionRefusesRedirects() async throws {
         let process = Process()
