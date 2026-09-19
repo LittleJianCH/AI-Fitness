@@ -6,6 +6,7 @@ module Workout.Analysis.Series
     , Segment (..)
     , samples
     , segments
+    , withinGap
     , clip
     , average
     , covered
@@ -40,9 +41,19 @@ segments :: Double -> Samples -> [Segment]
 segments gap xs =
     [ Segment a b x y
     | ((a, x), (b, y)) <- V.toList (V.zip xs (V.drop 1 xs))
-    , b > a
-    , b - a <= gap
+    , withinGap gap a b
     ]
+
+-- Elapsed timestamps are converted from exact NominalDiffTime to Double.
+-- Allow only the rounding uncertainty of those conversions/subtraction (four
+-- machine epsilons at their magnitude, capped at one nanosecond), not a
+-- fixed gap-filling allowance.
+withinGap :: Double -> Double -> Double -> Bool
+withinGap gap a b =
+    b > a && not (isInfinite delta) && (delta <= gap || delta - gap <= tolerance)
+  where
+    delta = b - a
+    tolerance = min 1e-9 (4 * encodeFloat 1 (-52) * maximum [1, abs a, abs b, abs gap])
 
 clip :: Double -> Double -> [Segment] -> [Segment]
 clip lo hi = mapMaybe cut
@@ -86,7 +97,7 @@ at gap xs t
         , i < V.length xs
         , (a, x) <- xs V.! (i - 1)
         , (b, y) <- xs V.! i
-        , b - a <= gap =
+        , withinGap gap a b =
             finite (valueAt t (Segment a b x y))
         | otherwise = Nothing
 

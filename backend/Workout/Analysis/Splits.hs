@@ -65,7 +65,7 @@ extent xs
   where
     first@(_, x) = V.head xs
     lastPoint@(_, y) = V.last xs
-    valid ((a, p), (b, q)) = b > a && b - a <= 120 && q >= p
+    valid ((a, p), (b, q)) = withinGap 120 a b && q >= p
 
 distanceTime :: Samples -> Double -> Maybe (Double, Double)
 distanceTime xs target

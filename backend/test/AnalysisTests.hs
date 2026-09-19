@@ -100,6 +100,26 @@ cases =
         )
     , ("analysis: normalized constant power", nearMaybe 200 (fst (normalizedPower plateau)))
     ,
+        ( "analysis: fractional timestamps preserve exact five-second gaps"
+        , let watts = V.fromList ((0, 200) : [(0.2 + fromIntegral i * 5, 200) | i <- [0 .. 12 :: Int]])
+              result = analysePower 60.2 (AthleteContext Nothing Nothing (Just (Power 200))) watts V.empty
+           in near 60.2 (covered (segments 5 watts))
+                && nearMaybe 200 (powerNormalized result)
+                && powerNormalizationSeconds result == 31
+                && nearMaybe (60.2 / 36) (powerStressScore result)
+                && nearMaybe 200 (at 5 watts 32)
+        )
+    ,
+        ( "analysis: floating tolerance never fills a real microsecond gap"
+        , covered (segments 5 (V.fromList [(30.2, 200), (35.200001, 200)])) == 0
+        )
+    ,
+        ( "analysis: fractional timestamps preserve exact split gap boundary"
+        , let fractionalDistance = V.fromList [(0.2 + fromIntegral i * 120, fromIntegral i * 1000) | i <- [0 .. 12 :: Int]]
+           in V.length (distanceSplits (V.head (splitSets fractionalDistance V.empty V.empty V.empty V.empty)))
+                == 12
+        )
+    ,
         ( "analysis: isolated extreme power cannot change supported windows"
         , nearMaybe 200 (fst (normalizedPower (plateau <> V.singleton (100, 1e100))))
         )

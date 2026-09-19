@@ -49,7 +49,9 @@ profile. It never changes observations or recorded summaries.
 * Sensor statistics/histograms integrate linear segments at most 120 seconds
   apart. Extrema use observed values. A singleton has no duration-weighted mean.
   Excluding zero removes zero plateaus, not isolated zero endpoints. Histograms
-  widen their nominal bin width to remain at most 64 bins.
+  widen their nominal bin width to remain at most 64 bins. Gap comparisons allow
+  at most four machine epsilons at the elapsed timestamp magnitude, capped at one
+  nanosecond, for conversion/subtraction rounding at exact boundaries.
 * Power uses five-second gaps. Normalized power integrates complete 30-second
   rolling windows at one-second endpoints, averages fourth powers, then takes
   the fourth root. Gaps reset windows and startup padding is not invented.
