@@ -20,7 +20,7 @@ parameter precedence, algorithm assumptions and explicit remaining feature gaps.
 
 ## Build
 
-The current baseline is Xcode 15.4, Swift 5.10, and iOS 17 or later. Select Xcode
+The minimum baseline is Xcode 15.4, Swift 5.10, and iOS 17 or later. Select Xcode
 with its platform SDKs installed. The macOS core test package requires macOS 14.
 The Xcode project is maintained in `Fitness.xcodeproj`; its `FitnessCore` product
 comes from this directory's local Swift package. `App/FitnessApp.swift` owns the
@@ -42,6 +42,9 @@ SPM may fetch the pinned packages on first use. The added Apple
 `swift-openapi-urlsession` 1.0.2 package supplies HTTP transport for the existing
 generator/runtime versions, rather than maintaining a second JSON client.
 Keep both the package and Xcode workspace resolution locks.
+The generator is pinned to 1.7.0: its upstream Foundation-import fixes are
+required by newer Swift toolchains (including Xcode 27). The runtime and
+transport pins are unchanged.
 
 Keep Xcode's local simulator signing enabled: Keychain requires the app identity
 in its signing entitlements. Disabling code signing may build successfully but

@@ -391,7 +391,7 @@ npm run generate
 npm run check
 ```
 
-On macOS with the project's Swift 5.10/Xcode toolchain, from the repository root:
+On macOS with Swift 5.10 or later and the selected Xcode toolchain, from the repository root:
 
 ```sh
 cp contracts/build/openapi.json contracts/swift/Sources/ContractClient/openapi.json

@@ -6,7 +6,7 @@ let package = Package(
     platforms: [.macOS(.v13), .iOS(.v17)],
     products: [.library(name: "ContractClient", targets: ["ContractClient"])],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-openapi-generator", exact: "1.6.0"),
+        .package(url: "https://github.com/apple/swift-openapi-generator", exact: "1.7.0"),
         .package(url: "https://github.com/apple/swift-openapi-runtime", exact: "1.7.0"),
     ],
     targets: [
