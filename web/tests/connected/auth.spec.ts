@@ -32,7 +32,12 @@ test('registration, safe return navigation, real reads, session restoration and 
 	);
 	expect(cookie).toMatchObject({ secure: true, httpOnly: true, sameSite: 'Lax', path: '/' });
 	expect(await page.evaluate(() => document.cookie)).not.toContain('__Host-ai-fitness-session');
-	expect(await page.evaluate(() => Object.keys(localStorage))).toEqual([]);
+	expect(
+		await page.evaluate(() => Object.keys(localStorage).filter((key) => key !== 'fitness-theme'))
+	).toEqual([]);
+	expect(await page.evaluate(() => localStorage.getItem('fitness-theme'))).toMatch(
+		/^(system|light|dark)$/
+	);
 	await page.getByRole('button', { name: '退出登录', exact: true }).click();
 	await expect(page.getByRole('button', { name: '登录', exact: true })).toBeVisible();
 	await page.goBack();

@@ -9,7 +9,18 @@
 		pinned = false,
 		compact = false
 	}: { workout: Workout; time?: string; pinned?: boolean; compact?: boolean } = $props();
-	const order = ['speed', 'power', 'cadence', 'heart-rate', 'altitude'];
+	const order = [
+		'power',
+		'heart-rate',
+		'cadence',
+		'speed',
+		'altitude',
+		'grade',
+		'temperature',
+		'step-length',
+		'vertical-oscillation',
+		'ground-contact-time'
+	];
 	const items = $derived(
 		metrics(workout).sort((a, b) => order.indexOf(a.key) - order.indexOf(b.key))
 	);

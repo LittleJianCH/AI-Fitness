@@ -5,7 +5,9 @@ import { workouts, card } from '../demo/fixtures';
 import {
 	getWorkouts200Response,
 	getWorkoutsWorkoutId200Response,
-	getWorkoutsWorkoutIdPowerCurve200Response
+	getWorkoutsWorkoutIdPowerCurve200Response,
+	getSettings200Response,
+	getWorkoutsWorkoutIdAnalysis200Response
 } from '../src/lib/api/generated/schemas';
 import { loadWorkouts, loadWorkout, readScenario, ApiError } from '../src/lib/api/read';
 import { metrics, duration, common, timeSummary } from '../src/lib/workouts/presentation';
@@ -16,7 +18,9 @@ describe('generated runtime contract', () => {
 		for (const [file, schema] of [
 			['list-response.json', getWorkouts200Response],
 			['workout-response.json', getWorkoutsWorkoutId200Response],
-			['power-curve-response.json', getWorkoutsWorkoutIdPowerCurve200Response]
+			['power-curve-response.json', getWorkoutsWorkoutIdPowerCurve200Response],
+			['settings-response.json', getSettings200Response],
+			['analysis-response.json', getWorkoutsWorkoutIdAnalysis200Response]
 		] as const) {
 			const raw: unknown = JSON.parse(
 				await readFile(new URL(`../../backend/build/${file}`, import.meta.url), 'utf8')

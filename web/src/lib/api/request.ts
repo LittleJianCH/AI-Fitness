@@ -69,6 +69,8 @@ export function errorText(error: Error | null): string {
 			return '会话校验未通过，请重试；如果仍然失败，请重新登录。';
 		case 'forbidden':
 			return '当前账号无法执行这个操作。';
+		case 'analysis_revision_conflict':
+			return '训练已更新，请刷新后查看对应版本的分析。';
 		case 'revision_conflict':
 			return '这条训练已被更新，请重新加载最新版本后再修改。';
 		case 'submission_conflict':

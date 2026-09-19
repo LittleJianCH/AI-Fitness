@@ -31,7 +31,9 @@ test('manual cycling and running records preserve summary-only and optional-dist
 	await expect(
 		page.getByRole('heading', { level: 1, name: 'Synthetic manual ride' })
 	).toBeVisible();
-	await expect(page.getByText('这条训练暂无可分析的指标汇总或曲线。')).toBeVisible();
+	await expect(
+		page.getByText('这条训练缺少逐点采样，暂时无法计算指标平均值或最大值。')
+	).toBeVisible();
 	await expect(page.getByText('Synthetic notes', { exact: true })).toBeVisible();
 	await expect(page.getByText('manual', { exact: true })).toBeVisible();
 	await expect(page.locator('.summary-number').first()).toContainText('未记录');

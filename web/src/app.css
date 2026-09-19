@@ -498,3 +498,11 @@ body {
 	margin: 0;
 	border-bottom: 1px solid var(--line);
 }
+
+:root {
+	--metric-grade: var(--metric-altitude);
+	--metric-temperature: var(--metric-cadence);
+	--metric-step-length: var(--metric-speed);
+	--metric-vertical-oscillation: var(--metric-cadence);
+	--metric-ground-contact-time: var(--metric-altitude);
+}

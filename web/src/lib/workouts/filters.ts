@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { GetWorkoutsParams } from '../api/generated/client';
-function localDay(value: string): Date | undefined {
+export function localDay(value: string): Date | undefined {
 	if (!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(value) || value.startsWith('0000')) return;
 	const date = new Date(`${value}T00:00:00`);
 	if (!Number.isFinite(date.getTime())) return;

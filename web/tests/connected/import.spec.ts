@@ -39,11 +39,9 @@ test('imports cycling and running, deduplicates renamed files, and survives rest
 	await expect(link).toHaveAttribute('href', first ?? 'missing-workout-link');
 	await link.click();
 	await expect(page.getByRole('heading', { name: '未命名训练' })).toBeVisible();
-	const heartRate = page
-		.locator('a.metric-card')
-		.filter({ has: page.getByRole('heading', { name: '心率', exact: true }) });
-	await expect(heartRate.locator('.metric-number')).toContainText('125');
-	await expect(heartRate.locator('.metric-number')).toContainText('计算平均');
+	const heartRate = page.getByRole('button', { name: '放大心率图表', exact: true });
+	await expect(heartRate.locator('.metric-heading > .subtle')).toContainText('125');
+	await expect(heartRate.locator('.metric-heading > .subtle')).toContainText('计算平均');
 	await heartRate.click();
 	await expect(page.locator('.summary-strip > div').filter({ hasText: '计算最大' })).toContainText(
 		'130'

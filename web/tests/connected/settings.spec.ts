@@ -23,9 +23,9 @@ async function anotherSession(browser: Browser, username: string, deviceName: st
 async function settings(page: Page) {
 	await page
 		.getByRole('navigation', { name: '主导航' })
-		.getByRole('link', { name: '账号', exact: true })
+		.getByRole('link', { name: '设置', exact: true })
 		.click();
-	await expect(page.getByRole('heading', { level: 1, name: '账号设置' })).toBeVisible();
+	await expect(page.getByRole('heading', { level: 1, name: '设置' })).toBeVisible();
 }
 async function confirm(page: Page, name: string) {
 	const dialog = page.waitForEvent('dialog').then((dialog) => dialog.accept());
@@ -127,7 +127,7 @@ test('password change validates confirmation, keeps a valid session on wrong cur
 		await page.getByRole('button', { name: '登录', exact: true }).click();
 		await expect(page.getByRole('alert')).toContainText('用户名或密码不正确');
 		await login(page, username, replacement);
-		await expect(page.getByRole('heading', { level: 1, name: '账号设置' })).toBeVisible();
+		await expect(page.getByRole('heading', { level: 1, name: '设置' })).toBeVisible();
 		await expect(page.getByLabel('当前密码', { exact: true })).toHaveValue('');
 		await expect(page.getByLabel('新密码', { exact: true })).toHaveValue('');
 	} finally {

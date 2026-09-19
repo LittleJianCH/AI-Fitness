@@ -1,7 +1,29 @@
-import type { Workout, WorkoutCard, CommonSummary } from '../api/generated/client';
+import type { Workout, WorkoutCard, CommonSummary, MetricKind } from '../api/generated/client';
 
 import type { NumericSample } from './chart-data';
-export type MetricKey = 'power' | 'heart-rate' | 'cadence' | 'speed' | 'altitude';
+export type MetricKey =
+	| 'power'
+	| 'heart-rate'
+	| 'cadence'
+	| 'speed'
+	| 'altitude'
+	| 'grade'
+	| 'temperature'
+	| 'step-length'
+	| 'vertical-oscillation'
+	| 'ground-contact-time';
+export const metricKinds: Record<MetricKey, MetricKind> = {
+	power: 'powerMetric',
+	'heart-rate': 'heartRateMetric',
+	cadence: 'cadenceMetric',
+	speed: 'speedMetric',
+	altitude: 'altitudeMetric',
+	grade: 'gradeMetric',
+	temperature: 'temperatureMetric',
+	'step-length': 'stepLengthMetric',
+	'vertical-oscillation': 'verticalOscillationMetric',
+	'ground-contact-time': 'groundContactTimeMetric'
+};
 export type Metric = {
 	key: MetricKey;
 	title: string;
@@ -96,6 +118,55 @@ export function metrics(workout: Workout): Metric[] {
 			factor: 1
 		}
 	];
+	result.push(
+		{
+			key: 'grade',
+			title: '坡度',
+			unit: '%',
+			color: '#586B63',
+			samples: m.motionGrade,
+			factor: 1,
+			average: s?.summaryGrade.averageValue,
+			maximum: s?.summaryGrade.maximumValue
+		},
+		{
+			key: 'temperature',
+			title: '温度',
+			unit: '°C',
+			color: '#9A6300',
+			samples: m.motionEnvironment.ambientTemperature,
+			factor: 1,
+			average: s?.summaryTemperature.averageValue,
+			maximum: s?.summaryTemperature.maximumValue
+		}
+	);
+	if (sport.type === 'running')
+		result.push(
+			{
+				key: 'step-length',
+				title: '步长',
+				unit: 'm',
+				color: '#1769D2',
+				samples: sport.data.runningDynamics.stepLength,
+				factor: 1
+			},
+			{
+				key: 'vertical-oscillation',
+				title: '垂直振幅',
+				unit: 'cm',
+				color: '#9A6300',
+				samples: sport.data.runningDynamics.verticalOscillation,
+				factor: 100
+			},
+			{
+				key: 'ground-contact-time',
+				title: '触地时间',
+				unit: 'ms',
+				color: '#586B63',
+				samples: sport.data.runningDynamics.groundContactTime,
+				factor: 1000
+			}
+		);
 	return result.filter((item) => {
 		const recordedPower =
 			item.key === 'power' ? recordedMetricSummary(workout, 'power') : undefined;
@@ -124,6 +195,22 @@ export function recordedMetricSummary(
 			return summary.summaryHeartRate;
 		case 'altitude':
 			return summary.summaryAltitude;
+		case 'grade':
+			return summary.summaryGrade;
+		case 'temperature':
+			return summary.summaryTemperature;
+		case 'step-length':
+			return sport.type === 'running'
+				? sport.data.runningSummary.recordedSummary.summaryStepLength
+				: {};
+		case 'vertical-oscillation':
+			return sport.type === 'running'
+				? sport.data.runningSummary.recordedSummary.summaryVerticalOscillation
+				: {};
+		case 'ground-contact-time':
+			return sport.type === 'running'
+				? sport.data.runningSummary.recordedSummary.summaryGroundContactTime
+				: {};
 		case 'cadence':
 			return sport.type === 'cycling'
 				? sport.data.cyclingSummary.recordedSummary.summaryCyclingCadence

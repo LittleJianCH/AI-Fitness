@@ -20,6 +20,11 @@
 		}
 		apply();
 		ready = true;
+		const sync = () => {
+			theme = document.documentElement.dataset.theme ?? 'system';
+		};
+		window.addEventListener('fitness-theme-changed', sync);
+		return () => window.removeEventListener('fitness-theme-changed', sync);
 	});
 </script>
 

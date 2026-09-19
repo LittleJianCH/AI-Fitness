@@ -18,6 +18,7 @@
 		selectedTime,
 		viewStart = 0,
 		viewEnd,
+		maxGapSeconds = 120,
 		onSelect
 	}: {
 		metric: Metric;
@@ -28,10 +29,11 @@
 		selectedTime?: string;
 		viewStart?: number;
 		viewEnd?: number;
+		maxGapSeconds?: number;
 		onSelect?: (index: number) => void;
 	} = $props();
 	const timestamps = $derived(sampleTimes(metric.samples));
-	const points = $derived(chartPoints(metric.samples, start, metric.factor));
+	const points = $derived(chartPoints(metric.samples, start, metric.factor, maxGapSeconds));
 	const startTime = $derived(Date.parse(start));
 	let host: HTMLDivElement;
 	let dark = $state(false);
@@ -42,7 +44,12 @@
 					'heart-rate': '#ec9baf',
 					cadence: '#e2bc70',
 					speed: '#8fc0f4',
-					altitude: '#a7c7b1'
+					altitude: '#a7c7b1',
+					grade: '#a7c7b1',
+					temperature: '#e2bc70',
+					'step-length': '#8fc0f4',
+					'vertical-oscillation': '#e2bc70',
+					'ground-contact-time': '#a7c7b1'
 				}[metric.key] ?? metric.color)
 			: metric.color
 	);
@@ -199,6 +206,7 @@
 <style>
 	.time-chart {
 		width: 100%;
+		overflow: hidden;
 		height: 340px;
 		touch-action: pan-y;
 	}

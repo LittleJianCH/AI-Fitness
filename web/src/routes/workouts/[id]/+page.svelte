@@ -4,6 +4,7 @@
 	import { resolve } from '$app/paths';
 	import RecentWorkouts from '$lib/workouts/components/RecentWorkouts.svelte';
 	import WorkoutReview from '$lib/workouts/components/WorkoutReview.svelte';
+	import WorkoutDetails from '$lib/analysis/WorkoutDetails.svelte';
 	import WorkoutGate from '$lib/workouts/components/WorkoutGate.svelte';
 	import Icon from '$lib/components/Icon.svelte';
 	import { readScenario } from '$lib/api/read';
@@ -81,6 +82,7 @@
 							{workout}
 							{suffix}
 						/>{/key}
+					{#if !demo}<WorkoutDetails {workout} />{/if}
 					<section class="source-details">
 						<details>
 							<summary>查看来源与统计口径</summary>

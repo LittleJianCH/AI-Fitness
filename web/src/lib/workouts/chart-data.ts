@@ -20,7 +20,8 @@ export function nearestIndex(times: readonly number[], target: number): number {
 export function chartPoints(
 	samples: readonly NumericSample[],
 	start: string,
-	factor: number
+	factor: number,
+	maxGapSeconds = 120
 ): [number, number | null][] {
 	const points: [number, number | null][] = [];
 	const origin = Date.parse(start);
@@ -28,7 +29,7 @@ export function chartPoints(
 	for (const sample of samples) {
 		const timestamp = Date.parse(sample.timestamp);
 		const seconds = (timestamp - origin) / 1000;
-		if (previous !== undefined && timestamp - previous > 120000)
+		if (previous !== undefined && timestamp - previous > maxGapSeconds * 1000)
 			points.push([seconds - 0.001, null]);
 		points.push([seconds, sample.value * factor]);
 		previous = timestamp;

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Workout } from '$lib/api/generated/client';
 	import {
+		metricKinds,
 		dateText,
 		duration,
 		valueText,
@@ -9,6 +10,8 @@
 	} from '$lib/workouts/presentation';
 	import { nearestIndex, sampleTimes } from '$lib/workouts/chart-data';
 	import { untrack } from 'svelte';
+	import MetricDetails from '$lib/analysis/MetricDetails.svelte';
+	import { workoutAnalysisQuery } from '$lib/analysis/query.svelte';
 	import PowerCurveAnalysis from '$lib/workouts/components/PowerCurveAnalysis.svelte';
 	import TimeChart from '$lib/workouts/components/TimeChart.svelte';
 
@@ -26,10 +29,19 @@
 			return nearestIndex(sampleTimes(metric.samples), Date.parse(initialTime));
 		})
 	);
+	const { query: analysis } = workoutAnalysisQuery(() => workout);
+	const statistics = $derived(
+		analysis.data?.analysisMetrics.find((m) => m.metricKind === metricKinds[metric.key])
+			?.metricStatistics
+	);
 	const range = $derived(workout.workoutObservation.observationRange);
 	const recorded = $derived(recordedMetricSummary(workout, metric.key));
-	const average = $derived(metric.average ?? recorded.averageValue);
-	const maximum = $derived(metric.maximum ?? recorded.maximumValue);
+	const average = $derived(
+		(demo ? metric.average : statistics?.averageValue) ?? recorded.averageValue
+	);
+	const maximum = $derived(
+		(demo ? metric.maximum : statistics?.maximumValue) ?? recorded.maximumValue
+	);
 	const selected = $derived(metric.samples[index]);
 </script>
 
@@ -44,12 +56,14 @@
 		</div>
 	</header>{/if}
 <p class="small subtle">
-	{#if metric.average !== undefined || metric.maximum !== undefined}计算统计包含真实零值；超过 2
-		分钟的空档不计入时间加权平均。{:else}当前显示记录自带的汇总。曲线保留原始采样；缺失记录不补零。{/if}
+	{#if (demo ? metric.average : statistics?.averageValue) !== undefined || (demo ? metric.maximum : statistics?.maximumValue) !== undefined}计算统计包含真实零值；超过
+		2 分钟的空档不计入时间加权平均。{:else}当前显示记录自带的汇总。曲线保留原始采样；缺失记录不补零。{/if}
 </p>
 {#if average !== undefined || maximum !== undefined}<div class="summary-strip">
 		<div>
-			<div class="summary-label">{metric.average !== undefined ? '计算平均' : '记录平均'}</div>
+			<div class="summary-label">
+				{(demo ? metric.average : statistics?.averageValue) !== undefined ? '计算平均' : '记录平均'}
+			</div>
 			<div class="summary-number">
 				{valueText(average, metric.factor, metric.key === 'speed' ? 1 : 0)}<small
 					>{average !== undefined ? metric.unit : ''}</small
@@ -57,7 +71,9 @@
 			</div>
 		</div>
 		<div>
-			<div class="summary-label">{metric.maximum !== undefined ? '计算最大' : '记录最大'}</div>
+			<div class="summary-label">
+				{(demo ? metric.maximum : statistics?.maximumValue) !== undefined ? '计算最大' : '记录最大'}
+			</div>
 			<div class="summary-number">
 				{valueText(maximum, metric.factor, metric.key === 'speed' ? 1 : 0)}<small
 					>{maximum !== undefined ? metric.unit : ''}</small
@@ -71,6 +87,7 @@
 		<p class="small subtle">横轴为经过时间 · 超过 2 分钟的采样间隔以断线显示</p>
 		<TimeChart
 			{metric}
+			maxGapSeconds={analysis.data?.analysisMaxGapSeconds ?? 120}
 			start={range.rangeStart}
 			end={range.rangeEnd}
 			selectedTime={selected.timestamp}
@@ -119,6 +136,7 @@
 		<h2>这次训练仅包含汇总数据</h2>
 		<p>没有逐点样本，因此不展示曲线。汇总值按其实际来源标注为计算或记录。</p>
 	</div>{/if}
+{#if !demo}<MetricDetails {workout} kind={metricKinds[metric.key]} />{/if}
 {#if metric.key === 'power'}
 	{#if metric.samples.length > 0}<PowerCurveAnalysis {workout} />
 	{:else}<section class="section" aria-label="最佳持续功率">
@@ -138,7 +156,7 @@
 				标为“计算”的统计来自后端对当前修订采样的计算；标为“记录”的统计直接来自训练记录。曲线按原始时间排列，保留真实零值，显示中的断线或缩放不改变统计值。
 			</p>
 			{#if metric.key === 'heart-rate'}<p>
-					当前接口没有提供已配置的心率分区或运动后恢复计算，因此这里展示心率记录本身。
+					心率分区使用训练开始时生效的个人参数。运动后恢复读数暂不在当前模型范围内。
 				</p>{/if}{#if metric.key === 'cadence' && workout.workoutObservation.observationSport.type === 'running'}<p
 				>
 					跑步步频使用双脚总步数（步/分钟）。

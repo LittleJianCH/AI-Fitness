@@ -4,6 +4,7 @@
 	import type { Workout } from '$lib/api/generated/client';
 	import {
 		metrics,
+		metricKinds,
 		motion,
 		duration,
 		valueText,
@@ -16,6 +17,7 @@
 	import DetailDialog from '$lib/components/DetailDialog.svelte';
 	import MetricAnalysis from '$lib/workouts/components/MetricAnalysis.svelte';
 	import { resolve } from '$app/paths';
+	import { workoutAnalysisQuery } from '$lib/analysis/query.svelte';
 
 	let {
 		workout,
@@ -26,10 +28,30 @@
 		restoreFocus: (node: HTMLElement) => void;
 		suffix?: '' | `?scenario=${string}`;
 	} = $props();
+	const { query: analysis } = workoutAnalysisQuery(() => workout);
 	const range = $derived(workout.workoutObservation.observationRange);
-	const order = ['speed', 'power', 'cadence', 'heart-rate', 'altitude'];
+	const order = [
+		'power',
+		'heart-rate',
+		'cadence',
+		'speed',
+		'altitude',
+		'grade',
+		'temperature',
+		'step-length',
+		'vertical-oscillation',
+		'ground-contact-time'
+	];
 	const items = $derived(
-		metrics(workout).sort((a, b) => order.indexOf(a.key) - order.indexOf(b.key))
+		metrics(workout)
+			.map((metric) => {
+				if (import.meta.env.MODE === 'demo') return metric;
+				const stats = analysis.data?.analysisMetrics.find(
+					(m) => m.metricKind === metricKinds[metric.key]
+				)?.metricStatistics;
+				return { ...metric, average: stats?.averageValue, maximum: stats?.maximumValue };
+			})
+			.sort((a, b) => order.indexOf(a.key) - order.indexOf(b.key))
 	);
 	const positions = $derived(motion(workout).motionPosition);
 	const times = $derived(
@@ -247,6 +269,7 @@
 					</div>
 					{#if metric.samples.length}<TimeChart
 							{metric}
+							maxGapSeconds={analysis.data?.analysisMaxGapSeconds ?? 120}
 							start={range.rangeStart}
 							end={range.rangeEnd}
 							{selectedTime}

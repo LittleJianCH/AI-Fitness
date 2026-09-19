@@ -15,7 +15,10 @@ const operations = {
   '/workouts': ['get', 'post'],
   '/workouts/{workoutId}': ['get', 'delete'],
   '/workouts/{workoutId}/power-curve': ['get'],
+  '/workouts/{workoutId}/analysis': ['get'],
   '/workouts/{workoutId}/user-data': ['put'],
+  '/settings': ['get', 'put'],
+  '/analysis/training-history': ['post'],
 };
 const content = (value) => ({
   ...value,

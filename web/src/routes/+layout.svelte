@@ -11,6 +11,7 @@
 	import { resolve } from '$app/paths';
 	import ThemePicker from '$lib/components/ThemePicker.svelte';
 	import Icon from '$lib/components/Icon.svelte';
+	import Preferences from '$lib/settings/Preferences.svelte';
 	import { readScenario } from '$lib/api/read';
 
 	let { children } = $props();
@@ -75,9 +76,14 @@
 			href={resolve(`/workouts${suffix}`)}><Icon /><span>训练</span></a
 		>
 		{#if !demo}<a
+				href={resolve('/training-history')}
+				class:active={page.url.pathname.includes('/training-history')}
+				aria-current={page.url.pathname.includes('/training-history') ? 'page' : undefined}
+				><span>趋势</span></a
+			><a
 				class:active={page.url.pathname.includes('/settings')}
 				aria-current={page.url.pathname.includes('/settings') ? 'page' : undefined}
-				href={resolve('/settings')}><Icon kind="settings" /><span>账号</span></a
+				href={resolve('/settings')}><Icon kind="settings" /><span>设置</span></a
 			>{/if}
 	</nav>
 	{#if demo}<a class="bottom-link" href={resolve('/demo')}
@@ -111,7 +117,9 @@
 			{#if logoutError && session.user}<p class="form-error" role="alert">
 					{errorText(logoutError)}
 				</p>{/if}
-			<AuthGate>{@render children()}</AuthGate>
+			<AuthGate
+				>{#if !demo}<Preferences />{/if}{@render children()}</AuthGate
+			>
 		</div>
 	</main>
 </QueryClientProvider>

@@ -265,3 +265,47 @@ calculation. Use connected mode to review the complete calculation flow.
 `./scripts/web_integration_test power-curve.spec.ts` verifies cycling and running
 on desktop and mobile against the real Haskell backend, using declining power
 samples and checking both the API response and displayed best-duration values.
+
+## Workout analysis and personal settings
+
+Connected details keep the existing route and linked-chart controls, then show
+backend power/running analysis, HR load, distance splits, recorded laps, and
+source/context. Metric dialogs and direct pages expose the backend's statistics,
+time distributions, zones and aligned relationships, including grade, temperature
+and running dynamics when recorded. Statistics use the full backend input;
+browser chart points never supply averages. Time plots retain every recorded
+sample and insert breaks using `analysisMaxGapSeconds`. Relationships render the
+backend's bounded point set. Units remain explicit in selectors, tables and axes.
+Recorded altitude/energy/laps/bicycle context remain labeled separately.
+
+`/settings` contains software, effective-dated body profiles, equipment and the
+existing account/session controls. GET/PUT use owner-scoped generated contracts.
+The editor captures a revision, preserves existing profile history, appends a
+complete parameter snapshot, and keeps equipment identity/kind immutable.
+A conflict retains the draft and requires an explicit reload. Save invalidates
+analysis/history queries. Profile fallback selection and all HR/power rules are
+backend-owned. The saved appearance applies when authenticated; the header picker
+remains a local appearance override. Only appearance may use browser storage;
+body profiles, equipment, workouts and completeness inputs stay in memory.
+
+The HR-load section links to `/training-history`. The form sends 1–366 consecutive
+local civil days with real UTC boundaries, explicit per-day recording completeness
+(default unconfirmed), and either an explicitly chosen zero prior load or both
+known CTL and ATL. Unknown results remain gaps, not zero. The results identify
+the submitted inputs, method and settings revision. No fatigue algorithm runs
+in the browser. Demo mode does not simulate these persisted features.
+
+Targeted real-backend verification:
+
+```sh
+./scripts/web_integration_test preferences.spec.ts settings.spec.ts
+./scripts/web_integration_test analysis.spec.ts power-curve.spec.ts
+```
+
+These use only synthetic data on desktop/mobile and check persistence after a
+backend restart, profile history, equipment retirement, revision conflicts,
+saved settings affecting selected analysis profiles and HRSS/W/kg, metric detail,
+km/5 km splits, and unknown/rest/prior-load history behavior. Calendar tests cover
+23/25-hour DST boundaries. Generated response validators also read the actual
+Servant settings and analysis fixtures. Existing session, route, chart and import
+controls retain their separate regression suites.
