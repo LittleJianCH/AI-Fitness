@@ -1,3 +1,11 @@
+// Share one Kotlin plugin classloader across the native app and JVM consumer.
+plugins {
+    id("com.android.application") apply false
+    id("org.jetbrains.kotlin.jvm") apply false
+    id("org.jetbrains.kotlin.android") apply false
+    id("org.jetbrains.kotlin.plugin.compose") apply false
+}
+
 // Plugin versions are pinned in settings.gradle.kts.
 // The formatter runs only as a build tool; it is never an app runtime dependency.
 val ktfmt by configurations.creating {
