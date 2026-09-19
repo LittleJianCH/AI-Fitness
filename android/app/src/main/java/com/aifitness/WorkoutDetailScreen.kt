@@ -141,6 +141,9 @@ fun WorkoutDetailScreen(state: FitnessState, model: FitnessViewModel) {
                     style = MaterialTheme.typography.titleLarge,
                 )
             }
+            if (set.distanceSplits.isEmpty()) {
+                item { Text("暂无可用分段。分段计算需要足够的连续、非递减距离数据。") }
+            }
             items(set.distanceSplits, key = { "${set.splitLengthMetres}-${it.splitIndex}" }) { split
                 ->
                 SectionCard("第 ${split.splitIndex} 段 · ${number(split.splitDistanceMetres, "m")}") {

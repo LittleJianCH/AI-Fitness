@@ -166,6 +166,8 @@ signs the client into its synthetic account. No production health data is used.
   relationships. Grade and temperature are supported when present.
   Distribution bars span the backend bin lower and upper bounds from a zero
   duration baseline; zone bars use equal category slots.
+  Empty distance split sets explain that usable continuous, nondecreasing
+  distance data are required instead of leaving an empty section.
 - Charts bound drawn points while preserving full-stream gaps first; point
   selection uses the raw stream. Distance axes use independently sampled distance
   only within valid intervals, never extrapolating. Chart coordinate mapping,
