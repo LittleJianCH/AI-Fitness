@@ -62,12 +62,13 @@ analyseHeart settings workout = case Load.calculateWorkoutLoad Load.defaultCover
                 (coerce . Load.activeDuration <$> coverage)
                 (coerce . Load.coveredDuration <$> coverage)
                 (coverage >>= Load.coverageFraction)
-                (maybe False ((== Load.RecordedTimer) . Load.timingBasis) coverage)
+                usesRecordedTimer
                 (maybe V.empty zones (Load.loadProfile load))
   where
-    blank status = HeartAnalysis status Nothing Nothing Nothing Nothing Nothing False V.empty
+    blank status = HeartAnalysis status Nothing Nothing Nothing Nothing Nothing usesRecordedTimer V.empty
     observation = workoutObservation workout
-    (_, ranges) = activeRanges observation
+    (timing, ranges) = activeRanges observation
+    usesRecordedTimer = timing == Load.RecordedTimer
     readings = V.toList (Sport.heartRate (observationSport observation))
     -- Match the load calculator's left-hold, ten-second gap and resume rules.
     intervals =

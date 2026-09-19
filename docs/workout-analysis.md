@@ -116,7 +116,9 @@ The existing pure `Analysis.HeartRate` and `Analysis.Fatigue` engine is integrat
 with the settings/API boundaries. HRSS left-holds readings for at most ten seconds
 and integrates over recorded active timer intervals. It does not hold a final
 sample to workout end or reuse a pre-pause reading after resume. Missing timers
-use a labelled elapsed-time fallback. Above-maximum HR is excluded and reduces
+use a labelled elapsed-time fallback. The reported timer basis comes from the
+workout's events even when a missing heart-rate profile prevents load calculation.
+Above-maximum HR is excluded and reduces
 coverage; below-resting HR contributes zero. Availability requires 95% coverage.
 Partial observed scores are not scaled to fill missing time and are labelled.
 

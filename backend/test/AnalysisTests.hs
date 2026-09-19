@@ -1,9 +1,12 @@
 module AnalysisTests (cases) where
 
+import qualified AnalysisFixtures as A
 import Data.Maybe (isNothing)
 import qualified Data.Vector as V
 import qualified Fixtures as F
+import Profile.Settings (emptySettings)
 import Workout.Analysis.Calculate (calculate)
+import Workout.Analysis.Heart (analyseHeart)
 import Workout.Analysis.Power (analysePower, normalizedPower)
 import Workout.Analysis.Series
 import Workout.Analysis.Splits
@@ -14,6 +17,19 @@ import Workout.Types
 cases :: [(String, Bool)]
 cases =
     [ ("analysis: empty streams remain missing", null (analysisMetrics (calculate emptyWorkout)))
+    ,
+        ( "analysis: recorded timer remains known without a heart-rate profile"
+        , let result = analyseHeart emptySettings A.paused
+           in heartLoadStatus result == HeartProfileMissing
+                && heartUsesRecordedTimer result
+                && isNothing (heartHrss result)
+                && isNothing (heartCoverageFraction result)
+        )
+    ,
+        ( "analysis: missing profile does not invent recorded timer events"
+        , let result = analyseHeart emptySettings A.ride
+           in heartLoadStatus result == HeartProfileMissing && not (heartUsesRecordedTimer result)
+        )
     ,
         ( "analysis: large finite constant histogram retains coverage"
         , near 10 (sum (map binSeconds (V.toList (distribution 25 (V.fromList [(0, 1e300), (10, 1e300)])))))
