@@ -70,13 +70,30 @@ val WorkoutCard.recorded: CommonSummary
             is SportSummaryRunningSummary -> sport.data.recordedSummary.runningCommonSummary
         }
 
-/** Raw observed values only: no interpolation, averages, splits, or load formulas. */
+/** Coordinates from recorded samples or backend analysis; no domain calculations. */
 data class ChartPoint(
     val x: Double,
     val y: Double,
     val label: String,
     val breakBefore: Boolean = false,
+    val upperX: Double? = null,
 )
+
+/** Numeric distributions retain full intervals; zone indices occupy equal category slots. */
+fun ChartPoint.barRange(): ClosedFloatingPointRange<Double> =
+    upperX?.let { x..it } ?: (x - 0.5)..(x + 0.5)
+
+fun nearestBarIndex(points: List<ChartPoint>, target: Double): Int {
+    val containing = points.indexOfFirst {
+        target >= it.barRange().start && target < it.barRange().endInclusive
+    }
+    return if (containing >= 0) containing
+    else
+        points.indices.minBy { index ->
+            val range = points[index].barRange()
+            kotlin.math.abs(target - target.coerceIn(range.start, range.endInclusive))
+        }
+}
 
 /** Navigation remains available from recorded samples when derived analysis fails. */
 fun Workout.metricKinds(analysis: WorkoutAnalysis? = null): List<MetricKind> {

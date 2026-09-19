@@ -164,6 +164,8 @@ signs the client into its synthetic account. No production health data is used.
   heart-rate load, distance splits/source laps, source context and method notes.
   Metric pages show raw samples, backend statistics, distributions and aligned
   relationships. Grade and temperature are supported when present.
+  Distribution bars span the backend bin lower and upper bounds from a zero
+  duration baseline; zone bars use equal category slots.
 - Charts bound drawn points while preserving full-stream gaps first; point
   selection uses the raw stream. Distance axes use independently sampled distance
   only within valid intervals, never extrapolating. Chart coordinate mapping,

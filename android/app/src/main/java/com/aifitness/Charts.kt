@@ -8,6 +8,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
@@ -38,9 +39,11 @@ fun PointChart(
         return
     }
     var selected by remember(points) { mutableIntStateOf(0) }
-    val visible = remember(points, gap) { renderingPoints(points, gap = gap) }
-    val xMin = remember(points) { points.minOf { it.x } }
-    val xMax = remember(points) { points.maxOf { it.x } }
+    val visible =
+        remember(points, gap, bars) { if (bars) points else renderingPoints(points, gap = gap) }
+    val xMin = remember(points, bars) { points.minOf { if (bars) it.barRange().start else it.x } }
+    val xMax =
+        remember(points, bars) { points.maxOf { if (bars) it.barRange().endInclusive else it.x } }
     val yMin = remember(points, bars) { if (bars) 0.0 else points.minOf { it.y } }
     val yMax = remember(points) { points.maxOf { it.y } }
     val xRange = (xMax - xMin).takeIf { it > 0 } ?: 1.0
@@ -56,11 +59,12 @@ fun PointChart(
             .height(180.dp)
             .testTag("chart-$title")
             .semantics { contentDescription = "$title，${points.size} 个样本；使用下方按钮选择原始点。" }
-            .pointerInput(points, scatter) {
+            .pointerInput(points, scatter, bars) {
                 detectTapGestures { location ->
                     val target = xMin + (location.x / size.width).coerceIn(0f, 1f) * xRange
                     selected =
-                        if (scatter)
+                        if (bars) nearestBarIndex(points, target)
+                        else if (scatter)
                             points.indices.minBy { i ->
                                 val p = points[i]
                                 val dx = ((p.x - xMin) / xRange * size.width - location.x)
@@ -83,22 +87,39 @@ fun PointChart(
         )
         visible.forEachIndexed { index, point ->
             val at = position(point)
-            if (bars)
-                drawLine(
+            if (bars) {
+                val range = point.barRange()
+                val left = ((range.start - xMin) / xRange * size.width).toFloat()
+                val right = ((range.endInclusive - xMin) / xRange * size.width).toFloat()
+                // Adjacent histogram bins share boundaries; category bars have a visual gap.
+                val inset = if (point.upperX == null) (right - left) * .175f else 0f
+                drawRect(
                     color,
-                    Offset(at.x, size.height),
-                    at,
-                    strokeWidth = (size.width / visible.size * .65f).coerceAtLeast(2f),
+                    Offset(left + inset, at.y),
+                    Size(right - left - 2 * inset, size.height - at.y),
                 )
-            else if (scatter || visible.size == 1) drawCircle(color, 3f, at)
+            } else if (scatter || visible.size == 1) drawCircle(color, 3f, at)
             else if (index > 0 && !point.breakBefore)
                 drawLine(color, position(visible[index - 1]), at, strokeWidth = 3f)
         }
-        drawCircle(color, 6f, position(points[selected.coerceIn(points.indices)]))
+        val current = points[selected.coerceIn(points.indices)]
+        val selectedAt =
+            if (bars) {
+                val range = current.barRange()
+                position(current.copy(x = (range.start + range.endInclusive) / 2))
+            } else position(current)
+        drawCircle(color, 6f, selectedAt)
     }
+    val categories = bars && points.all { it.upperX == null }
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(number(xMin, xUnit, xDigits), style = MaterialTheme.typography.bodySmall)
-        Text(number(xMax, xUnit, xDigits), style = MaterialTheme.typography.bodySmall)
+        Text(
+            number(if (categories) points.minOf { it.x } else xMin, xUnit, xDigits),
+            style = MaterialTheme.typography.bodySmall,
+        )
+        Text(
+            number(if (categories) points.maxOf { it.x } else xMax, xUnit, xDigits),
+            style = MaterialTheme.typography.bodySmall,
+        )
     }
     val current = points[selected.coerceIn(points.indices)]
     Text(

@@ -104,6 +104,32 @@ class ContractTests {
     }
 
     @Test
+    fun histogramUsesFullIntervalsForSingleAndUnequalWidthBins() {
+        val single = ChartPoint(2.8, 2700.0, "speed", upperX = 3.8)
+        assertEquals(2.8..3.8, single.barRange())
+        assertEquals(0, nearestBarIndex(listOf(single), 3.79))
+        val bins = listOf(single, ChartPoint(3.8, 120.0, "speed", upperX = 5.8))
+        assertEquals(2.8, bins.minOf { it.barRange().start }, 0.0)
+        assertEquals(5.8, bins.maxOf { it.barRange().endInclusive }, 0.0)
+        // Inside the first bin, a nearer second lower edge must not steal selection.
+        assertEquals(0, nearestBarIndex(bins, 3.7))
+        assertEquals(1, nearestBarIndex(bins, 3.8))
+        assertEquals(1, nearestBarIndex(bins, 5.8))
+        assertEquals(0, nearestBarIndex(bins, 0.0))
+        assertEquals(1, nearestBarIndex(bins, 10.0))
+        val zero = ChartPoint(0.0, 0.0, "zero duration", upperX = 1.0)
+        assertEquals(0.0..1.0, zero.barRange())
+    }
+
+    @Test
+    fun zoneBarsKeepEqualSlotsAroundCategoryIndices() {
+        val zones = (1..7).map { ChartPoint(it.toDouble(), 60.0, "zone") }
+        assertEquals(0.5..1.5, zones.first().barRange())
+        assertEquals(6.5..7.5, zones.last().barRange())
+        assertEquals(1, nearestBarIndex(zones, 1.6))
+    }
+
+    @Test
     fun downsamplingPreservesHiddenGapAndFullInput() {
         val source =
             (0..2000).map {

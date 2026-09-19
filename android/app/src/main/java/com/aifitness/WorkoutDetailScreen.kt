@@ -367,6 +367,7 @@ fun MetricScreen(detail: Detail?, kind: MetricKind) {
                                 bin.binLower,
                                 bin.binSeconds,
                                 "${kind.format(bin.binLower, workout.running)} – ${kind.format(bin.binUpper, workout.running)}",
+                                upperX = bin.binUpper,
                             )
                         },
                         "分布",
