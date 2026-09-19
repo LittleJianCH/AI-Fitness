@@ -19,7 +19,7 @@
 - Pinned Gradle distribution and wrapper JAR verified against official SHA-256 checksums.
 - Kotlin consumer compilation passed on JDK17, including generated contracts,
   the application's HTTP transport, lifecycle ViewModel, calendar and chart projections.
-- After formatting, final `scripts/android_integration_test --host` passed: **13 tests, zero failures,
+- After formatting, final `scripts/android_integration_test --host` passed: **16 tests, zero failures,
   errors or skips**. A private disposable PostgreSQL cluster, account and 23 synthetic
   workouts exercised the actual Haskell backend; no production records were used.
 - Actual HTTP coverage: login and `/me` session validation, 20+3 pagination, cycling and
@@ -29,7 +29,9 @@
 - Focused regressions: required/optional/null parsing, exact large decimal revision
   strings, unknown enums, subnanosecond server times, endpoint restrictions, redirect
   refusal, request cancellation, DST, hidden chart gaps, independent distance sampling,
-  partial analysis failures and retry, history return navigation, actionable analysis errors.
+  partial analysis failures and retry, history return navigation, actionable analysis errors,
+  exact/hidden distance resets, running-metric precision and raw-chart navigation
+  without a derived analysis response.
 - Two clean OpenAPI-to-Kotlin generations were byte-identical. Python, shell and
   Android XML syntax and maintained-file whitespace checks passed.
 
@@ -49,7 +51,7 @@ The instrumentation harness is implemented for a disposable authorized runtime.
 
 The route is a native interactive trace with raw-point selection; street/satellite
 basemaps are not implemented. No SDK license was accepted automatically, no global
-tooling was installed by this client task, and no changes were staged or committed.
+tooling was installed by this client task.
 
 ## Maintained changed paths
 

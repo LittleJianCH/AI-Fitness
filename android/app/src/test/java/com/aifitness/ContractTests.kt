@@ -5,6 +5,7 @@ import java.io.File
 import java.time.Duration
 import java.time.LocalDate
 import java.time.ZoneId
+import java.util.Locale
 import org.json.JSONObject
 import org.junit.Assert.*
 import org.junit.Test
@@ -145,6 +146,89 @@ class ContractTests {
         assertEquals(2, points.size)
         assertEquals(.05, points.first().x, 1e-9)
         assertTrue(points.last().breakBefore)
+    }
+
+    @Test
+    fun distanceAxisBreaksAtExactAndHiddenResets() {
+        val original = Workout.fromJson(fixture("workout-response.json"))
+        val start = parseInstant(original.workoutObservation.observationRange.rangeStart)
+        val sport = original.workoutObservation.observationSport as SportCycling
+        fun project(
+            times: List<Long>,
+            values: List<Double>,
+            sampleTimes: List<Double>,
+        ): List<ChartPoint> {
+            val motion =
+                sport.data.cyclingMotion.copy(
+                    motionDistance =
+                        times.zip(values).map { (time, value) ->
+                            Timed_Distance(start.plusSeconds(time).toString(), value)
+                        }
+                )
+            val workout =
+                original.copy(
+                    workoutObservation =
+                        original.workoutObservation.copy(
+                            observationSport =
+                                sport.copy(data = sport.data.copy(cyclingMotion = motion))
+                        )
+                )
+            return workout.distanceAxis(sampleTimes.map { ChartPoint(it, 100.0, "sample") }, 120.0)
+        }
+        val exact =
+            project(
+                listOf(0, 10, 20, 30),
+                listOf(0.0, 1000.0, 0.0, 1000.0),
+                listOf(0.0, 10.0, 20.0, 30.0),
+            )
+        assertFalse(exact[1].breakBefore)
+        assertTrue(exact[2].breakBefore)
+        assertFalse(exact[3].breakBefore)
+        val hidden =
+            project(listOf(0, 10, 20, 30), listOf(0.0, 1000.0, 0.0, 1000.0), listOf(0.0, 30.0))
+        assertTrue(hidden.last().breakBefore)
+        val gap =
+            project(
+                listOf(0, 10, 300, 310),
+                listOf(0.0, 1000.0, 2000.0, 3000.0),
+                listOf(0.0, 10.0, 300.0, 310.0),
+            )
+        assertTrue(gap[2].breakBefore)
+        assertFalse(gap[3].breakBefore)
+    }
+
+    @Test
+    fun runningMetricPrecisionPreservesObservedValues() {
+        val previous = Locale.getDefault()
+        try {
+            Locale.setDefault(Locale.US)
+            assertEquals("0.45 m", MetricKind.stepLengthMetric.format(0.45, true))
+            assertEquals("1.50 m", MetricKind.stepLengthMetric.format(1.5, true))
+            assertEquals("0.040 m", MetricKind.verticalOscillationMetric.format(0.04, true))
+            assertEquals("0.249 s", MetricKind.groundContactTimeMetric.format(0.249, true))
+        } finally {
+            Locale.setDefault(previous)
+        }
+    }
+
+    @Test
+    fun rawMetricNavigationDoesNotRequireAnalysis() {
+        val original = Workout.fromJson(fixture("workout-response.json"))
+        val sport = original.workoutObservation.observationSport as SportCycling
+        val start = original.workoutObservation.observationRange.rangeStart
+        val motion =
+            sport.data.cyclingMotion.copy(motionHeartRate = listOf(Timed_HeartRate(start, 130.0)))
+        val workout =
+            original.copy(
+                workoutObservation =
+                    original.workoutObservation.copy(
+                        observationSport =
+                            sport.copy(data = sport.data.copy(cyclingMotion = motion))
+                    )
+            )
+        assertTrue(workout.metricKinds(null).contains(MetricKind.heartRateMetric))
+        assertEquals(130.0, workout.metricPoints(MetricKind.heartRateMetric).single().y, 0.0)
+        assertFalse(workout.metricKinds(null).contains(MetricKind.stepLengthMetric))
     }
 
     @Test

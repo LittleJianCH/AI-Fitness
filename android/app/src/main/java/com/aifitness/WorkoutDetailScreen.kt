@@ -70,24 +70,27 @@ fun WorkoutDetailScreen(state: FitnessState, model: FitnessViewModel) {
                     }
                 }
             }
-        items(analysis?.analysisMetrics.orEmpty(), key = { it.metricKind.wire }) { metric ->
+        items(workout.metricKinds(analysis), key = { it.wire }) { kind ->
+            val metric = analysis?.analysisMetrics?.firstOrNull { it.metricKind == kind }
             Card(
-                onClick = { model.navigate(Screen.Metric(metric.metricKind)) },
-                modifier = Modifier.fillMaxWidth().testTag("metric-${metric.metricKind.wire}"),
+                onClick = { model.navigate(Screen.Metric(kind)) },
+                modifier = Modifier.fillMaxWidth().testTag("metric-${kind.wire}"),
             ) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(metric.metricKind.title(), style = MaterialTheme.typography.titleLarge)
-                    ValueRow(
-                        "后端计算均值",
-                        number(
-                            metric.metricStatistics.averageValue,
-                            metric.metricKind.unit(workout.running),
-                        ),
-                    )
-                    ValueRow(
-                        "范围",
-                        "${number(metric.metricStatistics.minimumValue)} – ${number(metric.metricStatistics.maximumValue)}",
-                    )
+                    Text(kind.title(), style = MaterialTheme.typography.titleLarge)
+                    if (metric != null) {
+                        ValueRow(
+                            "后端计算均值",
+                            metric.metricKind.format(
+                                metric.metricStatistics.averageValue,
+                                workout.running,
+                            ),
+                        )
+                        ValueRow(
+                            "范围",
+                            "${metric.metricKind.format(metric.metricStatistics.minimumValue, workout.running)} – ${metric.metricKind.format(metric.metricStatistics.maximumValue, workout.running)}",
+                        )
+                    } else Text("原始样本可用，后端统计暂不可用。")
                     Text("查看曲线、分布与关系 →", color = MaterialTheme.colorScheme.primary)
                 }
             }
@@ -307,12 +310,13 @@ fun MetricScreen(detail: Detail?, kind: MetricKind) {
         return
     }
     val workout = detail.workout
-    val analysis = detail.analysis ?: return
-    val metric = analysis.analysisMetrics.firstOrNull { it.metricKind == kind }
+    val analysis = detail.analysis
+    val metric = analysis?.analysisMetrics?.firstOrNull { it.metricKind == kind }
     var distance by remember(kind) { mutableStateOf(false) }
     val raw = remember(workout, kind) { workout.metricPoints(kind) }
-    val gap = analysis.analysisMaxGapSeconds.toDouble()
-    val points = remember(raw, distance) { if (distance) workout.distanceAxis(raw, gap) else raw }
+    val gap = analysis?.analysisMaxGapSeconds?.toDouble() ?: 120.0
+    val points =
+        remember(raw, distance, gap) { if (distance) workout.distanceAxis(raw, gap) else raw }
     LazyColumn(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
@@ -330,8 +334,10 @@ fun MetricScreen(detail: Detail?, kind: MetricKind) {
                     if (distance) "km" else "s",
                     kind.unit(workout.running),
                     if (distance) null else gap,
+                    yDigits = kind.digits(),
                 )
                 Text("选点来自原始样本。距离轴仅映射有效距离区间，不跨间隔推算。")
+                if (analysis == null) Text(detail.analysisError ?: "后端统计暂不可用，返回详情页可重试。")
             }
         }
         metric?.let {
@@ -339,17 +345,17 @@ fun MetricScreen(detail: Detail?, kind: MetricKind) {
                 SectionCard("统计 · 后端计算") {
                     ValueRow(
                         "均值",
-                        number(it.metricStatistics.averageValue, kind.unit(workout.running)),
+                        kind.format(it.metricStatistics.averageValue, workout.running),
                     )
                     if (workout.running && kind == MetricKind.speedMetric)
                         ValueRow("平均配速", pace(it.metricStatistics.averageValue))
                     ValueRow(
                         "最小 / 最大",
-                        "${number(it.metricStatistics.minimumValue)} / ${number(it.metricStatistics.maximumValue)}",
+                        "${kind.format(it.metricStatistics.minimumValue, workout.running)} / ${kind.format(it.metricStatistics.maximumValue, workout.running)}",
                     )
                     ValueRow(
                         "排除零均值",
-                        number(it.metricAverageExcludingZeros, kind.unit(workout.running)),
+                        kind.format(it.metricAverageExcludingZeros, workout.running),
                     )
                     ValueRow(
                         "样本 / 覆盖",
@@ -360,19 +366,20 @@ fun MetricScreen(detail: Detail?, kind: MetricKind) {
                             ChartPoint(
                                 bin.binLower,
                                 bin.binSeconds,
-                                "${number(bin.binLower)} – ${number(bin.binUpper)} ${kind.unit(workout.running)}",
+                                "${kind.format(bin.binLower, workout.running)} – ${kind.format(bin.binUpper, workout.running)}",
                             )
                         },
                         "分布",
                         kind.unit(workout.running),
                         "s",
                         bars = true,
+                        xDigits = kind.digits(),
                     )
                 }
             }
         }
         items(
-            analysis.analysisRelationships.filter {
+            analysis?.analysisRelationships.orEmpty().filter {
                 it.relationshipX == kind || it.relationshipY == kind
             }
         ) { relationship ->
@@ -391,6 +398,8 @@ fun MetricScreen(detail: Detail?, kind: MetricKind) {
                     relationship.relationshipX.unit(workout.running),
                     relationship.relationshipY.unit(workout.running),
                     scatter = true,
+                    xDigits = relationship.relationshipX.digits(),
+                    yDigits = relationship.relationshipY.digits(),
                 )
             }
         }

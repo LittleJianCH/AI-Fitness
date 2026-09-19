@@ -38,6 +38,17 @@ fun MetricKind.unit(running: Boolean): String =
         MetricKind.gradeMetric -> "%"
     }
 
+fun MetricKind.digits(): Int =
+    when (this) {
+        MetricKind.stepLengthMetric -> 2
+        MetricKind.verticalOscillationMetric,
+        MetricKind.groundContactTimeMetric -> 3
+        else -> 1
+    }
+
+fun MetricKind.format(value: Double?, running: Boolean): String =
+    number(value, unit(running), digits())
+
 val Workout.running: Boolean
     get() = workoutObservation.observationSport is SportRunning
 val Workout.motion: MotionData
@@ -66,6 +77,36 @@ data class ChartPoint(
     val label: String,
     val breakBefore: Boolean = false,
 )
+
+/** Navigation remains available from recorded samples when derived analysis fails. */
+fun Workout.metricKinds(analysis: WorkoutAnalysis? = null): List<MetricKind> {
+    val sport = workoutObservation.observationSport
+    val running = (sport as? SportRunning)?.data
+    return MetricKind.entries.filter { kind ->
+        val hasSamples =
+            when (kind) {
+                MetricKind.heartRateMetric -> motion.motionHeartRate.isNotEmpty()
+                MetricKind.powerMetric -> motion.motionPower.isNotEmpty()
+                MetricKind.speedMetric -> motion.motionSpeed.isNotEmpty()
+                MetricKind.altitudeMetric -> motion.motionAltitude.isNotEmpty()
+                MetricKind.gradeMetric -> motion.motionGrade.isNotEmpty()
+                MetricKind.temperatureMetric ->
+                    motion.motionEnvironment.ambientTemperature.isNotEmpty()
+                MetricKind.cadenceMetric ->
+                    when (sport) {
+                        is SportCycling -> sport.data.cyclingCadence.isNotEmpty()
+                        is SportRunning -> sport.data.runningCadence.isNotEmpty()
+                    }
+                MetricKind.stepLengthMetric ->
+                    running?.runningDynamics?.stepLength?.isNotEmpty() == true
+                MetricKind.verticalOscillationMetric ->
+                    running?.runningDynamics?.verticalOscillation?.isNotEmpty() == true
+                MetricKind.groundContactTimeMetric ->
+                    running?.runningDynamics?.groundContactTime?.isNotEmpty() == true
+            }
+        hasSamples || analysis?.analysisMetrics?.any { it.metricKind == kind } == true
+    }
+}
 
 fun Workout.metricPoints(kind: MetricKind): List<ChartPoint> {
     val start = parseInstant(workoutObservation.observationRange.rangeStart)
@@ -151,7 +192,15 @@ fun Workout.distanceAxis(points: List<ChartPoint>, maxGap: Double): List<ChartPo
     val result = mutableListOf<ChartPoint>()
     points.forEachIndexed { index, point ->
         if (index > 0 && point.x - points[index - 1].x > maxGap) pendingBreak = true
-        while (cursor < distances.lastIndex && distances[cursor + 1].first <= point.x) cursor++
+        while (cursor < distances.lastIndex && distances[cursor + 1].first <= point.x) {
+            val before = distances[cursor]
+            val after = distances[cursor + 1]
+            // Inspect every crossed distance interval, including exact samples
+            // and resets hidden between two points of the other sensor stream.
+            if (after.first - before.first > maxGap || after.second < before.second)
+                pendingBreak = true
+            cursor++
+        }
         val left = distances.getOrNull(cursor)
         val right = distances.getOrNull(cursor + 1)
         val distance =

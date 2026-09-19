@@ -122,6 +122,11 @@ signs the client into its synthetic account. No production health data is used.
   stale revisions explicitly request a detail refresh. A settings write clears
   prior analysis/history. Lifecycle-owned jobs prevent late cancelled requests
   from repopulating a different screen or account.
+- Raw metric navigation remains available if derived analysis fails. Only the
+  statistics, distributions and relationships depend on that response. Distance
+  chart projection preserves resets/gaps even at exact distance timestamps or
+  between sparsely sampled sensor points. Canonical running lengths and contact
+  durations retain metric-specific display precision in summaries and charts.
 - Detail order is route/recorded overview, metrics, power/running dynamics,
   heart-rate load, distance splits/source laps, source context and method notes.
   Metric pages show raw samples, backend statistics, distributions and aligned

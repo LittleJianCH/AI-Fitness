@@ -30,6 +30,8 @@ fun PointChart(
     gap: Double? = null,
     scatter: Boolean = false,
     bars: Boolean = false,
+    xDigits: Int = 1,
+    yDigits: Int = 1,
 ) {
     if (points.isEmpty()) {
         Text("$title：暂无可用样本")
@@ -46,7 +48,7 @@ fun PointChart(
     val color = MaterialTheme.colorScheme.primary
     Text(title, style = MaterialTheme.typography.titleMedium)
     Text(
-        "${number(yMin, yUnit)} — ${number(yMax, yUnit)}",
+        "${number(yMin, yUnit, yDigits)} — ${number(yMax, yUnit, yDigits)}",
         style = MaterialTheme.typography.bodySmall,
     )
     Canvas(
@@ -95,12 +97,12 @@ fun PointChart(
         drawCircle(color, 6f, position(points[selected.coerceIn(points.indices)]))
     }
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(number(xMin, xUnit), style = MaterialTheme.typography.bodySmall)
-        Text(number(xMax, xUnit), style = MaterialTheme.typography.bodySmall)
+        Text(number(xMin, xUnit, xDigits), style = MaterialTheme.typography.bodySmall)
+        Text(number(xMax, xUnit, xDigits), style = MaterialTheme.typography.bodySmall)
     }
     val current = points[selected.coerceIn(points.indices)]
     Text(
-        "${number(current.x, xUnit)} · ${number(current.y, yUnit)}",
+        "${number(current.x, xUnit, xDigits)} · ${number(current.y, yUnit, yDigits)}",
         modifier = Modifier.testTag("selectedPoint"),
     )
     Text(current.label, style = MaterialTheme.typography.bodySmall)
