@@ -160,6 +160,27 @@ for (const sport of ['cycling', 'running'] as const) {
 			.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
 			.toBe(true);
 	});
+	test(`${sport} pace presentation preserves speed and sample selection`, async ({ page }) => {
+		await login(page, await register(page));
+		const id = await seed(page, sport);
+		await page.goto(`/workouts/${id}`);
+		await page.getByRole('button', { name: '放大速度图表' }).click();
+		const dialog = page.getByRole('dialog');
+		await expect(dialog.getByRole('region', { name: '指标统计与分布' })).toContainText('18 km/h');
+		if (sport === 'running') {
+			await expect(dialog.locator('.summary-strip')).toContainText('平均配速');
+			await expect(dialog.locator('.summary-strip')).toContainText('最快采样配速');
+			await expect(dialog.locator('.selected-pace')).toHaveText('此刻配速：3:20 /km');
+			await dialog.getByLabel('图表横轴').selectOption('distance');
+			await dialog.getByRole('button', { name: '下一个样本' }).click();
+			await expect(dialog.locator('.selected-pace')).toHaveText('此刻配速：3:20 /km');
+		} else await expect(dialog.locator('.selected-pace')).toHaveCount(0);
+		await dialog.getByRole('link', { name: '独立页面查看' }).click();
+		await expect(page.getByRole('heading', { level: 1, name: '速度分析' })).toBeVisible();
+		if (sport === 'running')
+			await expect(page.locator('.selected-pace')).toHaveText('此刻配速：3:20 /km');
+		else await expect(page.locator('.selected-pace')).toHaveCount(0);
+	});
 }
 
 test('distance axis explains missing samples and preserves the raw time chart when analysis fails', async ({

@@ -285,6 +285,9 @@ Recorded altitude/energy/laps/bicycle context remain labeled separately.
 Recorded summaries keep metric entries available even without samples, including
 running dynamics; overview, dialogs and direct pages retain recorded provenance.
 Step length uses two decimal places in metres across summaries and sample views.
+Running speed details additionally show pace converted from the corresponding
+average, maximum and selected speeds. The fastest sample pace is explicitly
+distinguished from a best sustained kilometre; zero speed has no finite pace.
 
 `/settings` contains software, effective-dated body profiles, equipment and the
 existing account/session controls. GET/PUT use owner-scoped generated contracts.

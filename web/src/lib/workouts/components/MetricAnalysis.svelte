@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { metricValueText } from '$lib/analysis/presentation';
+	import { metricValueText, pace } from '$lib/analysis/presentation';
 	import type { Workout } from '$lib/api/generated/client';
 	import {
 		metricKinds,
@@ -44,6 +44,9 @@
 		(demo ? metric.maximum : statistics?.maximumValue) ?? recorded.maximumValue
 	);
 	const selected = $derived(metric.samples[index]);
+	const runningSpeed = $derived(
+		metric.key === 'speed' && workout.workoutObservation.observationSport.type === 'running'
+	);
 	let axis = $state<'time' | 'distance'>('time');
 	const distances = $derived(
 		distanceCoordinates(
@@ -92,8 +95,29 @@
 				>
 			</div>
 		</div>
+		{#if runningSpeed}
+			<div>
+				<div class="summary-label">
+					{(demo ? metric.average : statistics?.averageValue) !== undefined
+						? '平均配速'
+						: '记录平均配速'}
+				</div>
+				<div class="summary-number">{pace(average)}</div>
+			</div>
+			<div>
+				<div class="summary-label">
+					{(demo ? metric.maximum : statistics?.maximumValue) !== undefined
+						? '最快采样配速'
+						: '记录最快配速'}
+				</div>
+				<div class="summary-number">{pace(maximum)}</div>
+			</div>
+		{/if}
 	</div>
 {:else}<p class="small subtle">此指标暂无汇总统计，可以查看下方真实采样。</p>{/if}
+{#if runningSpeed}<p class="small subtle">
+		配速由对应速度换算；平均配速对应平均速度，最快采样配速不是持续一公里的最佳配速。零速度没有有限配速。
+	</p>{/if}
 {#if selected}<section class="surface analysis-chart">
 		<h2>{metric.title}{axis === 'time' ? '时间' : '距离'}曲线</h2>
 		<label
@@ -130,6 +154,9 @@
 				<small>{metric.unit}</small></strong
 			>
 		</div>
+		{#if runningSpeed}<p class="selected-pace" aria-live="polite">
+				此刻配速：{pace(selected.value)}
+			</p>{/if}
 		<label class="slider-label" for="sample"
 			>选择真实样本 <span class="subtle small">{index + 1} / {metric.samples.length}</span></label
 		><input
@@ -139,7 +166,7 @@
 			max={metric.samples.length - 1}
 			step="1"
 			bind:value={index}
-			aria-valuetext={`${duration((Date.parse(selected.timestamp) - Date.parse(range.rangeStart)) / 1000)}，${metricValueText(selected.value, metricKinds[metric.key], 1)} ${metric.unit}`}
+			aria-valuetext={`${duration((Date.parse(selected.timestamp) - Date.parse(range.rangeStart)) / 1000)}，${metricValueText(selected.value, metricKinds[metric.key], 1)} ${metric.unit}${runningSpeed ? `，配速 ${pace(selected.value)}` : ''}`}
 		/>
 		<div class="sample-buttons">
 			<button class="button" disabled={index === 0} onclick={() => index--}>上一个样本</button
