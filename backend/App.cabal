@@ -41,8 +41,15 @@ common backend-settings
                  Analysis.Fatigue.Daily,
                  Analysis.Fatigue.Calculate,
                  Analysis.Fatigue.Request,
+                 Api.Analysis.Codec,
+                 Api.Analysis.Routes,
+                 Api.Analysis.Handlers,
                  Profile.Types,
                  Profile.Settings,
+                 Api.Settings.Codec,
+                 Api.Settings.Routes,
+                 Api.Settings.Handlers,
+                 Storage.Settings,
                  Workout.Measurement.Types,
                  Workout.Measurement.Validation,
                  Workout.Running.Empty,
@@ -93,6 +100,7 @@ common backend-settings
                  Api.Types,
                  Api.Workout.Codec,
                  Api.Workout.PowerCurveCodec,
+                 Api.Workout.AnalysisCodec,
                  Api.Workout.Handlers,
                  Api.Workout.Common.Codec,
                  Api.Workout.Cycling.Codec,
@@ -150,4 +158,4 @@ test-suite http
   hs-source-dirs: test, test/http
   main-is: http/Main.hs
   build-depends: async
-  other-modules: BoundaryChecks, FitChecks, AuthChecks, AuthRaceChecks, InputChecks, HttpSupport, WorkoutChecks, HealthKitChecks, ExportChecks, RestartChecks, Fixtures
+  other-modules: BoundaryChecks, FitChecks, AuthChecks, AuthRaceChecks, InputChecks, HttpSupport, WorkoutChecks, HealthKitChecks, ExportChecks, RestartChecks, SettingsChecks, Fixtures

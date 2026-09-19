@@ -3,10 +3,12 @@
 
 module Api.Types (API, ProtectedAPI) where
 
+import Api.Analysis.Routes (AnalysisAPI)
 import Api.Auth.Context (SessionAuth)
 import Api.Auth.Routes (PrivateAuthAPI, PublicAuthAPI)
 import Api.Export.Routes (ExportAPI)
 import Api.Import.Routes (ImportAPI)
+import Api.Settings.Routes (SettingsAPI)
 import Api.Workout.Routes (WorkoutAPI)
 import Api.WorkoutGroup.Routes (WorkoutGroupAPI)
 import Data.Text (Text)
@@ -21,4 +23,10 @@ type API =
            )
 
 type ProtectedAPI =
-    PrivateAuthAPI :<|> WorkoutAPI :<|> WorkoutGroupAPI :<|> ImportAPI :<|> ExportAPI
+    PrivateAuthAPI
+        :<|> WorkoutAPI
+        :<|> WorkoutGroupAPI
+        :<|> ImportAPI
+        :<|> ExportAPI
+        :<|> SettingsAPI
+        :<|> AnalysisAPI

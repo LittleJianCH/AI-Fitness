@@ -12,6 +12,7 @@ import qualified FitChecks
 import qualified HealthKitChecks
 import qualified InputChecks
 import qualified RestartChecks
+import qualified SettingsChecks
 import System.Environment (getArgs, getEnv)
 import qualified WorkoutChecks
 
@@ -34,6 +35,7 @@ main = do
             AuthRaceChecks.checks environment
             InputChecks.checks environment
             WorkoutChecks.checks environment
+            SettingsChecks.checks environment
             HealthKitChecks.checks environment
             ExportChecks.checks environment
             FitChecks.checks environment

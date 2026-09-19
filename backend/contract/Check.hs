@@ -8,8 +8,9 @@ module Main (main) where
 import Api.Common.Routes (CookieResponse, Response)
 import Api.Common.Types (Revision (..))
 import Api.Export.Types (Platform (..))
+import Api.Settings.Codec ()
 import Api.Workout.PowerCurveCodec ()
-import Api.Workout.Routes (PowerCurveAPI, WorkoutDetailAPI, WorkoutListAPI)
+import Api.Workout.Routes (PowerCurveAPI, WorkoutAnalysisAPI, WorkoutDetailAPI, WorkoutListAPI)
 import ContractFixtures
 import Control.Monad (unless)
 import Data.Aeson (eitherDecode, encode)
@@ -19,7 +20,9 @@ import Data.Text (Text)
 import Network.HTTP.Types (status200, status204, status400)
 import Network.Wai (defaultRequest, requestMethod)
 import Network.Wai.Test (request, runSession, setPath, simpleBody, simpleHeaders, simpleStatus)
+import Profile.Settings (emptySettings)
 import Servant
+import qualified Workout.Analysis.Calculate as Analysis
 import qualified Workout.PowerCurve.Calculate as PowerCurve
 import Workout.Types (WorkoutId, WorkoutRevision (..), WorkoutUserData)
 
@@ -27,7 +30,9 @@ type FixtureAPI =
     ( "api"
         :> "v1"
         :> "workouts"
-        :> (WorkoutListAPI :<|> Capture "workoutId" WorkoutId :> (WorkoutDetailAPI :<|> PowerCurveAPI))
+        :> ( WorkoutListAPI
+                :<|> Capture "workoutId" WorkoutId :> (WorkoutDetailAPI :<|> PowerCurveAPI :<|> WorkoutAnalysisAPI)
+           )
     )
         :<|> "fixture-no-content" :> Response 'DELETE 204 (CookieResponse NoContent)
 
@@ -38,7 +43,11 @@ application =
     serve
         (Proxy :: Proxy FixtureAPI)
         ( ( listHandler
-                :<|> (\wid -> detailHandler wid :<|> respond (WithStatus @200 (PowerCurve.calculate powerWorkout)))
+                :<|> ( \wid ->
+                        detailHandler wid
+                            :<|> respond (WithStatus @200 (PowerCurve.calculate powerWorkout))
+                            :<|> respond (WithStatus @200 (Analysis.calculate powerWorkout))
+                     )
           )
             :<|> respond emptyResponse
         )
@@ -72,6 +81,17 @@ main = do
         )
         "Power curve response round trip failed"
     ByteString.writeFile "build/power-curve-response.json" (simpleBody curve)
+    analysis <-
+        runSession
+            (request (setPath defaultRequest "/api/v1/workouts/00000000-0000-0000-0000-000000000000/analysis"))
+            application
+    ensure
+        ( simpleStatus analysis == status200
+            && eitherDecode (simpleBody analysis) == Right (Analysis.calculate powerWorkout)
+        )
+        "Analysis response round trip failed"
+    ByteString.writeFile "build/analysis-response.json" (simpleBody analysis)
+    ByteString.writeFile "build/settings-response.json" (encode emptySettings)
     emptyResponse <-
         runSession
             (request ((setPath defaultRequest "/fixture-no-content") {requestMethod = "DELETE"}))

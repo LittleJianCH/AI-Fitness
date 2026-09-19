@@ -35,6 +35,21 @@ storage environment context work = do
         liftIO (Diagnostics.logFailure context Diagnostics.Storage Diagnostics.DatabaseFailure)
         problem context 500 "internal_error" "Database operation failed"
     translate UserConflict = problem context 409 "registration_conflict" "Account cannot be registered"
+    translate SettingsConflict = problem context 409 "revision_conflict" "Settings changed; reload before editing"
+    translate (InvalidSettings errors) =
+        throwError
+            (problemError context 422 "validation_failed" "Settings validation failed")
+                { errBody =
+                    encode
+                        ( Problem
+                            "validation_failed"
+                            "Settings validation failed"
+                            (requestId context)
+                            [FieldError "settings" "invalid_value" message | message <- errors]
+                        )
+                }
+    translate CorruptSettings = problem context 500 "internal_error" "Stored settings cannot be read"
+    translate AnalysisTooLarge = problem context 422 "analysis_too_large" "Select a calendar containing at most 1000 workouts"
     translate SessionConflict = problem context 409 "session_conflict" "Session state changed; retry the request"
     translate AuthenticationFailed = problem context 401 "unauthenticated" "Invalid or expired credentials"
     translate WorkoutConflict = problem context 409 "revision_conflict" "Workout changed; reload before editing"

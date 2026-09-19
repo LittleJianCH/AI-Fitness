@@ -13,16 +13,19 @@ module Api.Workout.Types
     , ManualWorkout (..)
     , EditWorkout (..)
     , PowerCurve (..)
+    , WorkoutAnalysis (..)
     ) where
 
 import Api.Codec (ViaJSON (..))
 import Api.Common.Types (Id)
+import Api.Workout.AnalysisCodec ()
 import Api.Workout.Codec ()
 import Api.Workout.PowerCurveCodec ()
 import Data.Aeson (FromJSON, ToJSON)
 import Data.OpenApi (ToParamSchema, ToSchema)
 import GHC.Generics (Generic)
 import Web.HttpApiData (FromHttpApiData)
+import Workout.Analysis.Types (WorkoutAnalysis (..))
 import qualified Workout.Cycling.Types as C
 import Workout.PowerCurve.Types (PowerCurve (..))
 import qualified Workout.Running.Types as R

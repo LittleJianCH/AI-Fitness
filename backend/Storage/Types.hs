@@ -1,6 +1,7 @@
 module Storage.Types (Store, StorageError (..)) where
 
 import Control.Monad.Trans.Except (ExceptT)
+import Data.Text (Text)
 import Hasql.Transaction (Transaction)
 import Workout.Validation.Types (ValidationError)
 
@@ -28,4 +29,8 @@ data StorageError
     | ExportReceiptConflict
     | InvalidExportReceipt
     | CorruptExportReceipt
+    | SettingsConflict
+    | InvalidSettings [Text]
+    | CorruptSettings
+    | AnalysisTooLarge
     deriving (Eq, Show)

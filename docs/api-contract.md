@@ -5,6 +5,13 @@ for parallel web and iOS development. Its source is
 [`Api.Types`](../backend/Api/Types.hs), with routes, request types and codecs
 grouped by feature. The generated OpenAPI document is a build artifact.
 
+Workout analysis (`GET /workouts/{id}/analysis`), effective-dated personal settings
+(`GET/PUT /settings`) and HRSS fitness history (`POST /analysis/training-history`)
+are mounted under `/api/v1` with the same owner/session/CSRF protections. See
+[workout analysis](workout-analysis.md) for calculation, parameter-version,
+coverage, calendar and persistence semantics. Settings writes use decimal-string
+revisions and return 409 on stale writes; no caller-supplied owner ID is accepted.
+
 **Implementation status:** the runtime mounts all eleven authentication routes,
 including browser/native login, `/me`, session management and password change,
 against PostgreSQL. The five core Workout routes support manual cycling/running data:
