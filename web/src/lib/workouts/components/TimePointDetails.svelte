@@ -1,6 +1,7 @@
 <script lang="ts">
+	import { metricValueText } from '$lib/analysis/presentation';
 	import type { Workout } from '$lib/api/generated/client';
-	import { metrics, motion, duration, valueText } from '$lib/workouts/presentation';
+	import { metrics, metricKinds, motion, duration, valueText } from '$lib/workouts/presentation';
 	import { sampleAt } from '$lib/workouts/timeline';
 
 	let {
@@ -43,9 +44,9 @@
 			<div>
 				<dt><i style:background={`var(--metric-${metric.key})`}></i>{metric.title}</dt>
 				<dd>
-					{valueText(
+					{metricValueText(
 						sample?.value,
-						metric.factor,
+						metricKinds[metric.key],
 						metric.key === 'speed' ? 1 : 0
 					)}{#if sample}<small>{metric.unit}</small>{/if}
 				</dd>

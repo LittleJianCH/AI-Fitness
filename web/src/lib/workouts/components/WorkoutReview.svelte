@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { metricValueText } from '$lib/analysis/presentation';
 	import { sampleAt } from '$lib/workouts/timeline';
 	import { nearestIndex } from '$lib/workouts/chart-data';
 	import type { Workout } from '$lib/api/generated/client';
@@ -255,15 +256,19 @@
 					<div class="metric-heading">
 						<h3>{metric.title}</h3>
 						<span class="subtle"
-							>{#if statistic !== undefined}{valueText(
+							>{#if statistic !== undefined}{metricValueText(
 									statistic,
-									metric.factor,
+									metricKinds[metric.key],
 									metric.key === 'speed' ? 1 : 0
 								)}
 								{metric.unit} ·
 							{/if}{statisticLabel}</span
 						><strong class="current"
-							>此刻 {valueText(sample?.value, metric.factor, metric.key === 'speed' ? 1 : 0)}
+							>此刻 {metricValueText(
+								sample?.value,
+								metricKinds[metric.key],
+								metric.key === 'speed' ? 1 : 0
+							)}
 							{sample ? metric.unit : ''}</strong
 						>
 					</div>

@@ -168,14 +168,13 @@ export function metrics(workout: Workout): Metric[] {
 			}
 		);
 	return result.filter((item) => {
-		const recordedPower =
-			item.key === 'power' ? recordedMetricSummary(workout, 'power') : undefined;
+		const recorded = recordedMetricSummary(workout, item.key);
 		return (
 			item.samples.length ||
 			item.average !== undefined ||
 			item.maximum !== undefined ||
-			recordedPower?.averageValue !== undefined ||
-			recordedPower?.maximumValue !== undefined
+			recorded.averageValue !== undefined ||
+			recorded.maximumValue !== undefined
 		);
 	});
 }

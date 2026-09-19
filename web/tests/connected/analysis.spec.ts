@@ -8,7 +8,7 @@ import {
 	getSettings200Response
 } from '../../src/lib/api/generated/schemas';
 
-async function seed(page: Page, sport: 'cycling' | 'running') {
+async function seed(page: Page, sport: 'cycling' | 'running', summaryOnly = false) {
 	const input = buildManualWorkout(
 		{
 			sport,
@@ -31,19 +31,26 @@ async function seed(page: Page, sport: 'cycling' | 'running') {
 			timestamp: new Date(start + i * 1000).toISOString(),
 			value: value(i)
 		}));
-	motion.motionHeartRate = samples((i) => 140 + i / 120);
-	motion.motionPower = samples((i) => 200 + i / 60);
-	motion.motionSpeed = samples(() => 5);
-	motion.motionDistance = samples((i) => i * 5);
-	motion.motionAltitude = samples((i) => 50 + i / 100);
-	motion.motionGrade = samples(() => 1);
-	motion.motionEnvironment.ambientTemperature = samples(() => 20);
-	if (activity.type === 'running') {
-		activity.data.runningCadence = samples(() => 180);
-		activity.data.runningDynamics.stepLength = samples(() => 1.5);
-		activity.data.runningDynamics.verticalOscillation = samples(() => 0.09);
-		activity.data.runningDynamics.groundContactTime = samples(() => 0.2);
-	} else activity.data.cyclingCadence = samples(() => 90);
+	if (!summaryOnly) {
+		motion.motionHeartRate = samples((i) => 140 + i / 120);
+		motion.motionPower = samples((i) => 200 + i / 60);
+		motion.motionSpeed = samples(() => 5);
+		motion.motionDistance = samples((i) => i * 5);
+		motion.motionAltitude = samples((i) => 50 + i / 100);
+		motion.motionGrade = samples(() => 1);
+		motion.motionEnvironment.ambientTemperature = samples(() => 20);
+		if (activity.type === 'running') {
+			activity.data.runningCadence = samples(() => 180);
+			activity.data.runningDynamics.stepLength = samples((i) => (i === 0 ? 0.45 : 1.5));
+			activity.data.runningDynamics.verticalOscillation = samples(() => 0.09);
+			activity.data.runningDynamics.groundContactTime = samples(() => 0.2);
+		} else activity.data.cyclingCadence = samples(() => 90);
+	} else if (activity.type === 'running') {
+		const summary = activity.data.runningSummary.recordedSummary;
+		summary.summaryStepLength = { averageValue: 0.45, maximumValue: 1.5 };
+		summary.summaryVerticalOscillation = { averageValue: 0.09 };
+		summary.summaryGroundContactTime = { maximumValue: 0.2 };
+	}
 	return page.evaluate(async (input) => {
 		const csrf = await (await fetch('/api/v1/auth/web/csrf')).json();
 		const response = await fetch('/api/v1/workouts', {
@@ -189,4 +196,71 @@ test('analysis failures and revision mismatch preserve the original workout cont
 	await page.getByRole('button', { name: '重试', exact: true }).click();
 	await expect(page.getByRole('region', { name: '功率分析' })).toBeVisible();
 	await expect(page.getByRole('alert')).toHaveCount(0);
+});
+
+test('step length keeps decimals in overview, timepoint, metric summary and analysis statistics', async ({
+	page
+}) => {
+	await login(page, await register(page));
+	const id = await seed(page, 'running');
+	await page.goto(`/workouts/${id}`);
+	await page.getByRole('button', { name: '固定时间点', exact: true }).click();
+	const preview = page.getByRole('button', { name: '放大步长图表' });
+	await expect(preview).toContainText('1.50 m ·计算平均');
+	await expect(preview).toContainText('此刻 0.45 m');
+	const timepoint = page
+		.locator('.accessible-details')
+		.locator('dl > div')
+		.filter({ has: page.locator('dt', { hasText: '步长' }) });
+	await expect(timepoint.locator('dd')).toHaveText('0.45m');
+	await preview.click();
+	const dialog = page.getByRole('dialog');
+	await expect(dialog.locator('.summary-strip')).toContainText('1.50m');
+	await expect(dialog.locator('.sample-value')).toContainText('0.45 m');
+	await expect(dialog.getByLabel('选择真实样本')).toHaveAttribute('aria-valuetext', /0.45 m/);
+	const statistics = dialog.getByRole('region', { name: '指标统计与分布' });
+	await expect(statistics.locator('dl > div').filter({ hasText: '最大' })).toContainText('1.50 m');
+	await expect(statistics.locator('dl > div').filter({ hasText: '最小' })).toContainText('0.45 m');
+	await dialog.getByRole('button', { name: '下一个样本' }).click();
+	await expect(dialog.locator('.sample-value')).toContainText('1.50 m');
+	await dialog.getByText('查看样本数据表', { exact: true }).click();
+	await expect(
+		dialog.getByRole('region', { name: '指标样本表' }).locator('tbody tr').first()
+	).toContainText('0.45');
+	await page.keyboard.press('Escape');
+	await page.goto(`/workouts/${id}/metrics/step-length`);
+	await expect(page.getByRole('heading', { level: 1, name: '步长分析' })).toBeVisible();
+	await expect(page.locator('.summary-strip')).toContainText('1.50m');
+	await expect(page.locator('.sample-value')).toContainText('0.45 m');
+});
+
+test('summary-only running dynamics retain overview, modal and direct routes with recorded provenance', async ({
+	page
+}) => {
+	await login(page, await register(page));
+	const id = await seed(page, 'running', true);
+	await page.goto(`/workouts/${id}`);
+	for (const [key, title, summary] of [
+		['step-length', '步长', '0.45 m ·记录平均'],
+		['vertical-oscillation', '垂直振幅', '9 cm ·记录平均'],
+		['ground-contact-time', '触地时间', '200 ms ·记录最大']
+	]) {
+		const preview = page.getByRole('button', { name: `放大${title}图表` });
+		await expect(preview).toContainText(summary);
+		await expect(preview).toContainText('仅记录汇总 · 无逐点曲线');
+		await preview.click();
+		const dialog = page.getByRole('dialog');
+		await expect(dialog.getByRole('heading', { name: '这次训练仅包含汇总数据' })).toBeVisible();
+		await expect(dialog.locator('.summary-strip')).not.toContainText('计算');
+		await dialog.getByRole('link', { name: '独立页面查看' }).click();
+		await expect(page).toHaveURL(new RegExp(`/metrics/${key}$`));
+		await expect(page.getByRole('heading', { level: 1, name: `${title}分析` })).toBeVisible();
+		await expect(page.getByRole('heading', { name: '这次训练仅包含汇总数据' })).toBeVisible();
+		await expect(page.locator('.summary-strip')).not.toContainText('计算');
+		if (key === 'step-length') {
+			await expect(page.locator('.summary-strip')).toContainText('0.45m');
+			await expect(page.locator('.summary-strip')).toContainText('1.50m');
+		}
+		await page.goto(`/workouts/${id}`);
+	}
 });

@@ -1,10 +1,10 @@
 <script lang="ts">
+	import { metricValueText } from '$lib/analysis/presentation';
 	import type { Workout } from '$lib/api/generated/client';
 	import {
 		metricKinds,
 		dateText,
 		duration,
-		valueText,
 		recordedMetricSummary,
 		type Metric
 	} from '$lib/workouts/presentation';
@@ -65,7 +65,7 @@
 				{(demo ? metric.average : statistics?.averageValue) !== undefined ? '计算平均' : '记录平均'}
 			</div>
 			<div class="summary-number">
-				{valueText(average, metric.factor, metric.key === 'speed' ? 1 : 0)}<small
+				{metricValueText(average, metricKinds[metric.key], metric.key === 'speed' ? 1 : 0)}<small
 					>{average !== undefined ? metric.unit : ''}</small
 				>
 			</div>
@@ -75,7 +75,7 @@
 				{(demo ? metric.maximum : statistics?.maximumValue) !== undefined ? '计算最大' : '记录最大'}
 			</div>
 			<div class="summary-number">
-				{valueText(maximum, metric.factor, metric.key === 'speed' ? 1 : 0)}<small
+				{metricValueText(maximum, metricKinds[metric.key], metric.key === 'speed' ? 1 : 0)}<small
 					>{maximum !== undefined ? metric.unit : ''}</small
 				>
 			</div>
@@ -96,7 +96,8 @@
 		<div class="sample-value" aria-live="polite">
 			<span>{duration((Date.parse(selected.timestamp) - Date.parse(range.rangeStart)) / 1000)}</span
 			><strong style:color={`var(--metric-${metric.key})`}
-				>{valueText(selected.value, metric.factor, 1)} <small>{metric.unit}</small></strong
+				>{metricValueText(selected.value, metricKinds[metric.key], 1)}
+				<small>{metric.unit}</small></strong
 			>
 		</div>
 		<label class="slider-label" for="sample"
@@ -108,7 +109,7 @@
 			max={metric.samples.length - 1}
 			step="1"
 			bind:value={index}
-			aria-valuetext={`${duration((Date.parse(selected.timestamp) - Date.parse(range.rangeStart)) / 1000)}，${valueText(selected.value, metric.factor, 1)} ${metric.unit}`}
+			aria-valuetext={`${duration((Date.parse(selected.timestamp) - Date.parse(range.rangeStart)) / 1000)}，${metricValueText(selected.value, metricKinds[metric.key], 1)} ${metric.unit}`}
 		/>
 		<div class="sample-buttons">
 			<button class="button" disabled={index === 0} onclick={() => index--}>上一个样本</button
@@ -126,7 +127,7 @@
 									>{duration(
 										(Date.parse(sample.timestamp) - Date.parse(range.rangeStart)) / 1000
 									)}</td
-								><td>{valueText(sample.value, metric.factor, 1)}</td></tr
+								><td>{metricValueText(sample.value, metricKinds[metric.key], 1)}</td></tr
 							>{/each}</tbody
 					>
 				</table>

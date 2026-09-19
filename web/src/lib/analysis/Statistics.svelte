@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { MetricAnalysis } from '$lib/api/generated/client';
-	import { metricInfo } from './presentation';
-	import { valueText, duration } from '$lib/workouts/presentation';
+	import { metricInfo, metricValueText } from './presentation';
+	import { duration } from '$lib/workouts/presentation';
 	import AnalysisPlot from './AnalysisPlot.svelte';
 	let { metric }: { metric: MetricAnalysis } = $props();
 	const info = $derived(metricInfo[metric.metricKind]);
@@ -13,7 +13,7 @@
 			>
 				<dt>{row[0]}</dt>
 				<dd>
-					{valueText(typeof row[1] === 'number' ? row[1] : undefined, info.factor, 2)}
+					{metricValueText(typeof row[1] === 'number' ? row[1] : undefined, metric.metricKind, 2)}
 					{info.unit}
 				</dd>
 			</div>{/each}
@@ -33,7 +33,8 @@
 			xLabel={`${info.title} (${info.unit})`}
 			yLabel="分钟"
 			labels={metric.metricDistribution.map(
-				(b) => `${valueText(b.binLower, info.factor, 1)}–${valueText(b.binUpper, info.factor, 1)}`
+				(b) =>
+					`${metricValueText(b.binLower, metric.metricKind, 1)}–${metricValueText(b.binUpper, metric.metricKind, 1)}`
 			)}
 			points={metric.metricDistribution.map((b, i) => [i, b.binSeconds / 60])}
 		/>
@@ -44,9 +45,9 @@
 					<thead><tr><th>区间 ({info.unit})</th><th>时间</th></tr></thead><tbody
 						>{#each metric.metricDistribution as bin, i (i)}<tr
 								><td
-									>{valueText(bin.binLower, info.factor, 2)}–{valueText(
+									>{metricValueText(bin.binLower, metric.metricKind, 2)}–{metricValueText(
 										bin.binUpper,
-										info.factor,
+										metric.metricKind,
 										2
 									)}</td
 								><td>{duration(bin.binSeconds)}</td></tr

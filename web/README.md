@@ -277,13 +277,17 @@ browser chart points never supply averages. Time plots retain every recorded
 sample and insert breaks using `analysisMaxGapSeconds`. Relationships render the
 backend's bounded point set. Units remain explicit in selectors, tables and axes.
 Recorded altitude/energy/laps/bicycle context remain labeled separately.
+Recorded summaries keep metric entries available even without samples, including
+running dynamics; overview, dialogs and direct pages retain recorded provenance.
+Step length uses two decimal places in metres across summaries and sample views.
 
 `/settings` contains software, effective-dated body profiles, equipment and the
 existing account/session controls. GET/PUT use owner-scoped generated contracts.
 The editor captures a revision, preserves existing profile history, appends a
 complete parameter snapshot, and keeps equipment identity/kind immutable.
 A conflict retains the draft and requires an explicit reload. Save invalidates
-analysis/history queries. Profile fallback selection and all HR/power rules are
+analysis/history queries. Before publishing a saved revision, outstanding settings
+reads for that owner are cancelled so an older GET cannot replace it. Profile fallback selection and all HR/power rules are
 backend-owned. The saved appearance applies when authenticated; the header picker
 remains a local appearance override. Only appearance may use browser storage;
 body profiles, equipment, workouts and completeness inputs stay in memory.
