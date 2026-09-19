@@ -55,9 +55,10 @@ struct MetricAnalysisScreen: View {
                 if let statistics {
                     AnalysisCard(title: "分布", color: metric.accent) {
                         Chart(Array(statistics.metricDistribution.enumerated()), id: \.offset) { _, bin in
-                            BarMark(xStart: .value(metric.unit, bin.binLower * metric.canonicalScale),
+                            RectangleMark(xStart: .value(metric.unit, bin.binLower * metric.canonicalScale),
                                     xEnd: .value(metric.unit, bin.binUpper * metric.canonicalScale),
-                                    y: .value("分钟", bin.binSeconds / 60))
+                                    yStart: .value("分钟", 0),
+                                    yEnd: .value("分钟", bin.binSeconds / 60))
                                 .foregroundStyle(metric.accent.gradient)
                         }.frame(height: 220)
                         Text("横轴 \(metric.unit) · 纵轴分钟。基于有效时间覆盖，不按采样点数量计数。")
