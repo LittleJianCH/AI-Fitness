@@ -1,0 +1,201 @@
+module AnalysisTests (cases) where
+
+import Data.Maybe (isNothing)
+import qualified Data.Vector as V
+import qualified Fixtures as F
+import Workout.Analysis.Calculate (calculate)
+import Workout.Analysis.Power (analysePower, normalizedPower)
+import Workout.Analysis.Series
+import Workout.Analysis.Splits
+import Workout.Analysis.Types
+import Workout.Empty
+import Workout.Types
+
+cases :: [(String, Bool)]
+cases =
+    [ ("analysis: empty streams remain missing", null (analysisMetrics (calculate emptyWorkout)))
+    ,
+        ( "analysis: large finite constant histogram retains coverage"
+        , near 10 (sum (map binSeconds (V.toList (distribution 25 (V.fromList [(0, 1e300), (10, 1e300)])))))
+        )
+    ,
+        ( "analysis: hourly threshold power has 100 stress and 720kJ work"
+        , let result =
+                analysePower
+                    3600
+                    (AthleteContext Nothing (Just (Mass 70)) (Just (Power 200)))
+                    (V.fromList [(t, 200) | t <- [0 .. 3600]])
+                    (V.fromList [(t, 150) | t <- [0 .. 3600]])
+           in nearMaybe 100 (powerStressScore result)
+                && nearMaybe 720000 (powerWorkJoules result)
+                && nearMaybe 0 (powerDecouplingPercent result)
+        )
+    ,
+        ( "analysis: split means clip sensor intervals at distance crossings"
+        , let result =
+                distanceSplits
+                    ( V.head
+                        (splitSets (V.fromList [(0, 0), (100, 2000)]) (V.fromList [(0, 100), (100, 200)]) V.empty V.empty V.empty)
+                    )
+           in V.length result == 2
+                && nearMaybe 125 (splitHeartRate (result V.! 0))
+                && nearMaybe 175 (splitHeartRate (result V.! 1))
+        )
+    ,
+        ( "analysis: singleton has extrema without mean or duration"
+        , let s = numericStatistics (V.singleton (0, 80))
+           in minimumValue s == Just 80 && isNothing (averageValue s)
+        )
+    ,
+        ( "analysis: irregular sampling uses elapsed duration"
+        , nearMaybe 75 (average (segments 120 (V.fromList [(0, 0), (5, 100), (10, 100)])))
+        )
+    ,
+        ( "analysis: gap cutoff is inclusive"
+        , covered (segments 120 (V.fromList [(0, 50), (120, 50), (241, 50)])) == 120
+        )
+    ,
+        ( "analysis: positive ramps retain isolated zero endpoint"
+        , nearMaybe 50 (excludingZeros (segments 120 (V.fromList [(0, 0), (10, 0), (20, 100)])))
+        )
+    ,
+        ( "analysis: zero plateaus are not missing"
+        , average (segments 120 (V.fromList [(0, 0), (10, 0)])) == Just 0
+        )
+    ,
+        ( "analysis: histogram conserves supported duration across ramp bins"
+        , near
+            20
+            (sum (map binSeconds (V.toList (distribution 25 (V.fromList [(0, 0), (10, 100), (20, 0)])))))
+        )
+    ,
+        ( "analysis: constant histogram includes zero duration"
+        , near 10 (sum (map binSeconds (V.toList (distribution 25 (V.fromList [(0, 0), (10, 0)])))))
+        )
+    ,
+        ( "analysis: independent clock interpolates within gap"
+        , at 5 (V.fromList [(0, 10), (4, 30)]) 2 == Just 20
+        )
+    , ("analysis: no extrapolation", isNothing (at 5 (V.fromList [(0, 10), (4, 30)]) 5))
+    ,
+        ( "analysis: relationship does not bridge missing sensor"
+        , relationshipSampleCount
+            ( relationships
+                PowerMetric
+                HeartRateMetric
+                (V.singleton (200, 100))
+                (V.fromList [(0, 100), (400, 150)])
+            )
+            == 0
+        )
+    ,
+        ( "analysis: constant relationships have no correlation"
+        , isNothing (relationshipCorrelation (relationships PowerMetric HeartRateMetric plateau plateau))
+        )
+    , ("analysis: normalized constant power", nearMaybe 200 (fst (normalizedPower plateau)))
+    ,
+        ( "analysis: normalized real zero remains zero"
+        , fst (normalizedPower (V.map (\(t, _) -> (t, 0)) plateau)) == Just 0
+        )
+    ,
+        ( "analysis: normalized power needs complete 30-second window"
+        , isNothing (fst (normalizedPower (V.take 30 plateau)))
+        )
+    ,
+        ( "analysis: gap resets rolling window"
+        , isNothing
+            (fst (normalizedPower (V.fromList ([(t, 200) | t <- [0 .. 20]] <> [(t, 200) | t <- [30 .. 50]]))))
+        )
+    ,
+        ( "analysis: finite large power does not overflow fourth moment"
+        , nearMaybe 1e300 (fst (normalizedPower (V.map (\(t, _) -> (t, 1e300)) plateau)))
+        )
+    ,
+        ( "analysis: split distance and elapsed seconds"
+        , case V.toList (distanceSplits (V.head sets)) of
+            [a, b, c] ->
+                splitDistanceMetres a == 1000
+                    && splitEndSeconds a == 200
+                    && splitDistanceMetres b == 1000
+                    && splitDistanceMetres c == 500
+                    && splitEndSeconds c == 500
+            _ -> False
+        )
+    ,
+        ( "analysis: distance gap cannot become a fabricated split"
+        , all
+            (V.null . distanceSplits)
+            (splitSets (V.fromList [(0, 0), (500, 2500)]) V.empty V.empty V.empty V.empty)
+        )
+    ,
+        ( "analysis: distance reset cannot become negative split"
+        , all
+            (V.null . distanceSplits)
+            (splitSets (V.fromList [(0, 0), (60, 100), (120, 50)]) V.empty V.empty V.empty V.empty)
+        )
+    ,
+        ( "analysis: identical halves have zero change"
+        , maybe False ((== 0) . secondHalfChangePercent) (compareHalves distance)
+        )
+    ,
+        ( "analysis: workout revision accompanies derived result"
+        , analysisRevision (calculate emptyWorkout) == workoutRevision emptyWorkout
+        )
+    ,
+        ( "analysis: missing mass and FTP are not guessed"
+        , let p = analysisPower (calculate emptyWorkout)
+           in isNothing (powerWattsPerKilogram p) && isNothing (powerIntensityFactor p)
+        )
+    ,
+        ( "analysis: running dynamics derive supported flight and ratios"
+        , case analysisRunning (calculate runWorkout) of
+            Just result ->
+                nearMaybe 0.125 (runningFlightSeconds result)
+                    && nearMaybe 10 (runningVerticalRatioPercent result)
+                    && nearMaybe (100 / 3) (runningFlightRatioPercent result)
+                    && nearMaybe 160 (runningSteps result)
+            Nothing -> False
+        )
+    ]
+  where
+    plateau = V.fromList [(t, 200) | t <- [0 .. 60]]
+    distance = V.fromList [(t, t * 5) | t <- [0, 100 .. 500]]
+    sets = splitSets distance V.empty V.empty V.empty V.empty
+
+near :: Double -> Double -> Bool
+near expected actual = abs (actual / max 1 (abs expected) - expected / max 1 (abs expected)) < 1e-9
+
+nearMaybe :: Double -> Maybe Double -> Bool
+nearMaybe expected = maybe False (near expected)
+
+emptyWorkout :: Workout
+emptyWorkout =
+    F.workout
+        { workoutObservation =
+            F.observation
+                { observationRange = TimeRange F.start (F.at 60)
+                , observationSport = Cycling emptyCycling
+                , observationAthlete = AthleteContext Nothing Nothing Nothing
+                , observationEvents = V.empty
+                }
+        , workoutUserData = emptyUserData
+        }
+
+runWorkout :: Workout
+runWorkout =
+    emptyWorkout
+        { workoutObservation =
+            (workoutObservation emptyWorkout)
+                { observationSport =
+                    Running
+                        emptyRunning
+                            { runningCadence =
+                                V.fromList [Timed F.start (RunningCadence 160), Timed (F.at 60) (RunningCadence 160)]
+                            , runningDynamics =
+                                RunningDynamics
+                                    (V.fromList [Timed F.start (Distance 1), Timed (F.at 60) (Distance 1)])
+                                    (V.fromList [Timed F.start (Distance 0.1), Timed (F.at 60) (Distance 0.1)])
+                                    (V.fromList [Timed F.start (Duration 0.25), Timed (F.at 60) (Duration 0.25)])
+                            }
+                }
+        }

@@ -1,6 +1,6 @@
 .PHONY: all perf run check test format format-check lint contract contract-test
 
-DOMAIN_SOURCES := $(wildcard Workout/*.hs Workout/*/*.hs Import/*.hs Import/Fit/*.hs)
+DOMAIN_SOURCES := $(wildcard Workout/*.hs Workout/*/*.hs Import/*.hs Import/Fit/*.hs Profile/*.hs Analysis/*/*.hs)
 API_SOURCES := $(wildcard Api/*.hs Api/*/*.hs Api/*/*/*.hs)
 STORAGE_SOURCES := $(wildcard Storage/*.hs Storage/*/*.hs)
 RUNTIME_SOURCES := $(wildcard App/*.hs Auth/*.hs)
