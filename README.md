@@ -2,15 +2,28 @@
 
 A personal fitness and training data system managed as a monorepo.
 The backend uses Servant, IHP configuration, Hasql and PostgreSQL.
-The `web/` directory contains a Svelte 5 / SvelteKit training-review demo with strict TypeScript.
+The `web/` directory contains a Svelte 5 / SvelteKit training-review application with strict TypeScript.
 Canonical workout/import models and a generated API contract are available;
-authentication and manual Workout endpoints now use PostgreSQL.
+authentication, workouts and personal settings use PostgreSQL. Haskell owns
+workout metrics, power analysis and heart-rate training load; the clients share
+the [workout analysis contract and presentation structure](docs/workout-analysis.md).
 
 ## Run the iOS app
 
 The `ios/` directory contains SwiftUI login, workout browsing, explicit Apple Health
-import/export and its shared Swift API/session core. See [iOS development](ios/README.md) for contract generation,
+import/export, workout analysis, personal/equipment settings and its shared Swift
+API/session core. See [iOS development](ios/README.md) for contract generation,
 Xcode setup, backend connection, and isolated simulator integration tests.
+
+## Run the Android app
+
+The `android/` directory contains a Kotlin/Jetpack Compose client for login,
+workout browsing and analysis, personal/equipment settings and training history.
+Use `nix develop .#android` for the pinned JDK; Gradle and SDK versions are declared
+in the Android build files. An Android SDK with accepted licenses is required for
+native builds and emulator tests. [Android development](android/README.md) covers
+contract generation, builds, shared Kotlin checks against the real backend and
+separate instrumented device verification.
 
 ## Run the backend
 
@@ -49,9 +62,10 @@ pnpm demo
 ```
 
 Open http://127.0.0.1:5173/workouts. The demo uses generated API contracts with
-synthetic read-only responses. Backend authentication and manual Workout handlers
-are implemented; the web demo is not connected to them yet. See [Web development](web/README.md) for data flow, checks and
-ordinary-mode behavior, and [Web UI Design](docs/web-design.md) for design rules.
+synthetic read-only responses. Connected mode uses the real backend for login,
+owned records, FIT import and edits. See [Web development](web/README.md) for
+local HTTPS setup, connected checks and mode selection, and
+[Web UI Design](docs/web-design.md) for design rules.
 Ctrl-C stops the server; `exit` leaves the development shell.
 
 ## Domain checks
@@ -75,8 +89,9 @@ import-state decisions and import-output refresh behavior.
 ## API contract
 
 The [API contract guide](docs/api-contract.md) defines authentication, workouts,
-groups, imports and exports for web/iOS development. Servant definitions reuse
-the canonical model and generate OpenAPI 3.1, TypeScript and Swift clients.
+groups, imports and exports for Web, iOS and Android development. Servant
+definitions reuse the canonical model and generate OpenAPI 3.1, TypeScript and
+Swift clients; Android generates Kotlin DTOs/codecs from that same specification.
 Authentication, user/session storage and manual Workout CRUD are implemented.
 HealthKit submission/detail handlers support single-part cycling/running imports
 with durable retry identity and explicit refresh. Export receipt handlers persist

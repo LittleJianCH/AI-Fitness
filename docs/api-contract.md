@@ -1,7 +1,7 @@
 # API contract
 
 The v1 draft defines authentication, workouts, workout groups, imports and exports
-for parallel web and iOS development. Its source is
+for parallel Web, iOS and Android development. Its source is
 [`Api.Types`](../backend/Api/Types.hs), with routes, request types and codecs
 grouped by feature. The generated OpenAPI document is a build artifact.
 
@@ -408,7 +408,13 @@ invalid dates, sport alternatives and large revision strings. This is a macOS
 contract check, not an iOS simulator/device or HealthKit test. TypeScript checks
 compile strict consumer code, validate actual payloads against the schema and
 exercise generated fetch with a fixture transport.
-Kotlin and Go generation/compilation remain their respective client tasks.
+Android's `scripts/android_generate` reads the same OpenAPI artifact and generates
+the consumed Kotlin DTOs and strict JSON codecs into ignored build output. The
+`android/consumer` verification module compiles the app's actual transport,
+contract and presentation sources on the JVM, including real-backend checks.
+Native Compose, Keystore and device behavior need the separate Android SDK and
+instrumentation checks described in [Android development](../android/README.md).
+Go generation/compilation remains a future consumer task.
 
 The pinned Haskell library generates OpenAPI 3.0. `contracts/openapi.mjs` performs
 an explicit 3.1 Schema Object conversion, handling nullable types, exclusive
