@@ -1,0 +1,6509 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "%@ analysis": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ analysis"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@分析"
+          }
+        }
+      }
+    },
+    "%@ and %@": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ and %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@与%@"
+          }
+        }
+      }
+    },
+    "%@ over %@": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ over %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@随%@变化"
+          }
+        }
+      }
+    },
+    "%@ resting / threshold / maximum heart rate": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ resting / threshold / maximum heart rate"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@静息 / 阈值 / 最大心率"
+          }
+        }
+      }
+    },
+    "%@ threshold power": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ threshold power"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@阈值功率"
+          }
+        }
+      }
+    },
+    "%lld km splits": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld km splits"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld km 分段"
+          }
+        }
+      }
+    },
+    "%lld workouts · Known load %@": {
+      "comment": "Count is an integer. Use native plural rules; Chinese has only the other category.",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld workout · Known load %@"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld workouts · Known load %@"
+                }
+              }
+            }
+          }
+        },
+        "zh-Hans": {
+          "variations": {
+            "plural": {
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld 次运动 · 已知负荷 %@"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "180 days": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "180 days"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "180 天"
+          }
+        }
+      }
+    },
+    "42 days": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "42 days"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "42 天"
+          }
+        }
+      }
+    },
+    "90 days": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "90 days"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "90 天"
+          }
+        }
+      }
+    },
+    "About the data": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About the data"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "数据说明"
+          }
+        }
+      }
+    },
+    "Account": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "账号"
+          }
+        }
+      }
+    },
+    "Account and sign-in sessions": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account and sign-in sessions"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "账号与登录会话"
+          }
+        }
+      }
+    },
+    "Account sign-in": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account sign-in"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "账号登录"
+          }
+        }
+      }
+    },
+    "Add equipment": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add equipment"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "添加器材"
+          }
+        }
+      }
+    },
+    "Add heart rate parameters effective at the workout start in Settings": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add heart rate parameters effective at the workout start in Settings"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请在设置中补充该运动开始时生效的心率参数"
+          }
+        }
+      }
+    },
+    "Algorithm": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Algorithm"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "算法"
+          }
+        }
+      }
+    },
+    "Aligned sample pairs: %lld; the chart shows up to 600 pairs. Correlation does not imply causation.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aligned sample pairs: %lld; the chart shows up to 600 pairs. Correlation does not imply causation."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 对有效采样，图上最多展示 600 对。相关不代表因果。"
+          }
+        }
+      }
+    },
+    "All": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全部"
+          }
+        }
+      }
+    },
+    "All workouts in this range have been imported": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All workouts in this range have been imported"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这段历史中的运动均已导入"
+          }
+        }
+      }
+    },
+    "Allow writing the previewed data types in Health permissions.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow writing the previewed data types in Health permissions."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请在健康权限中允许写入预览所列的数据类型。"
+          }
+        }
+      }
+    },
+    "Altitude": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Altitude"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "海拔"
+          }
+        }
+      }
+    },
+    "Ambient temperature": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ambient temperature"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "环境温度"
+          }
+        }
+      }
+    },
+    "Analysis method and personal parameters": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Analysis method and personal parameters"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "分析方法与个人参数"
+          }
+        }
+      }
+    },
+    "Analysis was cancelled. Try again.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Analysis was cancelled. Try again."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "分析已取消，请重试。"
+          }
+        }
+      }
+    },
+    "Analyzing workout…": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Analyzing workout…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在分析运动…"
+          }
+        }
+      }
+    },
+    "Appearance": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appearance"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "外观"
+          }
+        }
+      }
+    },
+    "Apple Health": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Health"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "苹果健康"
+          }
+        }
+      }
+    },
+    "Apple Health is unavailable on this device.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Health is unavailable on this device."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此设备不支持苹果健康。"
+          }
+        }
+      }
+    },
+    "Apple Health summary": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Health summary"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "苹果健康摘要"
+          }
+        }
+      }
+    },
+    "Apple Health was updated, but the server receipt was not confirmed. Try again.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Health was updated, but the server receipt was not confirmed. Try again."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple 健康已写入，但后端回执未能确认，请重试。"
+          }
+        }
+      }
+    },
+    "Ascent": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ascent"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "爬升"
+          }
+        }
+      }
+    },
+    "Assume no training load before the start": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Assume no training load before the start"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "假设开始前没有训练负荷"
+          }
+        }
+      }
+    },
+    "Authorize and read": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Authorize and read"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "授权并读取"
+          }
+        }
+      }
+    },
+    "Average": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Average"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "平均"
+          }
+        }
+      }
+    },
+    "Average excluding zero plateaus": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Average excluding zero plateaus"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "排除零平台的平均"
+          }
+        }
+      }
+    },
+    "Average heart rate": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Average heart rate"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "平均心率"
+          }
+        }
+      }
+    },
+    "Average pace": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Average pace"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "平均配速"
+          }
+        }
+      }
+    },
+    "Average power": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Average power"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "平均功率"
+          }
+        }
+      }
+    },
+    "Average power / body weight": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Average power / body weight"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "平均功率 / 体重"
+          }
+        }
+      }
+    },
+    "Average speed": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Average speed"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "平均速度"
+          }
+        }
+      }
+    },
+    "Average temperature": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Average temperature"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "平均气温"
+          }
+        }
+      }
+    },
+    "Best interval: %@ – %@": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Best interval: %@ – %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最佳区间：%@ – %@"
+          }
+        }
+      }
+    },
+    "Best sustained power": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Best sustained power"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最佳持续功率"
+          }
+        }
+      }
+    },
+    "Best sustained power chart. Use the duration picker or data list to inspect values.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Best sustained power chart. Use the duration picker or data list to inspect values."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最佳持续功率曲线，使用下方时长选择或数据列表查看数值"
+          }
+        }
+      }
+    },
+    "Bike": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bike"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自行车"
+          }
+        }
+      }
+    },
+    "Bike weight": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bike weight"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自行车重量"
+          }
+        }
+      }
+    },
+    "Body weight": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Body weight"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "体重"
+          }
+        }
+      }
+    },
+    "Body weight (kg)": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Body weight (kg)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "体重 (kg)"
+          }
+        }
+      }
+    },
+    "Body weight used": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Body weight used"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用的体重"
+          }
+        }
+      }
+    },
+    "Both charts share horizontal positions and retain their original units.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Both charts share horizontal positions and retain their original units."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "两张图共享横轴位置，各自保留原始单位。"
+          }
+        }
+      }
+    },
+    "Calculate fitness and fatigue": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Calculate fitness and fatigue"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "计算体能与疲劳"
+          }
+        }
+      }
+    },
+    "Calculated results": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Calculated results"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "计算结果"
+          }
+        }
+      }
+    },
+    "Calculating best sustained power…": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Calculating best sustained power…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在计算最佳持续功率…"
+          }
+        }
+      }
+    },
+    "Calculating…": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Calculating…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在计算…"
+          }
+        }
+      }
+    },
+    "Cancel": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "取消"
+          }
+        }
+      }
+    },
+    "Cannot access export recovery records. Unlock this device and check available storage.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cannot access export recovery records. Unlock this device and check available storage."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "导出恢复记录无法读写，请解锁设备并检查可用空间。"
+          }
+        }
+      }
+    },
+    "Cannot access secure credential storage. Unlock this device and try again.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cannot access secure credential storage. Unlock this device and try again."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法访问安全凭据存储，请解锁设备后重试。"
+          }
+        }
+      }
+    },
+    "Cannot connect to the server. Check your network and try again.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cannot connect to the server. Check your network and try again."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暂时无法连接服务器，请检查网络后重试。"
+          }
+        }
+      }
+    },
+    "Change server": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change server"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更换服务器"
+          }
+        }
+      }
+    },
+    "Check the form.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the form."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请检查填写内容。"
+          }
+        }
+      }
+    },
+    "Checks up to the latest 200 records in this period. Only single-sport cycling and running are supported; records written by this app are excluded. An empty list may reflect read permissions rather than no workouts.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checks up to the latest 200 records in this period. Only single-sport cycling and running are supported; records written by this app are excluded. An empty list may reflect read permissions rather than no workouts."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最多检查此期间最新的 200 条记录，只支持单项骑行和跑步，并排除本应用回写的记录。空列表可能与读取权限有关，并不代表没有运动。"
+          }
+        }
+      }
+    },
+    "Clear saved credentials": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear saved credentials"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "清除本机凭据"
+          }
+        }
+      }
+    },
+    "Clearing local credentials does not revoke the session on the server.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clearing local credentials does not revoke the session on the server."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "清除本机凭据不会撤销服务器上的会话。"
+          }
+        }
+      }
+    },
+    "Close": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "关闭"
+          }
+        }
+      }
+    },
+    "Compare metric": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compare metric"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "对照指标"
+          }
+        }
+      }
+    },
+    "Complete all heart rate parameters, with resting < threshold ≤ maximum heart rate.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Complete all heart rate parameters, with resting < threshold ≤ maximum heart rate."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "心率参数请全部填写，并满足：静息心率 < 阈值心率 ≤ 最大心率。"
+          }
+        }
+      }
+    },
+    "Confirm complete workout records and configure heart rate parameters. Training load remains unknown when heart rate sampling is insufficient.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm complete workout records and configure heart rate parameters. Training load remains unknown when heart rate sampling is insufficient."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请确认运动记录完整，并为相关运动设置心率参数。心率采样不足时，训练负荷仍保留未知。"
+          }
+        }
+      }
+    },
+    "Confirm the version and data to export. If interrupted, return here to resume.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm the version and data to export. If interrupted, return here to resume."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "确认要导出的版本和数据。中途中断时，可以回到这里继续恢复。"
+          }
+        }
+      }
+    },
+    "Confirm upload (%lld)": {
+      "comment": "Count is an integer. Use native plural rules; Chinese has only the other category.",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Confirm upload of %lld workout"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Confirm upload of %lld workouts"
+                }
+              }
+            }
+          }
+        },
+        "zh-Hans": {
+          "variations": {
+            "plural": {
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "确认上传以上 %lld 条"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Confirm write": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm write"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "确认写入"
+          }
+        }
+      }
+    },
+    "Connect": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "连接"
+          }
+        }
+      }
+    },
+    "Connect to a server to view workouts and exchange data with Apple Health.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect to a server to view workouts and exchange data with Apple Health."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "连接服务器后，即可查看运动记录并与 Apple 健康交换数据。"
+          }
+        }
+      }
+    },
+    "Connect your workout records": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect your workout records"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "连接你的训练记录"
+          }
+        }
+      }
+    },
+    "Continuous segment": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuous segment"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "连续段"
+          }
+        }
+      }
+    },
+    "Continuous, increasing distance samples are required for splits. Gaps and distance resets are not extrapolated.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuous, increasing distance samples are required for splits. Gaps and distance resets are not extrapolated."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "需要连续、递增的距离采样才能计算分段。缺失或距离重置时不推算。"
+          }
+        }
+      }
+    },
+    "Correlation": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Correlation"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "相关系数"
+          }
+        }
+      }
+    },
+    "Count: %lld": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Count: %lld"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 个"
+          }
+        }
+      }
+    },
+    "Credentials are stored separately for each server on this device.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Credentials are stored separately for each server on this device."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登录凭据会按服务器地址分别保存在本机。"
+          }
+        }
+      }
+    },
+    "Credentials could not be saved and the server session could not be revoked. Unlock this device, try again, and review this session in session management.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Credentials could not be saved and the server session could not be revoked. Unlock this device, try again, and review this session in session management."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "凭据未能保存，且服务器会话未能撤销；请解锁设备后重试，并在会话管理中检查本次会话。"
+          }
+        }
+      }
+    },
+    "Current account": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current account"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "当前账号"
+          }
+        }
+      }
+    },
+    "Cycling": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cycling"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "骑行"
+          }
+        }
+      }
+    },
+    "Cycling cadence": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cycling cadence"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "踏频"
+          }
+        }
+      }
+    },
+    "Cycling type": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cycling type"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "骑行类型"
+          }
+        }
+      }
+    },
+    "Daily load": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daily load"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每日负荷"
+          }
+        }
+      }
+    },
+    "Dark": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dark"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "深色"
+          }
+        }
+      }
+    },
+    "Date": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Date"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "日期"
+          }
+        }
+      }
+    },
+    "Date range": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Date range"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "读取范围"
+          }
+        }
+      }
+    },
+    "Dates use %@. Workouts belong to their start date; today's result updates as new records arrive.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dates use %@. Workouts belong to their start date; today's result updates as new records arrive."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "日期按 %@ 划分。当天的运动计入开始日期；今天的结果会随新记录更新。"
+          }
+        }
+      }
+    },
+    "Days": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Days"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "天数"
+          }
+        }
+      }
+    },
+    "Derived statistics are unavailable. Return to workout details to retry the analysis.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Derived statistics are unavailable. Return to workout details to retry the analysis."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "派生统计暂不可用，可返回运动详情重试分析。"
+          }
+        }
+      }
+    },
+    "Detailed analysis": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detailed analysis"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "详细分析"
+          }
+        }
+      }
+    },
+    "Device laps": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Device laps"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "设备分段"
+          }
+        }
+      }
+    },
+    "Device time zone · %@": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Device time zone · %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本机时区 · %@"
+          }
+        }
+      }
+    },
+    "Device-recorded laps": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Device-recorded laps"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "设备记录的分段"
+          }
+        }
+      }
+    },
+    "Display": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Display"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "显示"
+          }
+        }
+      }
+    },
+    "Distance": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Distance"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "距离"
+          }
+        }
+      }
+    },
+    "Distance (km)": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Distance (km)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "距离（km）"
+          }
+        }
+      }
+    },
+    "Distance splits": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Distance splits"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "距离分段"
+          }
+        }
+      }
+    },
+    "Distribution": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Distribution"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "分布"
+          }
+        }
+      }
+    },
+    "Done": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "完成"
+          }
+        }
+      }
+    },
+    "Duration": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duration"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用时"
+          }
+        }
+      }
+    },
+    "Duration in seconds": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duration in seconds"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "持续秒数"
+          }
+        }
+      }
+    },
+    "Each update creates a record with an effective time. Analysis uses workout-recorded parameters first, then personal parameters effective at the workout start.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Each update creates a record with an effective time. Analysis uses workout-recorded parameters first, then personal parameters effective at the workout start."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每次更新都新增一条带生效时间的记录。分析优先使用运动中的身体参数；缺少时使用运动开始时生效的个人参数。"
+          }
+        }
+      }
+    },
+    "Earlier workouts retain their previous parameters. An earlier effective date applies these parameters to analysis of workouts starting from that time.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Earlier workouts retain their previous parameters. An earlier effective date applies these parameters to analysis of workouts starting from that time."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "生效时间之前的运动保持原参数。选择较早的时间，会使该时间之后的运动采用这次填写的参数进行分析。"
+          }
+        }
+      }
+    },
+    "Edit equipment": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit equipment"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "编辑器材"
+          }
+        }
+      }
+    },
+    "Effective from": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Effective from"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "生效时间"
+          }
+        }
+      }
+    },
+    "Efficiency factor": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Efficiency factor"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "效率因子"
+          }
+        }
+      }
+    },
+    "Elapsed time": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elapsed time"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "经过时间"
+          }
+        }
+      }
+    },
+    "Elapsed time (minutes)": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elapsed time (minutes)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "经过时间（分钟）"
+          }
+        }
+      }
+    },
+    "Elevation, energy and environment": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elevation, energy and environment"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "海拔、能量与环境"
+          }
+        }
+      }
+    },
+    "End": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "End"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "结束"
+          }
+        }
+      }
+    },
+    "End date": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "End date"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "结束日期"
+          }
+        }
+      }
+    },
+    "Ending fatigue ATL": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ending fatigue ATL"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "期末疲劳 ATL"
+          }
+        }
+      }
+    },
+    "Ending fitness CTL": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ending fitness CTL"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "期末体能 CTL"
+          }
+        }
+      }
+    },
+    "Enter a server address with its protocol and optional port, without a path, query, or account information.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a server address with its protocol and optional port, without a path, query, or account information."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请输入后端地址，包含协议和可选端口，不包含路径、查询参数或账号。"
+          }
+        }
+      }
+    },
+    "Enter an equipment name of at most 120 characters.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter an equipment name of at most 120 characters."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请填写不超过 120 字的器材名称。"
+          }
+        }
+      }
+    },
+    "Equipment": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Equipment"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "器材"
+          }
+        }
+      }
+    },
+    "Equipment name": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Equipment name"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "器材名称"
+          }
+        }
+      }
+    },
+    "Expand map": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expand map"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "展开地图"
+          }
+        }
+      }
+    },
+    "Export completed": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Export completed"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已完成导出"
+          }
+        }
+      }
+    },
+    "Export preview": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Export preview"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "导出预览"
+          }
+        }
+      }
+    },
+    "Export to Apple Health": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Export to Apple Health"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "导出到 Apple 健康"
+          }
+        }
+      }
+    },
+    "Exports cycling or running, supported recorded samples such as heart rate, power and speed, and route coordinates. Distance and energy use recorded totals without adding cumulative streams again; missing totals are not inferred. Apple Health calculates duration from start, end and pause events, which can differ from the recorded summary. Route accuracy is unknown and is not fabricated; altitude is omitted. Laps, running cadence, notes, tags, calculated summaries and other unsupported fields are omitted. This is a platform copy, not a complete backup. A new revision creates a new copy.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exports cycling or running, supported recorded samples such as heart rate, power and speed, and route coordinates. Distance and energy use recorded totals without adding cumulative streams again; missing totals are not inferred. Apple Health calculates duration from start, end and pause events, which can differ from the recorded summary. Route accuracy is unknown and is not fabricated; altitude is omitted. Laps, running cadence, notes, tags, calculated summaries and other unsupported fields are omitted. This is a platform copy, not a complete backup. A new revision creates a new copy."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "导出骑行/跑步、记录中的心率/功率/速度等支持的采样，以及路线经纬度。距离和能量使用记录总量，不重复叠加累计曲线；缺失总量不推算。Apple 健康会按起止时间和暂停事件计算时长，可能与记录摘要不同。路线精度未知，不伪造定位精度；海拔不写入。圈、跑步步频、备注、标签、后端计算摘要及其他不支持的字段不写入。这是平台副本，不是完整备份；新版本会生成新的副本。"
+          }
+        }
+      }
+    },
+    "Fastest sample pace": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fastest sample pace"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最快采样配速"
+          }
+        }
+      }
+    },
+    "Fatigue ATL": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fatigue ATL"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "疲劳 ATL"
+          }
+        }
+      }
+    },
+    "Finish": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finish"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "终点"
+          }
+        }
+      }
+    },
+    "First half": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "First half"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "前半程"
+          }
+        }
+      }
+    },
+    "Fitness CTL": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fitness CTL"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "体能 CTL"
+          }
+        }
+      }
+    },
+    "Fitness and fatigue": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fitness and fatigue"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "体能与疲劳"
+          }
+        }
+      }
+    },
+    "Fitness and fatigue trends": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fitness and fatigue trends"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "体能与疲劳趋势"
+          }
+        }
+      }
+    },
+    "Fitness uses 42-day and fatigue uses 7-day exponential decay. These HRSS values cannot be directly compared with other load models.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fitness uses 42-day and fatigue uses 7-day exponential decay. These HRSS values cannot be directly compared with other load models."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "体能使用 42 天、疲劳使用 7 天的指数衰减。基于 HRSS，不能与其他负荷模型的数值直接比较。"
+          }
+        }
+      }
+    },
+    "Flight ratio": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Flight ratio"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "腾空比"
+          }
+        }
+      }
+    },
+    "Flight time": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Flight time"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "腾空时间"
+          }
+        }
+      }
+    },
+    "Flight time uses cadence and ground contact time. Vertical ratio uses vertical oscillation and step length. Simultaneous valid samples are required.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Flight time uses cadence and ground contact time. Vertical ratio uses vertical oscillation and step length. Simultaneous valid samples are required."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "腾空时间由步频和触地时间计算，垂直比由垂直振幅和每步步长计算；需要同时存在的有效采样。"
+          }
+        }
+      }
+    },
+    "Grade": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grade"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "坡度"
+          }
+        }
+      }
+    },
+    "Ground contact time": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ground contact time"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "触地时间"
+          }
+        }
+      }
+    },
+    "HRSS / day": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HRSS / day"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HRSS / 日"
+          }
+        }
+      }
+    },
+    "Health": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Health"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "健康"
+          }
+        }
+      }
+    },
+    "Heart rate": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heart rate"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "心率"
+          }
+        }
+      }
+    },
+    "Heart rate %lld · Power %lld · Speed %lld · Route %lld": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heart rate %lld · Power %lld · Speed %lld · Route %lld"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "心率 %lld · 功率 %lld · 速度 %lld · 路线 %lld"
+          }
+        }
+      }
+    },
+    "Heart rate and training load": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heart rate and training load"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "心率与训练负荷"
+          }
+        }
+      }
+    },
+    "Heart rate coverage": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heart rate coverage"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "心率覆盖率"
+          }
+        }
+      }
+    },
+    "Heart rate load cannot be calculated from the current data": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heart rate load cannot be calculated from the current data"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "当前数据无法计算心率负荷"
+          }
+        }
+      }
+    },
+    "Height": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Height"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "身高"
+          }
+        }
+      }
+    },
+    "Height (cm)": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Height (cm)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "身高 (cm)"
+          }
+        }
+      }
+    },
+    "History range": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "History range"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "历史范围"
+          }
+        }
+      }
+    },
+    "Horizontal axis": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Horizontal axis"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "横轴"
+          }
+        }
+      }
+    },
+    "Horizontal axis: %@ · Vertical axis: minutes. Weighted by covered time, not sample count.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Horizontal axis: %@ · Vertical axis: minutes. Weighted by covered time, not sample count."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "横轴 %@ · 纵轴分钟。基于有效时间覆盖，不按采样点数量计数。"
+          }
+        }
+      }
+    },
+    "If interrupted, reopen export from this workout to resume. Completion requires both the platform write and the server receipt to be confirmed.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If interrupted, reopen export from this workout to resume. Completion requires both the platform write and the server receipt to be confirmed."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "中途离开后，可从此运动详情重新打开并恢复。仅在平台写入和后端回执都确认后显示完成。"
+          }
+        }
+      }
+    },
+    "If you have CTL / ATL from the same HRSS model, enter the values for the day before this range. A zero start is a calculation assumption that strongly affects short histories.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If you have CTL / ATL from the same HRSS model, enter the values for the day before this range. A zero start is a calculation assumption that strongly affects short histories."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "若已有同一 HRSS 模型下的 CTL / ATL，可填写范围开始前一天的值。零起点仅是计算假设，短历史会明显受它影响。"
+          }
+        }
+      }
+    },
+    "Import confirmed. Uploading again will not create duplicates.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import confirmed. Uploading again will not create duplicates."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已确认导入，重复上传不会新增记录。"
+          }
+        }
+      }
+    },
+    "Import from Apple Health": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import from Apple Health"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "从苹果健康导入 AI Fitness"
+          }
+        }
+      }
+    },
+    "Initial fatigue ATL": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Initial fatigue ATL"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "初始疲劳 ATL"
+          }
+        }
+      }
+    },
+    "Initial fitness CTL": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Initial fitness CTL"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "初始体能 CTL"
+          }
+        }
+      }
+    },
+    "Initial state": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Initial state"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "初始状态"
+          }
+        }
+      }
+    },
+    "Insufficient continuous samples": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Insufficient continuous samples"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "连续采样不足"
+          }
+        }
+      }
+    },
+    "Intensity factor": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Intensity factor"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "强度因子"
+          }
+        }
+      }
+    },
+    "Lap %lld": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lap %lld"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "分段 %lld"
+          }
+        }
+      }
+    },
+    "Light": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Light"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "浅色"
+          }
+        }
+      }
+    },
+    "Load more": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Load more"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "加载更多"
+          }
+        }
+      }
+    },
+    "Load uses your selected coefficient, without inferring it from your identity. Heart rate zones use heart rate reserve.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Load uses your selected coefficient, without inferring it from your identity. Heart rate zones use heart rate reserve."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "负荷使用你选择的指数；不会根据身份推断。心率区间按心率储备划分。"
+          }
+        }
+      }
+    },
+    "Loading details…": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loading details…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在加载详情…"
+          }
+        }
+      }
+    },
+    "Loading settings…": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loading settings…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在加载设置…"
+          }
+        }
+      }
+    },
+    "Loading workouts…": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loading workouts…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在加载运动…"
+          }
+        }
+      }
+    },
+    "Manage your session on the current server.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manage your session on the current server."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "管理当前服务器的登录会话。"
+          }
+        }
+      }
+    },
+    "Maximum": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maximum"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最大"
+          }
+        }
+      }
+    },
+    "Maximum altitude": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maximum altitude"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最高海拔"
+          }
+        }
+      }
+    },
+    "Maximum heart rate (bpm)": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maximum heart rate (bpm)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最大心率 (bpm)"
+          }
+        }
+      }
+    },
+    "Measurement samples": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Measurement samples"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "测量样本"
+          }
+        }
+      }
+    },
+    "Mechanical work": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mechanical work"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "机械功"
+          }
+        }
+      }
+    },
+    "Metabolic energy": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Metabolic energy"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "代谢能量"
+          }
+        }
+      }
+    },
+    "Metric": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Metric"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "指标"
+          }
+        }
+      }
+    },
+    "Metric · km / kg / W": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Metric · km / kg / W"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "公制 · km / kg / W"
+          }
+        }
+      }
+    },
+    "Minimum": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minimum"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最小"
+          }
+        }
+      }
+    },
+    "Minimum altitude": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minimum altitude"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最低海拔"
+          }
+        }
+      }
+    },
+    "Minutes": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minutes"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "分钟"
+          }
+        }
+      }
+    },
+    "More summary metrics": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More summary metrics"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更多摘要指标"
+          }
+        }
+      }
+    },
+    "Moving time": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moving time"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移动时间"
+          }
+        }
+      }
+    },
+    "Net elevation change": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Net elevation change"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "净海拔变化"
+          }
+        }
+      }
+    },
+    "No data": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No data"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无数据"
+          }
+        }
+      }
+    },
+    "No personal parameters were effective at the workout start. Add them in Settings → Personal parameters.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No personal parameters were effective at the workout start. Add them in Settings → Personal parameters."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "运动开始时没有生效的个人参数；可在「设置 → 个人身体参数」中添加。"
+          }
+        }
+      }
+    },
+    "No records are available to display. Adjust the dates or check system Health permissions.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No records are available to display. Adjust the dates or check system Health permissions."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "当前没有可显示的记录。可调整日期或在系统健康权限中检查。"
+          }
+        }
+      }
+    },
+    "No records match the current filters.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No records match the current filters."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "当前筛选下没有记录。"
+          }
+        }
+      }
+    },
+    "No route data": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No route data"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无路线数据"
+          }
+        }
+      }
+    },
+    "No sample data": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No sample data"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无采样数据"
+          }
+        }
+      }
+    },
+    "No samples available for this axis": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No samples available for this axis"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有可用于此横轴的采样"
+          }
+        }
+      }
+    },
+    "No training trend available": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No training trend available"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暂无可绘制的训练趋势"
+          }
+        }
+      }
+    },
+    "No valid timer duration": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No valid timer duration"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有有效计时时间"
+          }
+        }
+      }
+    },
+    "No workouts yet": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No workouts yet"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暂无运动记录"
+          }
+        }
+      }
+    },
+    "None": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "None"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无"
+          }
+        }
+      }
+    },
+    "Normalized power": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Normalized power"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "标准化功率"
+          }
+        }
+      }
+    },
+    "Observed mechanical work": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Observed mechanical work"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "观测机械功"
+          }
+        }
+      }
+    },
+    "Only single-sport cycling and running workouts are supported. Multisport workouts are not supported yet.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only single-sport cycling and running workouts are supported. Multisport workouts are not supported yet."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "目前支持单项骑行或跑步，多项目运动暂不支持。"
+          }
+        }
+      }
+    },
+    "Pace": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pace"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "配速"
+          }
+        }
+      }
+    },
+    "Parameter revision": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parameter revision"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "参数版本"
+          }
+        }
+      }
+    },
+    "Password": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Password"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "密码"
+          }
+        }
+      }
+    },
+    "Personal parameters": {
+      "comment": "iOS screen-specific wording; retain the distinct route, date, navigation and form contexts.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Personal parameters"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "个人身体参数"
+          }
+        }
+      }
+    },
+    "Personal parameters effective from": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Personal parameters effective from"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "个人参数生效时间"
+          }
+        }
+      }
+    },
+    "Power": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Power"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "功率"
+          }
+        }
+      }
+    },
+    "Power / heart rate decoupling between halves": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Power / heart rate decoupling between halves"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "前后半程功率 / 心率解耦"
+          }
+        }
+      }
+    },
+    "Power analysis": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Power analysis"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "功率分析"
+          }
+        }
+      }
+    },
+    "Power connects samples at most 5 seconds apart. Normalized power uses complete 30-second rolling windows; interpret results under 10 minutes cautiously.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Power connects samples at most 5 seconds apart. Normalized power uses complete 30-second rolling windows; interpret results under 10 minutes cautiously."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "功率计算仅连接相邻 5 秒内的采样。标准化功率使用完整的 30 秒滚动窗口；短于 10 分钟的结果需谨慎解读。"
+          }
+        }
+      }
+    },
+    "Power training stress": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Power training stress"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "功率训练压力"
+          }
+        }
+      }
+    },
+    "Power zones": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Power zones"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "功率区间"
+          }
+        }
+      }
+    },
+    "Preview and confirm": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preview and confirm"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "预览与确认"
+          }
+        }
+      }
+    },
+    "Preview selection (%lld)": {
+      "comment": "Count is an integer. Use native plural rules; Chinese has only the other category.",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Preview %lld workout"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Preview %lld workouts"
+                }
+              }
+            }
+          }
+        },
+        "zh-Hans": {
+          "variations": {
+            "plural": {
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "预览已选 %lld 条"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Processing export…": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Processing export…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在处理导出…"
+          }
+        }
+      }
+    },
+    "Processing…": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Processing…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在处理…"
+          }
+        }
+      }
+    },
+    "Record completeness, heart rate coverage or personal parameters are insufficient. This day and subsequent trends remain unknown.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Record completeness, heart rate coverage or personal parameters are insufficient. This day and subsequent trends remain unknown."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "记录完整性、心率覆盖或个人参数不足，此日及后续趋势保留未知。"
+          }
+        }
+      }
+    },
+    "Record weight, height, and separate power and heart rate thresholds for cycling and running. Leave unknown parameters empty.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Record weight, height, and separate power and heart rate thresholds for cycling and running. Leave unknown parameters empty."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "记录体重、身高，以及骑行和跑步各自的功率与心率阈值。缺少的参数可以留空。"
+          }
+        }
+      }
+    },
+    "Recorded distance": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recorded distance"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "记录距离"
+          }
+        }
+      }
+    },
+    "Recorded samples": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recorded samples"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "原始采样"
+          }
+        }
+      }
+    },
+    "Recorded summary": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recorded summary"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "记录摘要"
+          }
+        }
+      }
+    },
+    "Recorded timer events": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recorded timer events"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "记录中的计时事件"
+          }
+        }
+      }
+    },
+    "Recorded workout route": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recorded workout route"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "运动记录路线"
+          }
+        }
+      }
+    },
+    "Refresh linked imported data": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh linked imported data"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更新已导入的关联数据"
+          }
+        }
+      }
+    },
+    "Refresh workout": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh workout"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "刷新训练"
+          }
+        }
+      }
+    },
+    "Reload": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reload"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重新加载"
+          }
+        }
+      }
+    },
+    "Reload details": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reload details"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重新加载详情"
+          }
+        }
+      }
+    },
+    "Remaining influence of the initial CTL": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remaining influence of the initial CTL"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "起点对当前 CTL 的剩余影响"
+          }
+        }
+      }
+    },
+    "Request ID: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Request ID: %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请求标识：%@"
+          }
+        }
+      }
+    },
+    "Resting heart rate (bpm)": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resting heart rate (bpm)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "静息心率 (bpm)"
+          }
+        }
+      }
+    },
+    "Restoring sign-in…": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restoring sign-in…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在恢复登录…"
+          }
+        }
+      }
+    },
+    "Resume the previously confirmed version first, then reopen this page to export the current revision.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resume the previously confirmed version first, then reopen this page to export the current revision."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "先恢复此前确认的版本，再重新打开此页面导出当前版本。"
+          }
+        }
+      }
+    },
+    "Retire equipment": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retire equipment"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "停用器材"
+          }
+        }
+      }
+    },
+    "Retired": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retired"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已停用"
+          }
+        }
+      }
+    },
+    "Retry": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重试"
+          }
+        }
+      }
+    },
+    "Retry analysis": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry analysis"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重试分析"
+          }
+        }
+      }
+    },
+    "Retry failed import": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry failed import"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重试失败的导入"
+          }
+        }
+      }
+    },
+    "Retry restoring sign-in": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry restoring sign-in"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重试恢复登录"
+          }
+        }
+      }
+    },
+    "Revision %@": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revision %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "版本 %@"
+          }
+        }
+      }
+    },
+    "Route": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Route"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "路线"
+          }
+        }
+      }
+    },
+    "Route points": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Route points"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "路线点"
+          }
+        }
+      }
+    },
+    "Route points: %lld": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld route point"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld route points"
+                }
+              }
+            }
+          }
+        },
+        "zh-Hans": {
+          "variations": {
+            "plural": {
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld 个位置点"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Running": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Running"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "跑步"
+          }
+        }
+      }
+    },
+    "Running cadence": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Running cadence"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "步频"
+          }
+        }
+      }
+    },
+    "Running dynamics": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Running dynamics"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "跑姿"
+          }
+        }
+      }
+    },
+    "Running effectiveness": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Running effectiveness"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "跑步效率"
+          }
+        }
+      }
+    },
+    "Running shoes": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Running shoes"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "跑鞋"
+          }
+        }
+      }
+    },
+    "Sample coverage meets the requirement": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sample coverage meets the requirement"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "采样覆盖满足要求"
+          }
+        }
+      }
+    },
+    "Samples: %lld": {
+      "comment": "Count is an integer. Use native plural rules; Chinese has only the other category.",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld sample"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld samples"
+                }
+              }
+            }
+          }
+        },
+        "zh-Hans": {
+          "variations": {
+            "plural": {
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld 个样本"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Satellite map": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Satellite map"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "卫星地图"
+          }
+        }
+      }
+    },
+    "Save": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存"
+          }
+        }
+      }
+    },
+    "Save to Apple Health": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save to Apple Health"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "存入 Apple 健康"
+          }
+        }
+      }
+    },
+    "Saved to this account · Revision %@": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved to this account · Revision %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已保存到当前账号 · 版本 %@"
+          }
+        }
+      }
+    },
+    "Saving…": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saving…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在保存…"
+          }
+        }
+      }
+    },
+    "Second half": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Second half"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "后半程"
+          }
+        }
+      }
+    },
+    "Select cycling or running workouts, then review and confirm uploading to the current server.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select cycling or running workouts, then review and confirm uploading to the current server."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选择骑行或跑步，预览后再确认上传到当前服务器。"
+          }
+        }
+      }
+    },
+    "Select the zero-start assumption or enter nonnegative initial CTL and ATL values.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select the zero-start assumption or enter nonnegative initial CTL and ATL values."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请选择零起点假设，或填写非负的初始 CTL 和 ATL。"
+          }
+        }
+      }
+    },
+    "Select up to 10 workouts per batch.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select up to 10 workouts per batch."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每批最多选择 10 条运动，请分批导入。"
+          }
+        }
+      }
+    },
+    "Select workouts": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select workouts"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选择运动"
+          }
+        }
+      }
+    },
+    "Server": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "服务器"
+          }
+        }
+      }
+    },
+    "Server address": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server address"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "服务器地址"
+          }
+        }
+      }
+    },
+    "Server-calculated summary": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server-calculated summary"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "后端计算摘要"
+          }
+        }
+      }
+    },
+    "Settings": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "设置"
+          }
+        }
+      }
+    },
+    "Settings are being saved. Try again shortly.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings are being saved. Try again shortly."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "设置正在保存，请稍后重试。"
+          }
+        }
+      }
+    },
+    "Settings are loading. Try again shortly.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings are loading. Try again shortly."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "设置正在加载，请稍后重试。"
+          }
+        }
+      }
+    },
+    "Sign in": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登录"
+          }
+        }
+      }
+    },
+    "Sign in again to save settings.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in again to save settings."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请重新登录后保存设置。"
+          }
+        }
+      }
+    },
+    "Sign in to view your workout and health records.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in to view your workout and health records."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登录后，继续查看你的运动与健康记录。"
+          }
+        }
+      }
+    },
+    "Sign out": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign out"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "退出登录"
+          }
+        }
+      }
+    },
+    "Sign-in was cancelled, but the server session could not be revoked. Revoke it later in session management.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign-in was cancelled, but the server session could not be revoked. Revoke it later in session management."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登录已取消，但服务器会话未能撤销；可稍后在会话管理中撤销。"
+          }
+        }
+      }
+    },
+    "Sign-out has not completed. Try again.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign-out has not completed. Try again."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "退出尚未完成，请重试。"
+          }
+        }
+      }
+    },
+    "Signing in…": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signing in…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在登录…"
+          }
+        }
+      }
+    },
+    "Signing out…": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signing out…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在退出…"
+          }
+        }
+      }
+    },
+    "Software settings": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Software settings"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "软件设置"
+          }
+        }
+      }
+    },
+    "Speed": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speed"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "速度"
+          }
+        }
+      }
+    },
+    "Speed change in the second half": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speed change in the second half"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "后半程速度变化"
+          }
+        }
+      }
+    },
+    "Split": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Split"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "分段"
+          }
+        }
+      }
+    },
+    "Split %lld": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Split %lld"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "第 %lld 段"
+          }
+        }
+      }
+    },
+    "Split length": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Split length"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "分段长度"
+          }
+        }
+      }
+    },
+    "Splits and sensor averages use elapsed time, including stops. Heart rate load uses recorded timer events to exclude pauses when available.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Splits and sensor averages use elapsed time, including stops. Heart rate load uses recorded timer events to exclude pauses when available."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "分段与传感器均值使用经过时间，包含停车。心率负荷优先使用记录中的计时事件排除暂停。"
+          }
+        }
+      }
+    },
+    "Sport": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sport"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "运动类型"
+          }
+        }
+      }
+    },
+    "Standard map": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Standard map"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "标准地图"
+          }
+        }
+      }
+    },
+    "Start": {
+      "comment": "iOS screen-specific wording; retain the distinct route, date, navigation and form contexts.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开始"
+          }
+        }
+      }
+    },
+    "Statistics and distributions are time-weighted, connecting samples at most 120 seconds apart. Zeros are retained; gaps are not filled with zeros.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Statistics and distributions are time-weighted, connecting samples at most 120 seconds apart. Zeros are retained; gaps are not filled with zeros."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "统计与分布按时间加权，最多连接相邻 120 秒内的采样。零值保留，空档不补零。"
+          }
+        }
+      }
+    },
+    "Step length": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Step length"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "步长"
+          }
+        }
+      }
+    },
+    "Steps (complete cadence integral)": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steps (complete cadence integral)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "步数（完整步频积分）"
+          }
+        }
+      }
+    },
+    "System": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "跟随系统"
+          }
+        }
+      }
+    },
+    "TRIMP coefficient": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "TRIMP coefficient"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "TRIMP 指数"
+          }
+        }
+      }
+    },
+    "The Apple Health write and server receipt are both confirmed.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Apple Health write and server receipt are both confirmed."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple 健康写入与后端回执均已确认。"
+          }
+        }
+      }
+    },
+    "The Apple Health write has not been confirmed. Unlock this device and allow read access, then retry. The workout will not be written again.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Apple Health write has not been confirmed. Unlock this device and allow read access, then retry. The workout will not be written again."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "尚不能确认 Apple 健康的写入结果。请解锁设备并允许读取后重试；不会重复写入。"
+          }
+        }
+      }
+    },
+    "The data has changed. Refresh and try again.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The data has changed. Refresh and try again."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "数据已经变化，请刷新后重试。"
+          }
+        }
+      }
+    },
+    "The effective time must be after the previous parameter record.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The effective time must be after the previous parameter record."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "生效时间需要晚于上一条参数记录。"
+          }
+        }
+      }
+    },
+    "The operation was cancelled.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The operation was cancelled."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "操作已取消。"
+          }
+        }
+      }
+    },
+    "The preview includes readable samples associated with this workout and from the same source. Missing data are not estimated. Interval samples use their end time; distance and energy accumulate available increments. Step counts are not converted to cadence. Laps, device-specific fields and other sports are not included.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The preview includes readable samples associated with this workout and from the same source. Missing data are not estimated. Interval samples use their end time; distance and energy accumulate available increments. Step counts are not converted to cadence. Laps, device-specific fields and other sports are not included."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "预览只包含可读取、关联于这条运动且来自同一来源的样本。缺失数据不会补算；区间样本显示在结束时刻，距离和能量累计可用增量。步数不推算为步频。暂不包含圈段、设备专有字段或其他运动类型。"
+          }
+        }
+      }
+    },
+    "The request could not be completed. Try again.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The request could not be completed. Try again."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请求未能完成，请重试。"
+          }
+        }
+      }
+    },
+    "The server could not complete the request. Try again.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The server could not complete the request. Try again."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "服务器暂时无法完成请求，请重试。"
+          }
+        }
+      }
+    },
+    "The server could not import this data. Existing workouts are unchanged.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The server could not import this data. Existing workouts are unchanged."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "后端未能导入这些数据；已有运动记录保持不变。"
+          }
+        }
+      }
+    },
+    "The server did not return a complete import result. Check again.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The server did not return a complete import result. Check again."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "服务器未返回完整导入结果，请重新检查。"
+          }
+        }
+      }
+    },
+    "The server has not confirmed completion. Check again later.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The server has not confirmed completion. Check again later."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "服务器尚未确认完成，可稍后重新检查。"
+          }
+        }
+      }
+    },
+    "The server requires HTTPS. Development builds allow HTTP only for loopback addresses.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The server requires HTTPS. Development builds allow HTTP only for loopback addresses."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "后端需要使用 HTTPS；开发模式只允许本机地址使用 HTTP。"
+          }
+        }
+      }
+    },
+    "The submitted data is invalid. Check it and try again.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The submitted data is invalid. Check it and try again."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "提交的数据不符合要求，请检查后重试。"
+          }
+        }
+      }
+    },
+    "The username or password is incorrect.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The username or password is incorrect."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用户名或密码不正确。"
+          }
+        }
+      }
+    },
+    "The workout has changed. Refresh to view its current power curve.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The workout has changed. Refresh to view its current power curve."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "训练已更新，请刷新后查看对应的功率曲线。"
+          }
+        }
+      }
+    },
+    "The workout record changed. Reload details.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The workout record changed. Reload details."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "运动记录已更新，请重新加载详情。"
+          }
+        }
+      }
+    },
+    "The workout was written, but the route has not been confirmed. Unlock this device and allow read access, then retry.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The workout was written, but the route has not been confirmed. Unlock this device and allow read access, then retry."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "运动已写入，但路线结果尚不能确认。请解锁设备并允许读取后重试。"
+          }
+        }
+      }
+    },
+    "Theme": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Theme"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "主题"
+          }
+        }
+      }
+    },
+    "There are not enough continuous power samples to calculate best sustained power.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There are not enough continuous power samples to calculate best sustained power."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有足够的连续功率采样，无法计算最佳持续功率。"
+          }
+        }
+      }
+    },
+    "These are source-recorded summaries. Metabolic energy and mechanical work are shown separately; missing metrics are not estimated.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These are source-recorded summaries. Metabolic energy and mechanical work are shown separately; missing metrics are not estimated."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "以上保留源记录的摘要，代谢能量与机械功分别展示。没有记录的指标不会用估值补齐。"
+          }
+        }
+      }
+    },
+    "This Apple Health workout cannot be read. Select it again.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This Apple Health workout cannot be read. Select it again."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这条苹果健康记录当前不可读取，请重新选择。"
+          }
+        }
+      }
+    },
+    "This action is not allowed.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This action is not allowed."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "当前操作未获允许。"
+          }
+        }
+      }
+    },
+    "This data cannot be safely exported.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This data cannot be safely exported."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这些数据暂不能安全导出。"
+          }
+        }
+      }
+    },
+    "This data exceeds the server limit and cannot be submitted.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This data exceeds the server limit and cannot be submitted."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "数据量超过服务器限制，暂时无法提交。"
+          }
+        }
+      }
+    },
+    "This history cannot be calculated. Adjust the analysis options and try again.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This history cannot be calculated. Adjust the analysis options and try again."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "当前历史数据无法计算，请调整分析条件后重试。"
+          }
+        }
+      }
+    },
+    "This history exceeds the processing limit. Choose a shorter date range and try again.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This history exceeds the processing limit. Choose a shorter date range and try again."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这段历史的数据量超过处理上限，请缩短日期范围后重试。"
+          }
+        }
+      }
+    },
+    "This list has changed. Pull down to refresh.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This list has changed. Pull down to refresh."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "列表分页已失效，请下拉刷新。"
+          }
+        }
+      }
+    },
+    "This record does not exist or was deleted.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This record does not exist or was deleted."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "记录不存在或已被删除。"
+          }
+        }
+      }
+    },
+    "This record is excluded from statistics": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This record is excluded from statistics"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此记录不计入统计"
+          }
+        }
+      }
+    },
+    "This source was deleted and blocked from reimporting.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This source was deleted and blocked from reimporting."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此来源已被删除并禁止重新导入。"
+          }
+        }
+      }
+    },
+    "This workout contains overlapping or unsupported samples and cannot be fully imported yet.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This workout contains overlapping or unsupported samples and cannot be fully imported yet."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此记录含有重叠或无法表示的样本，暂不能完整导入。"
+          }
+        }
+      }
+    },
+    "This workout has too many samples to import.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This workout has too many samples to import."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此记录的样本过多，暂不支持导入。"
+          }
+        }
+      }
+    },
+    "This workout is being exported. Try again shortly.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This workout is being exported. Try again shortly."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此记录正在导出，请稍后再试。"
+          }
+        }
+      }
+    },
+    "This workout is excluded from statistics": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This workout is excluded from statistics"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此运动不计入统计"
+          }
+        }
+      }
+    },
+    "Threshold heart rate (bpm)": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Threshold heart rate (bpm)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "阈值心率 (bpm)"
+          }
+        }
+      }
+    },
+    "Threshold power (W)": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Threshold power (W)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "阈值功率 (W)"
+          }
+        }
+      }
+    },
+    "Threshold power used": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Threshold power used"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用的阈值功率"
+          }
+        }
+      }
+    },
+    "Time": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Time"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "时间"
+          }
+        }
+      }
+    },
+    "Time zone": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Time zone"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "时区"
+          }
+        }
+      }
+    },
+    "Timer time": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Timer time"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "计时时间"
+          }
+        }
+      }
+    },
+    "Timing basis": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Timing basis"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "计时依据"
+          }
+        }
+      }
+    },
+    "Too many requests. Try again later.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Too many requests. Try again later."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请求过于频繁，请稍后重试。"
+          }
+        }
+      }
+    },
+    "Total ascent": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total ascent"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "累计爬升"
+          }
+        }
+      }
+    },
+    "Total descent": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total descent"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "累计下降"
+          }
+        }
+      }
+    },
+    "Training balance CTL − ATL": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Training balance CTL − ATL"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "负荷平衡 CTL − ATL"
+          }
+        }
+      }
+    },
+    "Training trends": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Training trends"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "训练趋势"
+          }
+        }
+      }
+    },
+    "Type": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Type"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "类型"
+          }
+        }
+      }
+    },
+    "Units": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Units"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "单位"
+          }
+        }
+      }
+    },
+    "Unrecorded metrics": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unrecorded metrics"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未记录的指标"
+          }
+        }
+      }
+    },
+    "Until %@": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Until %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "至 %@"
+          }
+        }
+      }
+    },
+    "Update personal parameters": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update personal parameters"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更新个人参数"
+          }
+        }
+      }
+    },
+    "Username": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Username"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用户名"
+          }
+        }
+      }
+    },
+    "Uses elapsed time, including stops. The final split retains its actual distance.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uses elapsed time, including stops. The final split retains its actual distance."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "按经过时间计算，包含停止时间。末段保留实际距离。"
+          }
+        }
+      }
+    },
+    "Valid coverage": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Valid coverage"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "有效覆盖"
+          }
+        }
+      }
+    },
+    "Valid coverage: %@": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Valid coverage: %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "有效覆盖 %@"
+          }
+        }
+      }
+    },
+    "Values must be greater than zero. Leave missing data empty.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Values must be greater than zero. Leave missing data empty."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "数值需要大于零；没有数据时请留空。"
+          }
+        }
+      }
+    },
+    "Variability index": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Variability index"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "变异指数"
+          }
+        }
+      }
+    },
+    "Vertical oscillation": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vertical oscillation"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "垂直振幅"
+          }
+        }
+      }
+    },
+    "Vertical ratio": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vertical ratio"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "垂直比"
+          }
+        }
+      }
+    },
+    "View all splits (%lld)": {
+      "comment": "Count is an integer. Use native plural rules; Chinese has only the other category.",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "View %lld split"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "View all %lld splits"
+                }
+              }
+            }
+          }
+        },
+        "zh-Hans": {
+          "variations": {
+            "plural": {
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "查看全部 %lld 个分段"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "View best power data": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View best power data"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "查看最佳功率数据"
+          }
+        }
+      }
+    },
+    "View recorded laps (%lld)": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "View %lld recorded lap"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "View %lld recorded laps"
+                }
+              }
+            }
+          }
+        },
+        "zh-Hans": {
+          "variations": {
+            "plural": {
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "查看 %lld 个记录分段"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "View summary and available data": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View summary and available data"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "查看摘要及可用数据"
+          }
+        }
+      }
+    },
+    "Weight (kg, optional)": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weight (kg, optional)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重量 (kg，可选)"
+          }
+        }
+      }
+    },
+    "Welcome back": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Welcome back"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "欢迎回来"
+          }
+        }
+      }
+    },
+    "What the export includes": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What the export includes"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "导出包含哪些数据"
+          }
+        }
+      }
+    },
+    "When confirmed, days without workouts count as rest. Otherwise they remain unknown, so missing records are not treated as zero load.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When confirmed, days without workouts count as rest. Otherwise they remain unknown, so missing records are not treated as zero load."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "确认后，没有运动的日子按休息日计算。未确认时保留未知状态，避免把漏记的运动当作零负荷。"
+          }
+        }
+      }
+    },
+    "Workout details": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Workout details"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "运动详情"
+          }
+        }
+      }
+    },
+    "Workout equipment": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Workout equipment"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "运动中的器材"
+          }
+        }
+      }
+    },
+    "Workout notes": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Workout notes"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "运动备注"
+          }
+        }
+      }
+    },
+    "Workout route": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Workout route"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "运动路线"
+          }
+        }
+      }
+    },
+    "Workout-recorded weight and threshold take precedence. Training stress, efficiency and decoupling require full coverage; unsupported results show no data.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Workout-recorded weight and threshold take precedence. Training stress, efficiency and decoupling require full coverage; unsupported results show no data."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "源记录中的体重和阈值优先。训练压力、效率和解耦需要完整覆盖；没有依据时显示无数据。"
+          }
+        }
+      }
+    },
+    "Workouts": {
+      "comment": "iOS screen-specific wording; retain the distinct route, date, navigation and form contexts.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Workouts"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "运动"
+          }
+        }
+      }
+    },
+    "Write the previewed data to Apple Health?": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write the previewed data to Apple Health?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "确认将预览的数据写入 Apple 健康？"
+          }
+        }
+      }
+    },
+    "Write to Apple Health / Resume export": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write to Apple Health / Resume export"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "写入 Apple 健康 / 恢复导出"
+          }
+        }
+      }
+    },
+    "Your preferences, personal parameters and sports equipment.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your preferences, personal parameters and sports equipment."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "你的偏好、身体参数与运动器材。"
+          }
+        }
+      }
+    },
+    "Your session has expired. Sign in again.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your session has expired. Sign in again."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登录已失效，请重新登录。"
+          }
+        }
+      }
+    },
+    "Zone": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zone"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "区间"
+          }
+        }
+      }
+    },
+    "steps": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "steps"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "步"
+          }
+        }
+      }
+    },
+    "steps/min": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "steps/min"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "步/分"
+          }
+        }
+      }
+    },
+    "Single workout · W · Includes recorded zeros. Samples up to %lld seconds apart are linearly interpolated; longer gaps break the interval without zero filling or extrapolation. Duration uses a logarithmic axis and connecting lines are reading guides. Interval times are relative to workout start.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Single workout · W · Includes recorded zeros. Samples up to %lld seconds apart are linearly interpolated; longer gaps break the interval without zero filling or extrapolation. Duration uses a logarithmic axis and connecting lines are reading guides. Interval times are relative to workout start."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "单次训练 · W · 包含真实零值。间隔最多 %lld 秒时线性插值，更长缺口切断区间，不补零或外推。横轴为持续时长（对数），连线仅辅助阅读；区间时间相对训练开始。"
+          }
+        }
+      }
+    },
+    "%@ and above": {
+      "comment": "Unbounded measurement zone, including its unit.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ and above"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 以上"
+          }
+        }
+      }
+    },
+    "Heart rate coverage is below 95%; the load below covers only the observed portion": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heart rate coverage is below 95%; the load below covers only the observed portion"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "心率覆盖不足 95%，以下仅为已观测部分的负荷"
+          }
+        }
+      }
+    },
+    "Zone boundaries are 55%, 75%, 90%, 105%, 120% and 150% of threshold power. Only valid power coverage is included.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zone boundaries are 55%, 75%, 90%, 105%, 120% and 150% of threshold power. Only valid power coverage is included."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "阈值功率的 55%、75%、90%、105%、120%、150% 为区间边界。只计入有效功率覆盖。"
+          }
+        }
+      }
+    },
+    "Zones use heart rate reserve boundaries of 50%, 60%, 70%, 80% and 90%. Z0 is below 50%; Z6 is at or above the configured maximum heart rate. Readings above maximum are excluded from load.": {
+      "comment": "Application-owned iOS interface text. Keep identifiers, values and metric units unchanged.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zones use heart rate reserve boundaries of 50%, 60%, 70%, 80% and 90%. Z0 is below 50%; Z6 is at or above the configured maximum heart rate. Readings above maximum are excluded from load."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "区间按心率储备划分：50%、60%、70%、80%、90%。Z0 低于 50%；Z6 为达到或超过配置的最大心率。超出最大心率的读数不计入负荷。"
+          }
+        }
+      }
+    },
+    "%@": {
+      "shouldTranslate": false,
+      "comment": "Verbatim content, product name, canonical unit, or fixed numeric notation."
+    },
+    "%@ · %@": {
+      "shouldTranslate": false,
+      "comment": "Verbatim content, product name, canonical unit, or fixed numeric notation."
+    },
+    "%@ – %@": {
+      "shouldTranslate": false,
+      "comment": "Verbatim content, product name, canonical unit, or fixed numeric notation."
+    },
+    "AI Fitness": {
+      "shouldTranslate": false,
+      "comment": "Verbatim content, product name, canonical unit, or fixed numeric notation."
+    },
+    "1 km": {
+      "shouldTranslate": false,
+      "comment": "Verbatim content, product name, canonical unit, or fixed numeric notation."
+    },
+    "5 km": {
+      "shouldTranslate": false,
+      "comment": "Verbatim content, product name, canonical unit, or fixed numeric notation."
+    },
+    "1.67": {
+      "shouldTranslate": false,
+      "comment": "Verbatim content, product name, canonical unit, or fixed numeric notation."
+    },
+    "1.92": {
+      "shouldTranslate": false,
+      "comment": "Verbatim content, product name, canonical unit, or fixed numeric notation."
+    },
+    "HRSS": {
+      "shouldTranslate": false,
+      "comment": "Verbatim content, product name, canonical unit, or fixed numeric notation."
+    },
+    "TRIMPexp": {
+      "shouldTranslate": false,
+      "comment": "Verbatim content, product name, canonical unit, or fixed numeric notation."
+    },
+    "W": {
+      "shouldTranslate": false,
+      "comment": "Verbatim content, product name, canonical unit, or fixed numeric notation."
+    },
+    "Z%lld": {
+      "shouldTranslate": false,
+      "comment": "Verbatim content, product name, canonical unit, or fixed numeric notation."
+    },
+    "https://fitness.example.com": {
+      "shouldTranslate": false,
+      "comment": "Verbatim content, product name, canonical unit, or fixed numeric notation."
+    },
+    "km/h": {
+      "shouldTranslate": false,
+      "comment": "Verbatim content, product name, canonical unit, or fixed numeric notation."
+    },
+    "Workout history": {
+      "comment": "iOS screen-specific wording; retain the distinct route, date, navigation and form contexts.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Workout history"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "运动记录"
+          }
+        }
+      }
+    },
+    "Route start": {
+      "comment": "iOS screen-specific wording; retain the distinct route, date, navigation and form contexts.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Route start"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "起点"
+          }
+        }
+      }
+    },
+    "Body parameters": {
+      "comment": "iOS screen-specific wording; retain the distinct route, date, navigation and form contexts.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Body parameters"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "身体参数"
+          }
+        }
+      }
+    },
+    "Effort duration": {
+      "comment": "iOS screen-specific wording; retain the distinct route, date, navigation and form contexts.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Effort duration"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "持续时长"
+          }
+        }
+      }
+    },
+    "Edit parameters": {
+      "comment": "iOS screen-specific wording; retain the distinct route, date, navigation and form contexts.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit parameters"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更新个人参数"
+          }
+        }
+      }
+    },
+    "Not set": {
+      "comment": "iOS screen-specific wording; retain the distinct route, date, navigation and form contexts.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not set"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未设置"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

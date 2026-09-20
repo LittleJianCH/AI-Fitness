@@ -23,18 +23,9 @@ public struct HealthLocation: Sendable {
     }
 }
 
-public enum HealthImportError: LocalizedError {
+public enum HealthImportError: Error, Equatable, Sendable {
     case unavailable, unsupportedWorkout, ambiguousSamples, tooManySamples, missingWorkout, invalidAcknowledgement
-    public var errorDescription: String? {
-        switch self {
-        case .unavailable: "此设备不支持苹果健康。"
-        case .unsupportedWorkout: "目前支持单项骑行或跑步，多项目运动暂不支持。"
-        case .ambiguousSamples: "此记录含有重叠或无法表示的样本，暂不能完整导入。"
-        case .tooManySamples: "此记录的样本过多，暂不支持导入。"
-        case .missingWorkout: "这条苹果健康记录当前不可读取，请重新选择。"
-        case .invalidAcknowledgement: "服务器未返回完整导入结果，请重新检查。"
-        }
-    }
+
 }
 
 public struct HealthImportPreview: Identifiable, Sendable {

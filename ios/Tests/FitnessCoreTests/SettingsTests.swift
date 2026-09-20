@@ -156,6 +156,37 @@ final class SettingsTests: XCTestCase {
         }
     }
 
+    @MainActor func testRefreshPreservesAppearanceAndBusySaveExplainsRejection() async {
+        let service = ControlledSettings()
+        let store = SettingsStore(service: service, session: await signedIn())
+        var dark = empty
+        dark.settingsSoftware.softwareAppearance = .darkAppearance
+        let first = Task { await store.load() }
+        await service.waitForRequest()
+        await service.respond(.success(dark))
+        await first.value
+        let reload = Task { await store.load() }
+        await service.waitForRequest()
+        XCTAssertEqual(store.settings, dark)
+        let acceptedWhileLoading = await store.save(dark)
+        XCTAssertFalse(acceptedWhileLoading)
+        XCTAssertEqual(store.message, .settingsLoading)
+        await service.respond(.failure(APIResponseError(status: 500, problem: nil, retryAfter: nil)))
+        await reload.value
+        XCTAssertEqual(store.settings, dark)
+        let save = Task { await store.save(dark) }
+        await service.waitForRequest()
+        let acceptedWhileSaving = await store.save(dark)
+        XCTAssertFalse(acceptedWhileSaving)
+        XCTAssertEqual(store.message, .settingsSaving)
+        var saved = dark
+        saved.settingsRevision = "1"
+        await service.respond(.success(saved))
+        let success = await save.value
+        XCTAssertTrue(success)
+        XCTAssertEqual(store.settings, saved)
+    }
+
     private var empty: UserSettings {
         .init(settingsBodyProfiles: [], settingsEquipment: [], settingsRevision: "0", settingsSoftware: .init(softwareAppearance: .systemAppearance))
     }

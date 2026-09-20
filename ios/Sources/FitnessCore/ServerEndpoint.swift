@@ -28,13 +28,8 @@ public struct ServerEndpoint: Hashable, Sendable {
     }
 }
 
-public enum EndpointError: LocalizedError {
+public enum EndpointError: Error, Equatable, Sendable {
     case invalidOrigin, requiresHTTPS
 
-    public var errorDescription: String? {
-        switch self {
-        case .invalidOrigin: "请输入后端地址，包含协议和可选端口，不包含路径、查询参数或账号。"
-        case .requiresHTTPS: "后端需要使用 HTTPS；开发模式只允许本机地址使用 HTTP。"
-        }
-    }
+
 }

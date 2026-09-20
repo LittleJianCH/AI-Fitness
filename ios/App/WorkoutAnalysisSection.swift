@@ -39,31 +39,31 @@ struct WorkoutAnalysisSection: View {
                 NavigationLink {
                     TrainingHistoryScreen(api: api, session: session, ending: min(Date(), workout.workoutObservation.observationRange.rangeStart))
                 } label: {
-                    Label("体能与疲劳趋势", systemImage: "chart.xyaxis.line")
+                    Label("Fitness and fatigue trends", systemImage: "chart.xyaxis.line")
                         .frame(maxWidth: .infinity, alignment: .leading).padding(20).fitnessCard()
                 }
                 if let running = analysis.analysisRunning { RunningDynamicsCard(running: running) }
-                SplitAnalysisCard(sets: analysis.analysisSplits, halves: analysis.analysisHalves, isRunning: workout.sportName == "跑步")
-                DisclosureGroup("分析方法与个人参数") {
+                SplitAnalysisCard(sets: analysis.analysisSplits, halves: analysis.analysisHalves, isRunning: workout.sportKind == .running)
+                DisclosureGroup("Analysis method and personal parameters") {
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("统计与分布按时间加权，最多连接相邻 120 秒内的采样。零值保留，空档不补零。")
-                        Text("功率计算仅连接相邻 5 秒内的采样。标准化功率使用完整的 30 秒滚动窗口；短于 10 分钟的结果需谨慎解读。")
-                        Text("分段与传感器均值使用经过时间，包含停车。心率负荷优先使用记录中的计时事件排除暂停。")
+                        Text("Statistics and distributions are time-weighted, connecting samples at most 120 seconds apart. Zeros are retained; gaps are not filled with zeros.")
+                        Text("Power connects samples at most 5 seconds apart. Normalized power uses complete 30-second rolling windows; interpret results under 10 minutes cautiously.")
+                        Text("Splits and sensor averages use elapsed time, including stops. Heart rate load uses recorded timer events to exclude pauses when available.")
                         if let profile = analysis.analysisBodyProfile {
-                            LabeledContent("个人参数生效时间", value: profile.bodyEffectiveFrom.formatted(date: .abbreviated, time: .shortened))
-                        } else { Text("运动开始时没有生效的个人参数；可在「设置 → 个人身体参数」中添加。") }
-                        LabeledContent("算法", value: analysis.analysisMethod)
-                        LabeledContent("参数版本", value: analysis.analysisSettingsRevision)
+                            LabeledContent(String(localized: "Personal parameters effective from"), value: profile.bodyEffectiveFrom.formatted(date: .abbreviated, time: .shortened))
+                        } else { Text("No personal parameters were effective at the workout start. Add them in Settings → Personal parameters.") }
+                        LabeledContent(String(localized: "Algorithm"), value: analysis.analysisMethod)
+                        LabeledContent(String(localized: "Parameter revision"), value: analysis.analysisSettingsRevision)
                     }.font(.footnote).foregroundStyle(.secondary).padding(.top, 12)
                 }.padding(20).fitnessCard()
-            } else if store.isLoading { ProgressView("正在分析运动…").frame(maxWidth: .infinity) }
+            } else if store.isLoading { ProgressView("Analyzing workout…").frame(maxWidth: .infinity) }
             if store.needsWorkoutRefresh {
-                Label("运动记录已更新，请重新加载详情。", systemImage: "arrow.clockwise")
-                Button("重新加载详情", action: refreshWorkout)
+                Label("The workout record changed. Reload details.", systemImage: "arrow.clockwise")
+                Button("Reload details", action: refreshWorkout)
             }
             if let message = store.message {
-                Text(message).foregroundStyle(.red)
-                Button("重试分析") { retry = Task { await load() } }
+                IssueText(message).foregroundStyle(.red)
+                Button("Retry analysis") { retry = Task { await load() } }
             }
         }
         .task(id: workout.workoutRevision) { await load() }
@@ -81,16 +81,16 @@ private struct MetricAnalysisCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            FitnessSectionTitle(title: metric.title, color: metric.accent)
+            FitnessSectionTitle(title: metric.titleResource, color: metric.accent)
             VStack(alignment: .leading, spacing: 18) {
                 if let statistics {
                     HStack(alignment: .top) {
-                        if metric.id == "speed", workout.sportName == "跑步" {
-                            FitnessStat(title: "平均配速", value: WorkoutFormat.pace(statistics.metricStatistics.averageValue), prominent: true)
-                            FitnessStat(title: "最快采样配速", value: WorkoutFormat.pace(statistics.metricStatistics.maximumValue))
+                        if metric.id == "speed", workout.sportKind == .running {
+                            FitnessStat(title: "Average pace", value: WorkoutFormat.pace(statistics.metricStatistics.averageValue), prominent: true)
+                            FitnessStat(title: "Fastest sample pace", value: WorkoutFormat.pace(statistics.metricStatistics.maximumValue))
                         } else {
-                            FitnessStat(title: "平均", value: metric.displayValue(statistics.metricStatistics.averageValue), prominent: true)
-                            FitnessStat(title: "最大", value: metric.displayValue(statistics.metricStatistics.maximumValue))
+                            FitnessStat(title: "Average", value: metric.localizedValue(statistics.metricStatistics.averageValue), prominent: true)
+                            FitnessStat(title: "Maximum", value: metric.localizedValue(statistics.metricStatistics.maximumValue))
                         }
                     }
                 }
@@ -98,11 +98,11 @@ private struct MetricAnalysisCard: View {
                     .frame(height: 165).accessibilityIdentifier("metric-\(metric.id)")
                 HStack {
                     if let statistics {
-                        Text("有效覆盖 " + WorkoutFormat.duration(statistics.metricCoveredSeconds))
+                        Text("Valid coverage: \(WorkoutFormat.duration(statistics.metricCoveredSeconds))")
                             .font(.caption).foregroundStyle(.secondary)
                     }
                     Spacer()
-                    NavigationLink("详细分析") {
+                    NavigationLink("Detailed analysis") {
                         MetricAnalysisScreen(workout: workout, metric: metric, statistics: statistics, analysis: analysis)
                     }.font(.subheadline.weight(.semibold))
                         .accessibilityIdentifier("metricAnalysis-\(metric.id)")
@@ -115,19 +115,19 @@ private struct MetricAnalysisCard: View {
 struct PowerSummaryCard: View {
     let power: Components.Schemas.PowerAnalysis
     var body: some View {
-        AnalysisCard(title: "功率分析", color: .purple) {
-            analysisRow("标准化功率", power.powerNormalized, "W")
-            analysisRow("变异指数", power.powerVariabilityIndex, "", digits: 2)
-            analysisRow("强度因子", power.powerIntensityFactor, "", digits: 2)
-            analysisRow("功率训练压力", power.powerStressScore, "", digits: 1)
-            analysisRow("平均功率 / 体重", power.powerWattsPerKilogram, "W/kg", digits: 2)
-            analysisRow("观测机械功", power.powerWorkJoules.map { $0 / 1000 }, "kJ", digits: 1)
-            analysisRow("效率因子", power.powerEfficiency, "W/bpm", digits: 2)
-            analysisRow("前后半程功率 / 心率解耦", power.powerDecouplingPercent, "%", digits: 1)
+        AnalysisCard(title: "Power analysis", color: .purple) {
+            analysisRow("Normalized power", power.powerNormalized, "W")
+            analysisRow("Variability index", power.powerVariabilityIndex, "", digits: 2)
+            analysisRow("Intensity factor", power.powerIntensityFactor, "", digits: 2)
+            analysisRow("Power training stress", power.powerStressScore, "", digits: 1)
+            analysisRow("Average power / body weight", power.powerWattsPerKilogram, "W/kg", digits: 2)
+            analysisRow("Observed mechanical work", power.powerWorkJoules.map { $0 / 1000 }, "kJ", digits: 1)
+            analysisRow("Efficiency factor", power.powerEfficiency, "W/bpm", digits: 2)
+            analysisRow("Power / heart rate decoupling between halves", power.powerDecouplingPercent, "%", digits: 1)
             Divider()
-            analysisRow("使用的阈值功率", power.powerThresholdWatts, "W")
-            analysisRow("使用的体重", power.powerAthleteKilograms, "kg", digits: 1)
-            Text("源记录中的体重和阈值优先。训练压力、效率和解耦需要完整覆盖；没有依据时显示无数据。")
+            analysisRow("Threshold power used", power.powerThresholdWatts, "W")
+            analysisRow("Body weight used", power.powerAthleteKilograms, "kg", digits: 1)
+            Text("Workout-recorded weight and threshold take precedence. Training stress, efficiency and decoupling require full coverage; unsupported results show no data.")
                 .font(.footnote).foregroundStyle(.secondary)
         }
     }
@@ -137,24 +137,24 @@ private struct HeartLoadCard: View {
     let heart: Components.Schemas.HeartAnalysis
     private var status: String {
         switch heart.heartLoadStatus {
-        case .heartLoadAvailable: "采样覆盖满足要求"
-        case .heartProfileMissing: "请在设置中补充该运动开始时生效的心率参数"
-        case .heartCoverageInsufficient: "心率覆盖不足 95%，以下仅为已观测部分的负荷"
-        case .heartNoActiveTime: "没有有效计时时间"
-        case .heartExcluded: "此运动不计入统计"
-        case .heartCalculationUnavailable: "当前数据无法计算心率负荷"
+        case .heartLoadAvailable: String(localized: "Sample coverage meets the requirement")
+        case .heartProfileMissing: String(localized: "Add heart rate parameters effective at the workout start in Settings")
+        case .heartCoverageInsufficient: String(localized: "Heart rate coverage is below 95%; the load below covers only the observed portion")
+        case .heartNoActiveTime: String(localized: "No valid timer duration")
+        case .heartExcluded: String(localized: "This workout is excluded from statistics")
+        case .heartCalculationUnavailable: String(localized: "Heart rate load cannot be calculated from the current data")
         }
     }
     var body: some View {
-        AnalysisCard(title: "心率与训练负荷", color: .red) {
+        AnalysisCard(title: "Heart rate and training load", color: .red) {
             Text(status).font(.subheadline).foregroundStyle(.secondary)
             analysisRow("HRSS", heart.heartHrss, "", digits: 1)
             analysisRow("TRIMPexp", heart.heartTrimp, "", digits: 1)
-            analysisRow("心率覆盖率", heart.heartCoverageFraction.map { $0 * 100 }, "%", digits: 1)
-            LabeledContent("计时依据", value: heart.heartUsesRecordedTimer ? "记录中的计时事件" : "经过时间")
+            analysisRow("Heart rate coverage", heart.heartCoverageFraction.map { $0 * 100 }, "%", digits: 1)
+            LabeledContent(String(localized: "Timing basis"), value: heart.heartUsesRecordedTimer ? String(localized: "Recorded timer events") : String(localized: "Elapsed time"))
             if !heart.heartZones.isEmpty {
-                ZoneChart(zones: heart.heartZones, unit: "bpm", heart: true)
-                Text("区间按心率储备划分：50%、60%、70%、80%、90%。Z0 低于 50%；Z6 为达到或超过配置的最大心率。超出最大心率的读数不计入负荷。")
+                ZoneChart(zones: heart.heartZones, unit: "bpm")
+                Text("Zones use heart rate reserve boundaries of 50%, 60%, 70%, 80% and 90%. Z0 is below 50%; Z6 is at or above the configured maximum heart rate. Readings above maximum are excluded from load.")
                     .font(.footnote).foregroundStyle(.secondary)
             }
         }
@@ -164,13 +164,13 @@ private struct HeartLoadCard: View {
 private struct RunningDynamicsCard: View {
     let running: Components.Schemas.RunningAnalysis
     var body: some View {
-        AnalysisCard(title: "跑姿", color: .orange) {
-            analysisRow("步数（完整步频积分）", running.runningSteps, "步")
-            analysisRow("腾空时间", running.runningFlightSeconds.map { $0 * 1000 }, "ms")
-            analysisRow("垂直比", running.runningVerticalRatioPercent, "%", digits: 1)
-            analysisRow("腾空比", running.runningFlightRatioPercent, "%", digits: 1)
-            analysisRow("跑步效率", running.runningEffectiveness, "", digits: 2)
-            Text("腾空时间由步频和触地时间计算，垂直比由垂直振幅和每步步长计算；需要同时存在的有效采样。")
+        AnalysisCard(title: "Running dynamics", color: .orange) {
+            analysisRow("Steps (complete cadence integral)", running.runningSteps, String(localized: "steps"))
+            analysisRow("Flight time", running.runningFlightSeconds.map { $0 * 1000 }, "ms")
+            analysisRow("Vertical ratio", running.runningVerticalRatioPercent, "%", digits: 1)
+            analysisRow("Flight ratio", running.runningFlightRatioPercent, "%", digits: 1)
+            analysisRow("Running effectiveness", running.runningEffectiveness, "", digits: 2)
+            Text("Flight time uses cadence and ground contact time. Vertical ratio uses vertical oscillation and step length. Simultaneous valid samples are required.")
                 .font(.footnote).foregroundStyle(.secondary)
         }
     }
@@ -184,44 +184,44 @@ struct SplitAnalysisCard: View {
     private var splits: [Components.Schemas.DistanceSplit] { sets.first { $0.splitLengthMetres == length }?.distanceSplits ?? [] }
 
     var body: some View {
-        AnalysisCard(title: "距离分段", color: .blue) {
-            Picker("分段长度", selection: $length) {
+        AnalysisCard(title: "Distance splits", color: .blue) {
+            Picker("Split length", selection: $length) {
                 Text("1 km").tag(1000.0)
                 Text("5 km").tag(5000.0)
             }.pickerStyle(.segmented)
             if splits.isEmpty {
-                Text("需要连续、递增的距离采样才能计算分段。缺失或距离重置时不推算。")
+                Text("Continuous, increasing distance samples are required for splits. Gaps and distance resets are not extrapolated.")
                     .foregroundStyle(.secondary)
             } else {
                 Chart(splits.prefix(100), id: \.splitIndex) { split in
-                    BarMark(x: .value("分段", String(split.splitIndex)), y: .value("km/h", split.splitAverageSpeed * 3.6))
+                    BarMark(x: .value("Split", String(split.splitIndex)), y: .value("km/h", split.splitAverageSpeed * 3.6))
                         .foregroundStyle(.blue.gradient)
                 }.frame(height: 140)
-                NavigationLink("查看全部 \(splits.count) 个分段") {
+                NavigationLink("View all splits (\(splits.count))") {
                     List(splits, id: \.splitIndex) { split in
                         VStack(alignment: .leading, spacing: 10) {
                             HStack {
-                                Text("第 \(split.splitIndex) 段").font(.headline)
+                                Text("Split \(split.splitIndex)").font(.headline)
                                 Spacer()
                                 Text(WorkoutFormat.distance(split.splitDistanceMetres))
                             }
-                            LabeledContent("用时", value: WorkoutFormat.duration(split.splitEndSeconds - split.splitStartSeconds))
-                            LabeledContent(isRunning ? "配速" : "速度", value: isRunning ? WorkoutFormat.pace(split.splitAverageSpeed) : WorkoutFormat.number(split.splitAverageSpeed * 3.6, unit: "km/h", fractionDigits: 1))
-                            analysisRow("心率", split.splitHeartRate, "bpm")
-                            analysisRow("功率", split.splitPower, "W")
-                            analysisRow(isRunning ? "步频" : "踏频", split.splitCadence, isRunning ? "步/分" : "rpm")
-                            analysisRow("净海拔变化", split.splitElevationChange, "m")
+                            LabeledContent(String(localized: "Duration"), value: WorkoutFormat.duration(split.splitEndSeconds - split.splitStartSeconds))
+                            LabeledContent(isRunning ? String(localized: "Pace") : String(localized: "Speed"), value: isRunning ? WorkoutFormat.pace(split.splitAverageSpeed) : WorkoutFormat.number(split.splitAverageSpeed * 3.6, unit: "km/h", fractionDigits: 1))
+                            analysisRow("Heart rate", split.splitHeartRate, "bpm")
+                            analysisRow("Power", split.splitPower, "W")
+                            analysisRow(isRunning ? "Running cadence" : "Cycling cadence", split.splitCadence, isRunning ? String(localized: "steps/min") : "rpm")
+                            analysisRow("Net elevation change", split.splitElevationChange, "m")
                         }.padding(.vertical, 8)
-                    }.navigationTitle("\(Int(length / 1000)) km 分段")
+                    }.navigationTitle("\(Int(length / 1000)) km splits")
                 }.accessibilityIdentifier("distanceSplits")
             }
             if let halves {
                 Divider()
-                LabeledContent("前半程", value: speed(halves.firstHalfSpeed))
-                LabeledContent("后半程", value: speed(halves.secondHalfSpeed))
-                analysisRow("后半程速度变化", halves.secondHalfChangePercent, "%", digits: 1)
+                LabeledContent(String(localized: "First half"), value: speed(halves.firstHalfSpeed))
+                LabeledContent(String(localized: "Second half"), value: speed(halves.secondHalfSpeed))
+                analysisRow("Speed change in the second half", halves.secondHalfChangePercent, "%", digits: 1)
             }
-            Text("按经过时间计算，包含停止时间。末段保留实际距离。")
+            Text("Uses elapsed time, including stops. The final split retains its actual distance.")
                 .font(.footnote).foregroundStyle(.secondary)
         }
     }
@@ -231,17 +231,16 @@ struct SplitAnalysisCard: View {
 struct ZoneChart: View {
     let zones: [Components.Schemas.ZoneDuration]
     let unit: String
-    var heart = false
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Chart(zones, id: \.zoneIndex) { zone in
-                BarMark(x: .value("分钟", zone.zoneSeconds / 60), y: .value("区间", "Z\(zone.zoneIndex)"))
-                    .foregroundStyle(by: .value("区间", "Z\(zone.zoneIndex)"))
+                BarMark(x: .value("Minutes", zone.zoneSeconds / 60), y: .value("Zone", "Z\(zone.zoneIndex)"))
+                    .foregroundStyle(by: .value("Zone", "Z\(zone.zoneIndex)"))
             }.chartLegend(.hidden).frame(height: 190)
             ForEach(zones, id: \.zoneIndex) { zone in
                 HStack {
                     Text("Z\(zone.zoneIndex)").fontWeight(.semibold)
-                    Text(WorkoutFormat.number(zone.zoneLower, unit: "") + "–" + (zone.zoneUpper.map { WorkoutFormat.number($0, unit: unit) } ?? "以上"))
+                    Text(zone.zoneUpper.map { "\(WorkoutFormat.number(zone.zoneLower, unit: ""))–\(WorkoutFormat.number($0, unit: unit))" } ?? String(localized: "\(WorkoutFormat.number(zone.zoneLower, unit: unit)) and above"))
                         .foregroundStyle(.secondary)
                     Spacer()
                     Text(WorkoutFormat.duration(zone.zoneSeconds)).monospacedDigit()
@@ -252,7 +251,7 @@ struct ZoneChart: View {
 }
 
 struct AnalysisCard<Content: View>: View {
-    let title: String
+    let title: LocalizedStringResource
     var color: Color = .primary
     @ViewBuilder let content: () -> Content
     var body: some View {
@@ -264,8 +263,11 @@ struct AnalysisCard<Content: View>: View {
     }
 }
 
-func analysisRow(_ title: String, _ value: Double?, _ unit: String, digits: Int = 0) -> some View {
-    LabeledContent(title, value: WorkoutFormat.number(value, unit: unit, fractionDigits: digits)).monospacedDigit()
+@MainActor
+func analysisRow(_ title: LocalizedStringResource, _ value: Double?, _ unit: String, digits: Int = 0) -> some View {
+    LabeledContent { Text(WorkoutFormat.number(value, unit: unit, fractionDigits: digits)) } label: { LocalizedText(title) }
+        .monospacedDigit()
+        .accessibilityElement(children: .combine)
 }
 
 extension WorkoutMetric {

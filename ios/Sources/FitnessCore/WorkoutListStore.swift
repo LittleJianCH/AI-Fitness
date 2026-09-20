@@ -7,7 +7,7 @@ public final class WorkoutListStore {
     public private(set) var nextCursor: String?
     public private(set) var isLoading = false
     public private(set) var hasLoaded = false
-    public private(set) var message: String?
+    public private(set) var message: ClientIssue?
     public private(set) var sport: WorkoutSportFilter?
     @ObservationIgnored private let service: any WorkoutService
     @ObservationIgnored private let session: SessionStore
@@ -64,10 +64,10 @@ public final class WorkoutListStore {
             guard requestGeneration == request, session.generation == identity else { return }
             if (error as? APIResponseError)?.status == 401 { session.handleUnauthorized(for: identity) }
             else if !(error is CancellationError) {
-                message = userFacingError(error)
+                message = ClientIssue(error)
                 if (error as? APIResponseError)?.problem?.code == "invalid_cursor" {
                     nextCursor = nil
-                    message = "列表分页已失效，请下拉刷新。"
+                    message = .invalidCursor
                 }
             }
         }

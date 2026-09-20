@@ -9,7 +9,7 @@ public enum SessionPhase: Equatable {
 @MainActor @Observable
 public final class SessionStore {
     public private(set) var phase: SessionPhase = .signedOut
-    public private(set) var message: String?
+    public private(set) var message: ClientIssue?
     public private(set) var generation: UInt64 = 0
     public private(set) var token: String?
     @ObservationIgnored private let service: any AuthService
@@ -46,7 +46,7 @@ public final class SessionStore {
                 clearCredential()
             } else {
                 phase = .restoreFailed
-                message = error is VaultError ? error.localizedDescription : userFacingError(error)
+                message = ClientIssue(error)
             }
         }
     }
@@ -64,7 +64,7 @@ public final class SessionStore {
                 let revoked = await revokeAbandonedLogin(result.token)
                 if operation == generation {
                     phase = .signedOut
-                    if !revoked { message = "登录已取消，但服务器会话未能撤销；可稍后在会话管理中撤销。" }
+                    if !revoked { message = .abandonedLogin }
                 }
                 return
             }
@@ -73,7 +73,7 @@ public final class SessionStore {
                 let revoked = await revokeAbandonedLogin(result.token)
                 if !revoked, operation == generation {
                     phase = .signedOut
-                    message = "凭据未能保存，且服务器会话未能撤销；请解锁设备后重试，并在会话管理中检查本次会话。"
+                    message = .unsavedCredential
                     return
                 }
                 throw error
@@ -85,8 +85,8 @@ public final class SessionStore {
             phase = .signedOut
             if error is CancellationError { return }
             message = (error as? APIResponseError)?.status == 401
-                ? "用户名或密码不正确。"
-                : (error is VaultError ? error.localizedDescription : userFacingError(error))
+                ? .invalidCredentials
+                : (ClientIssue(error))
         }
     }
 
@@ -105,7 +105,7 @@ public final class SessionStore {
             if (error as? APIResponseError)?.status == 401 { clearCredential() }
             else {
                 phase = .signedIn(user)
-                message = "退出尚未完成。" + userFacingError(error)
+                message = .logoutIncomplete(ClientIssue(error))
             }
         }
     }
@@ -130,7 +130,7 @@ public final class SessionStore {
             message = nil
         } catch {
             phase = .restoreFailed
-            message = error.localizedDescription
+            message = ClientIssue(error)
         }
     }
 

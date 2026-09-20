@@ -4,7 +4,7 @@ import Observation
 public final class WorkoutDetailStore {
     public private(set) var workout: Workout?
     public private(set) var isLoading = false
-    public private(set) var message: String?
+    public private(set) var message: ClientIssue?
     @ObservationIgnored private let service: any WorkoutService
     @ObservationIgnored private let session: SessionStore
     @ObservationIgnored private var generation: UInt64 = 0
@@ -31,7 +31,7 @@ public final class WorkoutDetailStore {
         } catch {
             guard generation == request, session.generation == identity else { return }
             if (error as? APIResponseError)?.status == 401 { session.handleUnauthorized(for: identity) }
-            else if !(error is CancellationError) { message = userFacingError(error) }
+            else if !(error is CancellationError) { message = ClientIssue(error) }
         }
     }
 }

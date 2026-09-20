@@ -8,7 +8,7 @@ final class AuthenticationUITests: XCTestCase {
             throw XCTSkip("Run through the isolated iOS integration harness.")
         }
         let app = XCUIApplication()
-        app.launchArguments = ["-serverOrigin", server]
+        app.launchArguments = ["-AppleLanguages", "(zh-Hans)", "-AppleLocale", "zh_CN", "-serverOrigin", server]
         app.launch()
         let username = app.textFields["username"]
         XCTAssertTrue(username.waitForExistence(timeout: 15))
@@ -39,7 +39,17 @@ final class AuthenticationUITests: XCTestCase {
         XCTAssertTrue(username.waitForExistence(timeout: 10))
     }
 
-    override func setUpWithError() throws { continueAfterFailure = false }
+    override func setUp() async throws {
+        continueAfterFailure = false
+        guard let server = ProcessInfo.processInfo.environment["FITNESS_TEST_SERVER"],
+              server.hasPrefix("http://127.0.0.1:") else { return }
+        // Each scenario owns its one-shot stale response, regardless of test order.
+        let url = try XCTUnwrap(URL(string: server + "/__test/reset"))
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        let (_, response) = try await URLSession.shared.data(for: request)
+        XCTAssertEqual((response as? HTTPURLResponse)?.statusCode, 204)
+    }
 
     @MainActor
     func testSettingsPersistBodyParametersAndEquipment() throws {
@@ -47,7 +57,7 @@ final class AuthenticationUITests: XCTestCase {
             throw XCTSkip("Run through the isolated iOS integration harness.")
         }
         let app = XCUIApplication()
-        app.launchArguments = ["-serverOrigin", server]
+        app.launchArguments = ["-AppleLanguages", "(zh-Hans)", "-AppleLocale", "zh_CN", "-serverOrigin", server]
         app.launch()
         // A prior failed UI scenario must not hide this scenario's coverage.
         if app.tabBars.buttons["设置"].waitForExistence(timeout: 2) {
@@ -80,7 +90,7 @@ final class AuthenticationUITests: XCTestCase {
         cyclingPower.tap()
         cyclingPower.typeText("240")
         app.buttons["saveBodyParameters"].tap()
-        XCTAssertTrue(app.staticTexts["体重, 72.5 kg"].waitForExistence(timeout: 10))
+        XCTAssertTrue(labeledValue("体重", "72.5 kg", in: app).waitForExistence(timeout: 10), app.debugDescription)
         capture(app, name: "Personal body parameter history")
         app.navigationBars.buttons.element(boundBy: 0).tap()
         app.buttons["equipmentSettings"].tap()
@@ -99,8 +109,8 @@ final class AuthenticationUITests: XCTestCase {
         app.tabBars.buttons["设置"].tap()
         XCTAssertTrue(body.waitForExistence(timeout: 15))
         body.tap()
-        XCTAssertTrue(app.staticTexts["体重, 72.5 kg"].waitForExistence(timeout: 10))
-        XCTAssertTrue(app.staticTexts["身高, 178.0 cm"].exists)
+        XCTAssertTrue(labeledValue("体重", "72.5 kg", in: app).waitForExistence(timeout: 10), app.debugDescription)
+        XCTAssertTrue(labeledValue("身高", "178.0 cm", in: app).exists)
         app.buttons["editBodyParameters"].tap()
         XCTAssertTrue(mass.waitForExistence(timeout: 10))
         XCTAssertEqual(mass.value as? String, "72.5")
@@ -135,7 +145,7 @@ final class AuthenticationUITests: XCTestCase {
             throw XCTSkip("Run through the isolated iOS integration harness.")
         }
         let app = XCUIApplication()
-        app.launchArguments = ["-serverOrigin", server]
+        app.launchArguments = ["-AppleLanguages", "(zh-Hans)", "-AppleLocale", "zh_CN", "-serverOrigin", server]
         app.launch()
         // A prior failed UI scenario must not hide this scenario's coverage.
         if app.tabBars.buttons["设置"].waitForExistence(timeout: 2) {
@@ -218,7 +228,7 @@ final class AuthenticationUITests: XCTestCase {
     @MainActor
     func testServerValidation() {
         let app = XCUIApplication()
-        app.launchArguments = ["-serverOrigin", ""]
+        app.launchArguments = ["-AppleLanguages", "(zh-Hans)", "-AppleLocale", "zh_CN", "-serverOrigin", ""]
         app.launch()
         let origin = app.textFields["serverOrigin"]
         XCTAssertTrue(origin.waitForExistence(timeout: 10))
@@ -235,7 +245,7 @@ final class AuthenticationUITests: XCTestCase {
             throw XCTSkip("Run through the isolated iOS integration harness to supply its temporary server.")
         }
         let app = XCUIApplication()
-        app.launchArguments = ["-serverOrigin", server]
+        app.launchArguments = ["-AppleLanguages", "(zh-Hans)", "-AppleLocale", "zh_CN", "-serverOrigin", server]
         app.launch()
         let username = app.textFields["username"]
         XCTAssertTrue(username.waitForExistence(timeout: 15))
@@ -270,9 +280,10 @@ final class AuthenticationUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["记录摘要"].exists)
         let averageHeartRate = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "平均心率")).firstMatch
         XCTAssertFalse(averageHeartRate.exists)
-        app.disclosureTriangles["更多摘要指标"].tap()
+        let summaryDisclosure = app.buttons["更多摘要指标"].exists ? app.buttons["更多摘要指标"] : app.disclosureTriangles["更多摘要指标"]
+        summaryDisclosure.tap()
         XCTAssertTrue(averageHeartRate.waitForExistence(timeout: 5))
-        app.disclosureTriangles["更多摘要指标"].tap()
+        summaryDisclosure.tap()
         expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: averageHeartRate)
         waitForExpectations(timeout: 5)
         capture(app, name: "Workout detail")
@@ -299,7 +310,32 @@ final class AuthenticationUITests: XCTestCase {
         let allowAll = app.cells["UIA.Health.AuthSheet.AllCategoryButton"]
         if allowAll.waitForExistence(timeout: 10) { allowAll.tap() }
         let allow = app.buttons["UIA.Health.AuthSheet.DoneButton"]
-        if allow.waitForExistence(timeout: 5) { allow.tap() }
+        if allow.waitForExistence(timeout: 5) {
+            allow.tap()
+        } else if allowAll.exists {
+            // iOS 27 puts the system confirmation at the bottom of the access sheet.
+            // Its stable identifier also works when system and app languages differ.
+            let permissions = app.tables.containing(.cell, identifier: "UIA.Health.AuthSheet.AllCategoryButton").firstMatch
+            let confirm = app.buttons["UIA.Health.Allow.Button"]
+            for _ in 0..<8 {
+                if confirm.exists && confirm.isHittable { break }
+                permissions.swipeUp()
+            }
+            XCTAssertTrue(confirm.isHittable, app.debugDescription)
+            capture(app, name: "Synthetic HealthKit permissions")
+            confirm.tap()
+        }
+        if app.navigationBars["HealthUI.HKAuthorizationTimeBoundedView"].waitForExistence(timeout: 5) {
+            // The harness creates an empty, English-system simulator. Its only
+            // workout is synthetic and may predate the OS's rolling read window.
+            let history = app.staticTexts["All Recorded Data and Future Data"]
+            XCTAssertTrue(history.waitForExistence(timeout: 5), app.debugDescription)
+            history.tap()
+            let confirm = app.buttons["Allow"]
+            XCTAssertTrue(confirm.isEnabled, app.debugDescription)
+            capture(app, name: "Synthetic HealthKit history scope")
+            confirm.tap()
+        }
         XCTAssertTrue(app.staticTexts["Apple 健康写入与后端回执均已确认。"].waitForExistence(timeout: 30), app.debugDescription)
         app.buttons["closeHealthExport"].tap()
         app.navigationBars.buttons.element(boundBy: 0).tap()
@@ -347,6 +383,12 @@ final class AuthenticationUITests: XCTestCase {
         app.launch()
         XCTAssertTrue(username.waitForExistence(timeout: 10))
         capture(app, name: "Login")
+    }
+
+    @MainActor
+    private func labeledValue(_ title: String, _ value: String, in app: XCUIApplication) -> XCUIElement {
+        // Native accessibility punctuation varies with language and OS version.
+        app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@ AND label ENDSWITH %@", title, value)).firstMatch
     }
 
     @MainActor
@@ -403,7 +445,7 @@ extension AuthenticationUITests {
         }
         try await setAnalysisFailure(true)
         let app = XCUIApplication()
-        app.launchArguments = ["-serverOrigin", server]
+        app.launchArguments = ["-AppleLanguages", "(zh-Hans)", "-AppleLocale", "zh_CN", "-serverOrigin", server]
         app.launch()
         if app.tabBars.buttons["设置"].waitForExistence(timeout: 2) {
             openAccount(in: app)
@@ -454,5 +496,87 @@ extension AuthenticationUITests {
         openAccount(in: app)
         app.buttons["logout"].tap()
         XCTAssertTrue(username.waitForExistence(timeout: 10))
+    }
+}
+
+
+extension AuthenticationUITests {
+    @MainActor
+    func testEnglishAndChineseJourneysAgainstBackend() throws {
+        guard let server = ProcessInfo.processInfo.environment["FITNESS_TEST_SERVER"], server.hasPrefix("http://127.0.0.1:") else {
+            throw XCTSkip("Requires the disposable synthetic integration backend.")
+        }
+        for chinese in [false, true] {
+            func label(_ english: String, _ chineseText: String) -> String { chinese ? chineseText : english }
+            let app = XCUIApplication()
+            app.launchArguments = ["-AppleLanguages", chinese ? "(zh-Hans)" : "(en-GB)", "-AppleLocale", chinese ? "zh_CN" : "en_GB", "-serverOrigin", server]
+            app.launch()
+            let settings = app.tabBars.buttons[label("Settings", "设置")]
+            if settings.waitForExistence(timeout: 2) {
+                settings.tap()
+                app.buttons[label("Account and sign-in sessions", "账号与登录会话")].tap()
+                app.buttons["logout"].tap()
+            }
+            let username = app.textFields["username"]
+            XCTAssertTrue(username.waitForExistence(timeout: 15))
+            XCTAssertTrue(app.staticTexts[label("Welcome back", "欢迎回来")].exists)
+            XCTAssertEqual(app.buttons["login"].label, label("Sign in", "登录"))
+            capture(app, name: label("English login", "Chinese login"))
+            username.tap()
+            username.typeText("ios_fixture_user")
+            app.secureTextFields["password"].tap()
+            app.secureTextFields["password"].typeText("synthetic ios fixture password")
+            app.buttons["login"].tap()
+            XCTAssertTrue(app.segmentedControls["sportFilter"].waitForExistence(timeout: 15))
+            app.segmentedControls["sportFilter"].buttons[label("Running", "跑步")].tap()
+            let workout = app.staticTexts["Synthetic running"]
+            XCTAssertTrue(workout.waitForExistence(timeout: 10))
+            capture(app, name: label("English workouts", "Chinese workouts"))
+            workout.tap()
+            XCTAssertEqual(app.staticTexts["workoutTitle"].label, "Synthetic running")
+            XCTAssertTrue(app.staticTexts[label("Recorded summary", "记录摘要")].exists)
+            capture(app, name: label("English workout detail", "Chinese workout detail"))
+            app.buttons["openHealthExport"].tap()
+            XCTAssertTrue(app.navigationBars[label("Export to Apple Health", "导出到 Apple 健康")].waitForExistence(timeout: 10))
+            XCTAssertTrue(app.staticTexts[label("Save to Apple Health", "存入 Apple 健康")].exists)
+            capture(app, name: label("English HealthKit export preview", "Chinese HealthKit export preview"))
+            app.buttons["closeHealthExport"].tap()
+            app.navigationBars.buttons.element(boundBy: 0).tap()
+            app.tabBars.buttons[label("Health", "健康")].tap()
+            XCTAssertTrue(app.staticTexts[label("Import from Apple Health", "从苹果健康导入 AI Fitness")].exists)
+            capture(app, name: label("English HealthKit import", "Chinese HealthKit import"))
+            settings.tap()
+            XCTAssertTrue(app.buttons["bodySettings"].waitForExistence(timeout: 10))
+            app.buttons["bodySettings"].tap()
+            app.buttons["editBodyParameters"].tap()
+            XCTAssertTrue(app.textFields["bodyMass"].waitForExistence(timeout: 10))
+            XCTAssertEqual(app.textFields["bodyMass"].label, label("Body weight (kg)", "体重 (kg)"))
+            XCTAssertEqual(app.textFields["cycling-resting"].label, label("Resting heart rate (bpm)", "静息心率 (bpm)"))
+            capture(app, name: label("English settings", "Chinese settings"))
+            app.buttons[label("Cancel", "取消")].tap()
+            app.navigationBars.buttons.element(boundBy: 0).tap()
+            app.buttons[label("Account and sign-in sessions", "账号与登录会话")].tap()
+            app.buttons["logout"].tap()
+            XCTAssertTrue(username.waitForExistence(timeout: 10))
+            app.terminate()
+        }
+    }
+
+    @MainActor
+    func testNativeLanguageFallbackAndServerErrors() {
+        for (language, chinese) in [("fr", false), ("zh-CN", true)] {
+            let app = XCUIApplication()
+            app.launchArguments = ["-AppleLanguages", "(\(language))", "-AppleLocale", "en_GB", "-serverOrigin", ""]
+            app.launch()
+            let origin = app.textFields["serverOrigin"]
+            XCTAssertTrue(origin.waitForExistence(timeout: 10))
+            XCTAssertTrue(app.staticTexts[chinese ? "连接你的训练记录" : "Connect your workout records"].exists)
+            origin.tap()
+            origin.typeText("http://example.com")
+            app.buttons["connectServer"].tap()
+            XCTAssertTrue(app.staticTexts[chinese ? "后端需要使用 HTTPS；开发模式只允许本机地址使用 HTTP。" : "The server requires HTTPS. Development builds allow HTTP only for loopback addresses."].exists)
+            capture(app, name: "Native language fallback \(language)")
+            app.terminate()
+        }
     }
 }

@@ -25,26 +25,26 @@ struct WorkoutDetailScreen: View {
             VStack(alignment: .leading, spacing: 28) {
                 if let workout = store.workout {
                     workoutHeader(workout)
-                    SummarySection(title: "记录摘要", summary: workout.recordedCommonSummary, isRunning: workout.sportName == "跑步")
+                    SummarySection(title: "Recorded summary", summary: workout.recordedCommonSummary, isRunning: workout.sportKind == .running)
                     RouteSection(positions: workout.motion.motionPosition)
                     WorkoutAnalysisSection(workout: workout, api: api, session: session, refreshWorkout: reloadWorkout)
                         .id(curveReload)
                     RecordedDetailsSection(workout: workout)
                     if workout.metrics.contains(where: { $0.points.isEmpty }) {
-                        DisclosureGroup("未记录的指标") {
+                        DisclosureGroup("Unrecorded metrics") {
                             ForEach(workout.metrics.filter { $0.points.isEmpty }) { metric in
-                                LabeledContent(metric.title, value: "无采样数据").padding(.vertical, 6)
+                                LabeledContent(metric.localizedTitle, value: String(localized: "No sample data")).padding(.vertical, 6)
                             }
                         }.font(.subheadline).foregroundStyle(.secondary).padding(20).fitnessCard()
                     }
                     if let calculated = workout.calculatedCommonSummary {
-                        DisclosureGroup("后端计算摘要") {
-                            SummarySection(title: "计算结果", summary: calculated, isRunning: workout.sportName == "跑步", inCard: false).padding(.top, 12)
+                        DisclosureGroup("Server-calculated summary") {
+                            SummarySection(title: "Calculated results", summary: calculated, isRunning: workout.sportKind == .running, inCard: false).padding(.top, 12)
                         }.padding(20).fitnessCard()
                     }
                     if workout.workoutUserData.workoutNotes != nil || !workout.workoutUserData.workoutTags.isEmpty || workout.workoutUserData.statisticsInclusion == .excludeFromStatistics {
                         VStack(alignment: .leading, spacing: 14) {
-                            FitnessSectionTitle(title: "运动备注")
+                            FitnessSectionTitle(title: "Workout notes")
                             VStack(alignment: .leading, spacing: 14) {
                                 if let notes = workout.workoutUserData.workoutNotes { Text(notes).textSelection(.enabled) }
                                 if !workout.workoutUserData.workoutTags.isEmpty {
@@ -52,7 +52,7 @@ struct WorkoutDetailScreen: View {
                                         .font(.subheadline).foregroundStyle(.secondary)
                                 }
                                 if workout.workoutUserData.statisticsInclusion == .excludeFromStatistics {
-                                    Label("此记录不计入统计", systemImage: "chart.bar.xaxis").font(.subheadline).foregroundStyle(.secondary)
+                                    Label("This record is excluded from statistics", systemImage: "chart.bar.xaxis").font(.subheadline).foregroundStyle(.secondary)
                                 }
                             }
                             .frame(maxWidth: .infinity, alignment: .leading).padding(20).fitnessCard()
@@ -60,7 +60,7 @@ struct WorkoutDetailScreen: View {
                     }
                     if !workout.workoutObservation.observationDataIssues.isEmpty {
                         VStack(alignment: .leading, spacing: 14) {
-                            FitnessSectionTitle(title: "数据说明")
+                            FitnessSectionTitle(title: "About the data")
                             VStack(alignment: .leading, spacing: 12) {
                                 ForEach(Array(workout.workoutObservation.observationDataIssues.enumerated()), id: \.offset) { _, issue in
                                     Label(issue.issueDescription, systemImage: "info.circle").font(.subheadline).foregroundStyle(.secondary)
@@ -70,12 +70,12 @@ struct WorkoutDetailScreen: View {
                         }
                     }
                 } else if store.isLoading {
-                    ProgressView("正在加载详情…").frame(maxWidth: .infinity).padding(40)
+                    ProgressView("Loading details…").frame(maxWidth: .infinity).padding(40)
                 }
                 if let message = store.message {
                     VStack(alignment: .leading, spacing: 12) {
-                        Label(message, systemImage: "exclamationmark.circle").foregroundStyle(.red)
-                        Button("重试", action: reloadWorkout).buttonStyle(.bordered)
+                        IssueText(message).foregroundStyle(.red)
+                        Button("Retry", action: reloadWorkout).buttonStyle(.bordered)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading).padding(20).fitnessCard()
                 }
@@ -84,7 +84,7 @@ struct WorkoutDetailScreen: View {
             .frame(maxWidth: .infinity)
         }
         .background(FitnessStyle.background)
-        .navigationTitle("运动详情").navigationBarTitleDisplayMode(.inline)
+        .navigationTitle("Workout details").navigationBarTitleDisplayMode(.inline)
         .task(id: id) { await store.load(id: id) }
         .refreshable { await refreshDetail() }
         .onDisappear { retry?.cancel() }
@@ -107,7 +107,7 @@ struct WorkoutDetailScreen: View {
     }
 
     private func workoutHeader(_ workout: Workout) -> some View {
-        let running = workout.sportName == "跑步"
+        let running = workout.sportKind == .running
         let accent: Color = running ? .orange : .blue
         return VStack(alignment: .leading, spacing: 16) {
             HStack(spacing: 10) {
@@ -120,20 +120,20 @@ struct WorkoutDetailScreen: View {
                     Image(systemName: "square.and.arrow.up").font(.title3).frame(width: 44, height: 44)
                         .background(FitnessStyle.surface, in: Circle())
                 }
-                .accessibilityLabel("导出到 Apple 健康").accessibilityIdentifier("openHealthExport")
+                .accessibilityLabel("Export to Apple Health").accessibilityIdentifier("openHealthExport")
             }
             Text(workout.displayTitle).font(.largeTitle.bold()).accessibilityIdentifier("workoutTitle")
             VStack(alignment: .leading, spacing: 5) {
                 Text(workout.workoutObservation.observationRange.rangeStart.formatted(date: .abbreviated, time: .standard))
-                Text("至 " + workout.workoutObservation.observationRange.rangeEnd.formatted(date: .abbreviated, time: .standard))
+                Text("Until \(workout.workoutObservation.observationRange.rangeEnd.formatted(date: .abbreviated, time: .standard))")
             }.font(.subheadline).foregroundStyle(.secondary)
-            Text("本机时区 · \(TimeZone.current.identifier)").font(.subheadline).foregroundStyle(.secondary)
+            Text("Device time zone · \(TimeZone.current.identifier)").font(.subheadline).foregroundStyle(.secondary)
         }
     }
 }
 
 struct SummarySection: View {
-    let title: String
+    let title: LocalizedStringResource
     let summary: Components.Schemas.CommonSummary
     let isRunning: Bool
     var inCard = true
@@ -151,21 +151,21 @@ struct SummarySection: View {
         VStack(alignment: .leading, spacing: 22) {
             let layout = dynamicTypeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 18)) : AnyLayout(HStackLayout(alignment: .top, spacing: 16))
             layout {
-                FitnessStat(title: "距离", value: WorkoutFormat.distance(summary.summaryDistance), prominent: true)
-                FitnessStat(title: "计时时间", value: WorkoutFormat.duration(summary.summaryTimerTime), prominent: true)
+                FitnessStat(title: "Distance", value: WorkoutFormat.distance(summary.summaryDistance), prominent: true)
+                FitnessStat(title: "Timer time", value: WorkoutFormat.duration(summary.summaryTimerTime), prominent: true)
             }
             DisclosureGroup {
                 VStack(spacing: 16) {
-                    LabeledContent("经过时间", value: WorkoutFormat.duration(summary.summaryElapsedTime))
-                    LabeledContent("移动时间", value: WorkoutFormat.duration(summary.summaryMovingTime))
-                    LabeledContent("平均心率", value: WorkoutFormat.number(summary.summaryHeartRate.averageValue, unit: "bpm"))
-                    LabeledContent("平均功率", value: WorkoutFormat.number(summary.summaryPower.averageValue, unit: "W"))
-                    LabeledContent("平均速度", value: WorkoutFormat.number(summary.summarySpeed.averageValue.map { $0 * 3.6 }, unit: "km/h", fractionDigits: 1))
-                    if isRunning { LabeledContent("平均配速", value: WorkoutFormat.pace(summary.summarySpeed.averageValue)) }
-                    LabeledContent("爬升", value: WorkoutFormat.number(summary.summaryAscent, unit: "m"))
+                    LabeledContent(String(localized: "Elapsed time"), value: WorkoutFormat.duration(summary.summaryElapsedTime))
+                    LabeledContent(String(localized: "Moving time"), value: WorkoutFormat.duration(summary.summaryMovingTime))
+                    LabeledContent(String(localized: "Average heart rate"), value: WorkoutFormat.number(summary.summaryHeartRate.averageValue, unit: "bpm"))
+                    LabeledContent(String(localized: "Average power"), value: WorkoutFormat.number(summary.summaryPower.averageValue, unit: "W"))
+                    LabeledContent(String(localized: "Average speed"), value: WorkoutFormat.number(summary.summarySpeed.averageValue.map { $0 * 3.6 }, unit: "km/h", fractionDigits: 1))
+                    if isRunning { LabeledContent(String(localized: "Average pace"), value: WorkoutFormat.pace(summary.summarySpeed.averageValue)) }
+                    LabeledContent(String(localized: "Ascent"), value: WorkoutFormat.number(summary.summaryAscent, unit: "m"))
                 }.font(.body).foregroundStyle(.primary).monospacedDigit().padding(.top, 16)
             } label: {
-                Text("更多摘要指标").frame(minHeight: 44)
+                Text("More summary metrics").frame(minHeight: 44)
             }.font(.subheadline).foregroundStyle(.secondary)
         }
     }
@@ -178,21 +178,21 @@ struct RouteSection: View {
     @State private var fullScreen = false
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            FitnessSectionTitle(title: "路线", color: .blue)
+            FitnessSectionTitle(title: "Route", color: .blue)
             if positions.isEmpty {
-                Label("无路线数据", systemImage: "map")
+                Label("No route data", systemImage: "map")
                     .font(.subheadline).foregroundStyle(.secondary).frame(maxWidth: .infinity, alignment: .leading)
                     .padding(inCard ? 20 : 0)
                     .background(inCard ? FitnessStyle.surface : Color.clear, in: RoundedRectangle(cornerRadius: FitnessStyle.radius, style: .continuous))
             } else {
                 VStack(spacing: 0) {
                     WorkoutRouteMap(positions: positions)
-                    .frame(height: 270).accessibilityLabel("运动记录路线")
+                    .frame(height: 270).accessibilityLabel("Recorded workout route")
                     HStack {
-                        Button { fullScreen = true } label: { Label("展开地图", systemImage: "arrow.up.left.and.arrow.down.right") }
+                        Button { fullScreen = true } label: { Label("Expand map", systemImage: "arrow.up.left.and.arrow.down.right") }
                             .accessibilityIdentifier("expandRoute")
                         Spacer()
-                        Text("\(positions.count) 个位置点").monospacedDigit()
+                        Text("Route points: \(positions.count)").monospacedDigit()
                     }.font(.subheadline).foregroundStyle(.secondary).padding(16)
                 }
                 .background(inCard ? FitnessStyle.surface : Color.clear)
@@ -203,8 +203,8 @@ struct RouteSection: View {
         .sheet(isPresented: $fullScreen) {
             NavigationStack {
                 WorkoutRouteMap(positions: positions, controls: true)
-                    .navigationTitle("运动路线").navigationBarTitleDisplayMode(.inline)
-                    .toolbar { ToolbarItem(placement: .confirmationAction) { Button("完成") { fullScreen = false } } }
+                    .navigationTitle("Workout route").navigationBarTitleDisplayMode(.inline)
+                    .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { fullScreen = false } } }
             }
         }
     }
@@ -237,16 +237,16 @@ private struct WorkoutRouteMap: View {
                 MapPolyline(coordinates: coordinates).stroke(.blue, style: StrokeStyle(lineWidth: 4, lineCap: .round, lineJoin: .round))
             }
             if let first = positions.first {
-                Marker("起点", coordinate: .init(latitude: first.value.latitude, longitude: first.value.longitude)).tint(.green)
+                Marker("Route start", coordinate: .init(latitude: first.value.latitude, longitude: first.value.longitude)).tint(.green)
             }
             if let last = positions.last {
-                Marker("终点", coordinate: .init(latitude: last.value.latitude, longitude: last.value.longitude)).tint(.red)
+                Marker("Finish", coordinate: .init(latitude: last.value.latitude, longitude: last.value.longitude)).tint(.red)
             }
         }
         .mapStyle(satellite ? .hybrid : .standard)
         .overlay(alignment: .topTrailing) {
             if controls {
-                Button(satellite ? "标准地图" : "卫星地图") { satellite.toggle() }
+                Button(satellite ? String(localized: "Standard map") : String(localized: "Satellite map")) { satellite.toggle() }
                     .buttonStyle(.borderedProminent).padding()
             }
         }
@@ -269,41 +269,45 @@ private struct RecordedDetailsSection: View {
 
     var body: some View {
         let summary = workout.recordedCommonSummary
-        AnalysisCard(title: "海拔、能量与环境", color: .teal) {
-            analysisRow("累计爬升", summary.summaryAscent, "m")
-            analysisRow("累计下降", summary.summaryDescent, "m")
-            analysisRow("最低海拔", summary.summaryAltitude.minimumValue, "m")
-            analysisRow("最高海拔", summary.summaryAltitude.maximumValue, "m")
-            analysisRow("代谢能量", summary.summaryMetabolicEnergy.map { $0 / 4184 }, "kcal")
-            analysisRow("机械功", summary.summaryMechanicalWork.map { $0 / 1000 }, "kJ")
-            analysisRow("平均气温", summary.summaryTemperature.averageValue, "°C", digits: 1)
-            Text("以上保留源记录的摘要，代谢能量与机械功分别展示。没有记录的指标不会用估值补齐。")
+        AnalysisCard(title: "Elevation, energy and environment", color: .teal) {
+            analysisRow("Total ascent", summary.summaryAscent, "m")
+            analysisRow("Total descent", summary.summaryDescent, "m")
+            analysisRow("Minimum altitude", summary.summaryAltitude.minimumValue, "m")
+            analysisRow("Maximum altitude", summary.summaryAltitude.maximumValue, "m")
+            analysisRow("Metabolic energy", summary.summaryMetabolicEnergy.map { $0 / 4184 }, "kcal")
+            analysisRow("Mechanical work", summary.summaryMechanicalWork.map { $0 / 1000 }, "kJ")
+            analysisRow("Average temperature", summary.summaryTemperature.averageValue, "°C", digits: 1)
+            Text("These are source-recorded summaries. Metabolic energy and mechanical work are shown separately; missing metrics are not estimated.")
                 .font(.footnote).foregroundStyle(.secondary)
         }
         if !laps.isEmpty {
-            AnalysisCard(title: "设备记录的分段") {
-                NavigationLink("查看 \(laps.count) 个记录分段") {
+            AnalysisCard(title: "Device-recorded laps") {
+                NavigationLink("View recorded laps (\(laps.count))") {
                     List(laps) { lap in
                         VStack(alignment: .leading, spacing: 12) {
-                            Text("分段 \(lap.id + 1)").font(.headline)
+                            Text("Lap \(lap.id + 1)").font(.headline)
                             Text(lap.range.rangeStart.formatted(date: .omitted, time: .standard) + "–" + lap.range.rangeEnd.formatted(date: .omitted, time: .standard)).font(.caption).foregroundStyle(.secondary)
-                            LabeledContent("距离", value: WorkoutFormat.distance(lap.summary.summaryDistance))
-                            LabeledContent("计时时间", value: WorkoutFormat.duration(lap.summary.summaryTimerTime))
-                            analysisRow("平均功率", lap.summary.summaryPower.averageValue, "W")
-                            analysisRow("平均心率", lap.summary.summaryHeartRate.averageValue, "bpm")
-                            LabeledContent("平均配速", value: WorkoutFormat.pace(lap.summary.summarySpeed.averageValue))
+                            LabeledContent(String(localized: "Distance"), value: WorkoutFormat.distance(lap.summary.summaryDistance))
+                            LabeledContent(String(localized: "Timer time"), value: WorkoutFormat.duration(lap.summary.summaryTimerTime))
+                            analysisRow("Average power", lap.summary.summaryPower.averageValue, "W")
+                            analysisRow("Average heart rate", lap.summary.summaryHeartRate.averageValue, "bpm")
+                            if workout.sportKind == .running {
+                                LabeledContent(String(localized: "Average pace"), value: WorkoutFormat.pace(lap.summary.summarySpeed.averageValue))
+                            } else {
+                                analysisRow("Average speed", lap.summary.summarySpeed.averageValue.map { $0 * 3.6 }, "km/h", digits: 1)
+                            }
                         }.padding(.vertical, 8)
-                    }.navigationTitle("设备分段")
+                    }.navigationTitle("Device laps")
                 }
             }
         }
         if case .case1(let sport) = workout.workoutObservation.observationSport {
             let context = sport.data.cyclingContext
             if context.bicycleName != nil || context.bicycleMass != nil || context.cyclingDiscipline != nil {
-                AnalysisCard(title: "运动中的器材") {
-                    if let name = context.bicycleName { LabeledContent("自行车", value: name) }
-                    if let discipline = context.cyclingDiscipline { LabeledContent("骑行类型", value: discipline) }
-                    analysisRow("自行车重量", context.bicycleMass, "kg", digits: 1)
+                AnalysisCard(title: "Workout equipment") {
+                    if let name = context.bicycleName { LabeledContent(String(localized: "Bike"), value: name) }
+                    if let discipline = context.cyclingDiscipline { LabeledContent(String(localized: "Cycling type"), value: discipline) }
+                    analysisRow("Bike weight", context.bicycleMass, "kg", digits: 1)
                 }
             }
         }

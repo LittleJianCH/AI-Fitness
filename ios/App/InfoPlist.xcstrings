@@ -1,0 +1,40 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "NSHealthShareUsageDescription": {
+      "comment": "HealthKit permission purpose; do not imply background or automatic synchronization.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read your selected cycling and running workouts, related measurements and routes. Preview them before importing to the AI Fitness server you are signed in to."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "读取你选择的骑行、跑步及相关测量和路线，预览后导入当前登录的 AI Fitness 后端。"
+          }
+        }
+      }
+    },
+    "NSHealthUpdateUsageDescription": {
+      "comment": "HealthKit permission purpose; do not imply background or automatic synchronization.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write the server workouts, supported measurements and routes you confirm to Apple Health, and save an export receipt for retries."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "将你确认的后端运动、支持的测量和路线写入 Apple 健康，并保存导出回执以便重试。"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

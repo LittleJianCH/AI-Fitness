@@ -19,18 +19,9 @@ extension FitnessAPI: HealthExportService {
     }
 }
 
-public enum HealthExportError: LocalizedError {
+public enum HealthExportError: Error, Equatable, Sendable {
     case invalidData, busy, uncertainWorkout, uncertainRoute, invalidReceipt, storage
-    public var errorDescription: String? {
-        switch self {
-        case .invalidData: "这些数据暂不能安全导出。"
-        case .busy: "此记录正在导出，请稍后再试。"
-        case .uncertainWorkout: "尚不能确认 Apple 健康的写入结果。请解锁设备并允许读取后重试；不会重复写入。"
-        case .uncertainRoute: "运动已写入，但路线结果尚不能确认。请解锁设备并允许读取后重试。"
-        case .invalidReceipt: "Apple 健康已写入，但后端回执未能确认，请重试。"
-        case .storage: "导出恢复记录无法读写，请解锁设备并检查可用空间。"
-        }
-    }
+
 }
 
 /// A revision is an explicit new export; a retry of that revision resumes one identity.

@@ -181,7 +181,7 @@ struct HealthWriter: HealthExportWriter {
     }
 }
 
-enum HealthWriterError: LocalizedError {
+enum HealthWriterError: Error {
     case permission
-    var errorDescription: String? { "请在健康权限中允许写入预览所列的数据类型。" }
+    var resource: LocalizedStringResource { "Allow writing the previewed data types in Health permissions." }
 }

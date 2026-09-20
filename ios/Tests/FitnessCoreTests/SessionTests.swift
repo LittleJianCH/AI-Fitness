@@ -85,7 +85,7 @@ final class SessionTests: XCTestCase {
         let store = SessionStore(service: service, vault: MemoryVault())
         await store.login(username: "alice", password: "wrong", deviceName: "Test")
         XCTAssertEqual(store.phase, .signedOut)
-        XCTAssertEqual(store.message, "用户名或密码不正确。")
+        XCTAssertEqual(store.message, .invalidCredentials)
     }
 
     @MainActor

@@ -25,13 +25,13 @@ import SwiftUI
             if case .signedIn = session.phase {
                 TabView(selection: $selectedTab) {
                     WorkoutListScreen(api: FitnessAPI(endpoint: endpoint), session: session)
-                        .tabItem { Label("运动", systemImage: "figure.run") }
+                        .tabItem { Label("Workouts", systemImage: "figure.run") }
                         .tag("workouts")
                     HealthImportScreen(api: FitnessAPI(endpoint: endpoint), session: session)
-                        .tabItem { Label("健康", systemImage: "heart") }
+                        .tabItem { Label("Health", systemImage: "heart") }
                         .tag("health")
                     SettingsScreen(store: settings, server: endpoint.url.absoluteString) { authenticationContent }
-                        .tabItem { Label("设置", systemImage: "gearshape") }
+                        .tabItem { Label("Settings", systemImage: "gearshape") }
                         .tag("account")
                 }
                 .id(session.generation)
@@ -63,15 +63,15 @@ import SwiftUI
                 switch session.phase {
                 case .signedOut, .signingIn:
                     Section {
-                        FitnessIntro(title: "欢迎回来", subtitle: "登录后，继续查看你的运动与健康记录。", symbol: "figure.run")
+                        FitnessIntro(title: "Welcome back", subtitle: "Sign in to view your workout and health records.", symbol: "figure.run")
                     }.listRowBackground(Color.clear)
-                    Section("账号登录") {
-                        TextField("用户名", text: $username)
+                    Section("Account sign-in") {
+                        TextField("Username", text: $username)
                             .textContentType(.username)
                             .textInputAutocapitalization(.never)
                             .autocorrectionDisabled()
                             .accessibilityIdentifier("username")
-                        SecureField("密码", text: $password)
+                        SecureField("Password", text: $password)
                             .textContentType(.password)
                             .accessibilityIdentifier("password")
                     }
@@ -82,42 +82,42 @@ import SwiftUI
                             password = ""
                             action = Task { await session.login(username: name, password: secret, deviceName: UIDevice.current.model) }
                         } label: {
-                            Text("登录").frame(maxWidth: .infinity).padding(.vertical, 4)
+                            Text("Sign in").frame(maxWidth: .infinity).padding(.vertical, 4)
                         }
                         .buttonStyle(.borderedProminent).controlSize(.large).buttonBorderShape(.roundedRectangle(radius: 16))
                         .disabled(username.isEmpty || password.isEmpty || session.phase == .signingIn)
                         .accessibilityIdentifier("login")
-                        if session.phase == .signingIn { ProgressView("正在登录…") }
+                        if session.phase == .signingIn { ProgressView("Signing in…") }
                     }.listRowBackground(Color.clear).listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
-                    Button("更换服务器", action: changeServer).disabled(session.phase == .signingIn)
+                    Button("Change server", action: changeServer).disabled(session.phase == .signingIn)
                 case .restoring:
-                    ProgressView("正在恢复登录…")
+                    ProgressView("Restoring sign-in…")
                 case .restoreFailed:
-                    Button("重试恢复登录") { action = Task { await session.restore() } }
-                    Button("清除本机凭据", role: .destructive) { session.forgetSavedSession() }
-                    Text("清除本机凭据不会撤销服务器上的会话。")
+                    Button("Retry restoring sign-in") { action = Task { await session.restore() } }
+                    Button("Clear saved credentials", role: .destructive) { session.forgetSavedSession() }
+                    Text("Clearing local credentials does not revoke the session on the server.")
                         .font(.footnote).foregroundStyle(.secondary)
-                    Button("更换服务器", action: changeServer)
+                    Button("Change server", action: changeServer)
                 case .signedIn(let user), .signingOut(let user):
                     Section {
-                        FitnessIntro(title: user.username, subtitle: "管理当前服务器的登录会话。", symbol: "person.crop.circle.fill")
+                        FitnessIntro(title: "\(user.username)", subtitle: "Manage your session on the current server.", symbol: "person.crop.circle.fill")
                     }.listRowBackground(Color.clear)
-                    Section("当前账号") {
-                        LabeledContent("用户名", value: user.username)
+                    Section("Current account") {
+                        LabeledContent(String(localized: "Username"), value: user.username)
                             .accessibilityIdentifier("currentUsername")
-                        Button("退出登录", role: .destructive) {
+                        Button("Sign out", role: .destructive) {
                             action = Task { await session.logout() }
                         }
                         .disabled(session.phase == .signingOut(user))
                         .accessibilityIdentifier("logout")
                     }
-                    if session.phase == .signingOut(user) { ProgressView("正在退出…") }
+                    if session.phase == .signingOut(user) { ProgressView("Signing out…") }
                 }
                 if let message = session.message {
-                    Text(message).foregroundStyle(.red).accessibilityIdentifier("sessionError")
+                    IssueText(message).foregroundStyle(.red).accessibilityIdentifier("sessionError")
                 }
             }
             .scrollContentBackground(.hidden).background(FitnessStyle.background)
-            .navigationTitle(session.user == nil ? "AI Fitness" : "账号")
+            .navigationTitle(session.user == nil ? "AI Fitness" : String(localized: "Account"))
     }
 }

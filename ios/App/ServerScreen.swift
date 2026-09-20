@@ -5,7 +5,7 @@ import SwiftUI
     @AppStorage("serverOrigin") private var savedOrigin = ""
     @State private var origin = ""
     @State private var endpoint: ServerEndpoint?
-    @State private var error: String?
+    @State private var error: ClientIssue?
 
     var body: some View {
         Group {
@@ -18,7 +18,7 @@ import SwiftUI
                 NavigationStack {
                     Form {
                         Section {
-                            FitnessIntro(title: "连接你的训练记录", subtitle: "连接服务器后，即可查看运动记录并与 Apple 健康交换数据。", symbol: "figure.outdoor.cycle")
+                            FitnessIntro(title: "Connect your workout records", subtitle: "Connect to a server to view workouts and exchange data with Apple Health.", symbol: "figure.outdoor.cycle")
                         }.listRowBackground(Color.clear)
                         Section {
                             TextField("https://fitness.example.com", text: $origin)
@@ -26,10 +26,10 @@ import SwiftUI
                                 .textInputAutocapitalization(.never)
                                 .autocorrectionDisabled()
                                 .accessibilityIdentifier("serverOrigin")
-                        } header: { Text("服务器地址") }
-                        footer: { Text("登录凭据会按服务器地址分别保存在本机。") }
-                        if let error { Text(error).foregroundStyle(.red) }
-                        Button(action: connect) { Text("连接").frame(maxWidth: .infinity).padding(.vertical, 4) }
+                        } header: { Text("Server address") }
+                        footer: { Text("Credentials are stored separately for each server on this device.") }
+                        if let error { IssueText(error).foregroundStyle(.red) }
+                        Button(action: connect) { Text("Connect").frame(maxWidth: .infinity).padding(.vertical, 4) }
                             .buttonStyle(.borderedProminent).controlSize(.large).buttonBorderShape(.roundedRectangle(radius: 16))
                             .listRowBackground(Color.clear).listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
                             .accessibilityIdentifier("connectServer")
@@ -56,6 +56,6 @@ import SwiftUI
             savedOrigin = parsed.credentialScope
             endpoint = parsed
             error = nil
-        } catch { self.error = error.localizedDescription }
+        } catch { self.error = ClientIssue(error) }
     }
 }

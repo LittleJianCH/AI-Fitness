@@ -3,7 +3,11 @@ import ContractClient
 import FitnessCore
 import SwiftUI
 
-enum MetricAxis: String, CaseIterable { case time = "时间", distance = "距离" }
+enum MetricAxis: CaseIterable {
+    case time, distance
+    var resource: LocalizedStringResource { self == .time ? "Time" : "Distance" }
+    var localizedTitle: String { String(localized: resource) }
+}
 
 struct MetricAnalysisScreen: View {
     let workout: Workout
@@ -12,76 +16,78 @@ struct MetricAnalysisScreen: View {
     let analysis: WorkoutAnalysis?
     @State private var axis: MetricAxis = .time
     @State private var comparison = ""
+    @State private var comparisonMetrics: [WorkoutMetric] = []
     @State private var selection: Double?
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 28) {
-                AnalysisCard(title: metric.title, color: metric.accent) {
-                    Picker("横轴", selection: $axis) {
-                        ForEach(MetricAxis.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                AnalysisCard(title: metric.titleResource, color: metric.accent) {
+                    Picker("Horizontal axis", selection: $axis) {
+                        ForEach(MetricAxis.allCases, id: \.self) { LocalizedText($0.resource).tag($0) }
                     }.pickerStyle(.segmented).accessibilityIdentifier("metricAxis")
                     MetricTimeline(workout: workout, metric: metric, axis: axis, selection: $selection)
                         .frame(height: 240)
-                    LabeledContent("对照指标") {
-                        Picker("对照指标", selection: $comparison) {
-                            Text("无").tag("")
-                            ForEach(workout.metrics.filter { $0.id != metric.id && !$0.points.isEmpty }) { Text($0.title).tag($0.id) }
+                    LabeledContent(String(localized: "Compare metric")) {
+                        Picker("Compare metric", selection: $comparison) {
+                            Text("None").tag("")
+                            ForEach(comparisonMetrics.filter { $0.id != metric.id && !$0.points.isEmpty }) { Text($0.localizedTitle).tag($0.id) }
                         }.labelsHidden().accessibilityIdentifier("comparisonMetric")
                     }
-                    if let other = workout.metrics.first(where: { $0.id == comparison }) {
-                        Text(other.title + " · " + other.unit).font(.subheadline).foregroundStyle(other.accent)
+                    if let other = comparisonMetrics.first(where: { $0.id == comparison }) {
+                        Text(other.localizedTitle + " · " + other.unit).font(.subheadline).foregroundStyle(other.accent)
                         MetricTimeline(workout: workout, metric: other, axis: axis, selection: $selection)
                             .frame(height: 150)
-                        Text("两张图共享横轴位置，各自保留原始单位。")
+                        Text("Both charts share horizontal positions and retain their original units.")
                             .font(.caption).foregroundStyle(.secondary)
                     }
                     if let statistics {
-                        LabeledContent("平均", value: metric.displayValue(statistics.metricStatistics.averageValue))
-                        LabeledContent("排除零平台的平均", value: metric.displayValue(statistics.metricAverageExcludingZeros))
-                        LabeledContent("最小", value: metric.displayValue(statistics.metricStatistics.minimumValue))
-                        LabeledContent("最大", value: metric.displayValue(statistics.metricStatistics.maximumValue))
-                        LabeledContent("有效覆盖", value: WorkoutFormat.duration(statistics.metricCoveredSeconds))
-                        LabeledContent("原始采样", value: "\(statistics.metricSampleCount) 个")
-                        if metric.id == "speed", workout.sportName == "跑步" {
-                            LabeledContent("平均配速", value: WorkoutFormat.pace(statistics.metricStatistics.averageValue))
-                            LabeledContent("最快采样配速", value: WorkoutFormat.pace(statistics.metricStatistics.maximumValue))
+                        LabeledContent(String(localized: "Average"), value: metric.localizedValue(statistics.metricStatistics.averageValue))
+                        LabeledContent(String(localized: "Average excluding zero plateaus"), value: metric.localizedValue(statistics.metricAverageExcludingZeros))
+                        LabeledContent(String(localized: "Minimum"), value: metric.localizedValue(statistics.metricStatistics.minimumValue))
+                        LabeledContent(String(localized: "Maximum"), value: metric.localizedValue(statistics.metricStatistics.maximumValue))
+                        LabeledContent(String(localized: "Valid coverage"), value: WorkoutFormat.duration(statistics.metricCoveredSeconds))
+                        LabeledContent(String(localized: "Recorded samples"), value: String(localized: "Count: \(statistics.metricSampleCount)"))
+                        if metric.id == "speed", workout.sportKind == .running {
+                            LabeledContent(String(localized: "Average pace"), value: WorkoutFormat.pace(statistics.metricStatistics.averageValue))
+                            LabeledContent(String(localized: "Fastest sample pace"), value: WorkoutFormat.pace(statistics.metricStatistics.maximumValue))
                         }
                     } else {
-                        Text("派生统计暂不可用，可返回运动详情重试分析。")
+                        Text("Derived statistics are unavailable. Return to workout details to retry the analysis.")
                             .font(.footnote).foregroundStyle(.secondary)
                     }
                 }
                 if let statistics {
-                    AnalysisCard(title: "分布", color: metric.accent) {
+                    AnalysisCard(title: "Distribution", color: metric.accent) {
                         Chart(Array(statistics.metricDistribution.enumerated()), id: \.offset) { _, bin in
                             RectangleMark(xStart: .value(metric.unit, bin.binLower * metric.canonicalScale),
                                     xEnd: .value(metric.unit, bin.binUpper * metric.canonicalScale),
-                                    yStart: .value("分钟", 0),
-                                    yEnd: .value("分钟", bin.binSeconds / 60))
+                                    yStart: .value("Minutes", 0),
+                                    yEnd: .value("Minutes", bin.binSeconds / 60))
                                 .foregroundStyle(metric.accent.gradient)
                         }.frame(height: 220)
-                        Text("横轴 \(metric.unit) · 纵轴分钟。基于有效时间覆盖，不按采样点数量计数。")
+                        Text("Horizontal axis: \(metric.unit) · Vertical axis: minutes. Weighted by covered time, not sample count.")
                             .font(.footnote).foregroundStyle(.secondary)
                     }
                 }
                 if let analysis {
                     if metric.id == "power", !analysis.analysisPowerZones.isEmpty {
-                        AnalysisCard(title: "功率区间", color: .purple) {
+                        AnalysisCard(title: "Power zones", color: .purple) {
                             ZoneChart(zones: analysis.analysisPowerZones, unit: "W")
-                            Text("阈值功率的 55%、75%、90%、105%、120%、150% 为区间边界。只计入有效功率覆盖。")
+                            Text("Zone boundaries are 55%, 75%, 90%, 105%, 120% and 150% of threshold power. Only valid power coverage is included.")
                                 .font(.footnote).foregroundStyle(.secondary)
                         }
                     }
                     ForEach(Array(analysis.analysisRelationships.filter { $0.relationshipX.rawValue == metric.id + "Metric" }.enumerated()), id: \.offset) { _, relationship in
-                        if let other = workout.metrics.first(where: { $0.id + "Metric" == relationship.relationshipY.rawValue }) {
+                        if let other = comparisonMetrics.first(where: { $0.id + "Metric" == relationship.relationshipY.rawValue }) {
                             RelationshipCard(metric: metric, other: other, relationship: relationship)
                         }
                     }
                 }
             }.padding(20).frame(maxWidth: 760).frame(maxWidth: .infinity)
         }
-        .background(FitnessStyle.background).navigationTitle(metric.title + "分析").navigationBarTitleDisplayMode(.inline)
+        .background(FitnessStyle.background).navigationTitle(String(localized: "\(metric.localizedTitle) analysis")).navigationBarTitleDisplayMode(.inline)
+        .task(id: workout.workoutId + ":" + workout.workoutRevision) { comparisonMetrics = workout.metrics }
         .onChange(of: axis) { _, _ in selection = nil }
     }
 }
@@ -91,16 +97,16 @@ private struct RelationshipCard: View {
     let other: WorkoutMetric
     let relationship: Components.Schemas.MetricRelationship
     var body: some View {
-        AnalysisCard(title: metric.title + "与" + other.title, color: metric.accent) {
+        AnalysisCard(title: "\(metric.localizedTitle) and \(other.localizedTitle)", color: metric.accent) {
             Chart(Array(relationship.relationshipPoints.enumerated()), id: \.offset) { _, point in
                 PointMark(x: .value(metric.unit, point.relationshipXValue * metric.canonicalScale),
                           y: .value(other.unit, point.relationshipYValue * other.canonicalScale))
                     .foregroundStyle(metric.accent.opacity(0.5)).symbolSize(12)
             }.frame(height: 220)
-                .chartXAxisLabel(metric.title + " · " + metric.unit)
-                .chartYAxisLabel(other.title + " · " + other.unit)
-            analysisRow("相关系数", relationship.relationshipCorrelation, "", digits: 2)
-            Text("\(relationship.relationshipSampleCount) 对有效采样，图上最多展示 600 对。相关不代表因果。")
+                .chartXAxisLabel(metric.localizedTitle + " · " + metric.unit)
+                .chartYAxisLabel(other.localizedTitle + " · " + other.unit)
+            analysisRow("Correlation", relationship.relationshipCorrelation, "", digits: 2)
+            Text("Aligned sample pairs: \(relationship.relationshipSampleCount); the chart shows up to 600 pairs. Correlation does not imply causation.")
                 .font(.footnote).foregroundStyle(.secondary)
         }
     }
@@ -115,54 +121,43 @@ struct MetricTimeline: View {
     var selection: Binding<Double?>?
     @State private var localSelection: Double?
 
-    private struct Point: Identifiable {
-        let id: Date
-        let x: Double
-        let y: Double
-        let segment: Int
+    private struct ProjectionKey: Equatable {
+        let workout: String
+        let revision: String
+        let metric: String
+        let axis: MetricAxis
     }
-
-    private var points: [Point] {
-        let shown = Set(metric.chartPoints.map(\.timestamp))
-        var segment = 0
-        var previous: Date?
-        var previousX: Double?
-        return metric.points.compactMap { point in
-            if let previous, point.timestamp.timeIntervalSince(previous) > 120 { segment += 1 }
-            previous = point.timestamp
-            guard let x = coordinate(point.timestamp) else { segment += 1; return nil }
-            if let previousX, x < previousX { segment += 1 }
-            previousX = x
-            guard shown.contains(point.timestamp) else { return nil }
-            return Point(id: point.timestamp, x: x, y: point.value, segment: segment)
-        }
+    private struct Prepared {
+        let key: ProjectionKey
+        let projection: MetricChartProjection
+        let domain: ClosedRange<Double>
     }
-
-    private var xDomain: ClosedRange<Double> {
-        let range = workout.workoutObservation.observationRange
-        if axis == .time { return 0...max(1, range.rangeEnd.timeIntervalSince(range.rangeStart)) }
-        return 0...max(0.001, (workout.motion.motionDistance.last?.value ?? 0) / 1000)
+    @State private var prepared: Prepared?
+    private var key: ProjectionKey {
+        ProjectionKey(workout: workout.workoutId, revision: workout.workoutRevision, metric: metric.id, axis: axis)
     }
 
     var body: some View {
-        let rendered = points
+        let current = prepared.flatMap { $0.key == key ? $0 : nil }
+        let rendered = current?.projection.rendered ?? []
         let selected = selection?.wrappedValue ?? localSelection
-        let nearest = selected.flatMap { metric.nearestPoint(to: $0, coordinate: coordinate) }
+        let nearest = selected.flatMap { current?.projection.nearest(to: $0) }
         VStack(alignment: .leading, spacing: 6) {
-            if rendered.isEmpty { Text("没有可用于此横轴的采样").font(.caption).foregroundStyle(.secondary) }
+            if rendered.isEmpty { Text("No samples available for this axis").font(.caption).foregroundStyle(.secondary) }
             else {
                 let chart = Chart {
                     ForEach(rendered) { point in
-                        LineMark(x: .value(axis.rawValue, point.x), y: .value(metric.unit, point.y), series: .value("连续段", point.segment))
+                        LineMark(x: .value(axis.localizedTitle, point.x), y: .value(metric.unit, point.value), series: .value("Continuous segment", point.segment))
                             .foregroundStyle(metric.accent).lineStyle(StrokeStyle(lineWidth: 2))
-                        if rendered.count < 3 { PointMark(x: .value(axis.rawValue, point.x), y: .value(metric.unit, point.y)).foregroundStyle(metric.accent) }
+                        if point.isolated { PointMark(x: .value(axis.localizedTitle, point.x), y: .value(metric.unit, point.value)).foregroundStyle(metric.accent) }
                     }
-                    if let nearest, let x = coordinate(nearest.timestamp) {
-                        RuleMark(x: .value(axis.rawValue, x)).foregroundStyle(.secondary.opacity(0.6))
-                        PointMark(x: .value(axis.rawValue, x), y: .value(metric.unit, nearest.value)).foregroundStyle(metric.accent)
+                    if let nearest {
+                        let x = nearest.x
+                        RuleMark(x: .value(axis.localizedTitle, x)).foregroundStyle(.secondary.opacity(0.6))
+                        PointMark(x: .value(axis.localizedTitle, x), y: .value(metric.unit, nearest.value)).foregroundStyle(metric.accent)
                     }
                 }
-                .chartXScale(domain: xDomain)
+                .chartXScale(domain: current?.domain ?? 0...1)
                 .chartXSelection(value: selection ?? $localSelection)
                 .chartXAxis {
                     AxisMarks(values: .automatic(desiredCount: 4)) { value in
@@ -172,9 +167,9 @@ struct MetricTimeline: View {
                         }
                     }
                 }
-                .chartXAxisLabel(axis == .time ? "经过时间（分钟）" : "距离（km）")
-                .accessibilityLabel(metric.title + "随" + axis.rawValue + "变化")
-                if let value = rendered.first?.y, rendered.allSatisfy({ $0.y == value }) {
+                .chartXAxisLabel(axis == .time ? String(localized: "Elapsed time (minutes)") : String(localized: "Distance (km)"))
+                .accessibilityLabel("\(metric.localizedTitle) over \(axis.localizedTitle)")
+                if let value = rendered.first?.value, rendered.allSatisfy({ $0.value == value }) {
                     // Automatic singleton domains can reverse negative axes.
                     // This range is display padding, not additional samples.
                     let padding = max(1, abs(value) * 0.05)
@@ -186,16 +181,24 @@ struct MetricTimeline: View {
                 }
                 if let nearest {
                     Text(WorkoutFormat.number(nearest.value, unit: metric.unit, fractionDigits: metric.fractionDigits)
-                        + " · " + nearest.timestamp.formatted(date: .omitted, time: .standard))
+                        + " · " + nearest.id.formatted(date: .omitted, time: .standard))
                         .font(.caption).monospacedDigit().foregroundStyle(metric.accent)
                 }
             }
         }
+        .task(id: key) {
+            let distances = workout.motion.motionDistance
+            let range = workout.workoutObservation.observationRange
+            let domain: ClosedRange<Double> = axis == .time
+                ? 0...max(1, range.rangeEnd.timeIntervalSince(range.rangeStart))
+                : 0...max(0.001, (distances.map(\.value).max() ?? 0) / 1000)
+            let projection = MetricChartProjection(metric: metric) { coordinate($0, distances: distances) }
+            prepared = Prepared(key: key, projection: projection, domain: domain)
+        }
     }
 
-    private func coordinate(_ time: Date) -> Double? {
+    private func coordinate(_ time: Date, distances: [Components.Schemas.Timed_Distance]) -> Double? {
         if axis == .time { return time.timeIntervalSince(workout.workoutObservation.observationRange.rangeStart) }
-        let distances = workout.motion.motionDistance
         var low = 0
         var high = distances.count
         while low < high {

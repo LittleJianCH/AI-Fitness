@@ -12,8 +12,9 @@ dynamics, fitness-history analysis and full-screen routes. Raw metric charts,
 metric navigation/comparison, and the separately requested power curve remain
 available when derived workout analysis fails; retry applies to the derived
 analysis. Settings requests and cached values are isolated by session identity,
-including account changes during a save; reads hide stale settings immediately
-before the next load starts. Training-history requests use each
+including account changes during a save. Account changes hide the previous
+settings immediately; same-account refresh keeps the current appearance and
+parameters visible until replacement values arrive. Training-history requests use each
 civil day's actual boundaries, including midnight daylight-saving changes. See
 [the analysis definitions](../docs/workout-analysis.md) for coverage policies,
 parameter precedence, algorithm assumptions and explicit remaining feature gaps.
@@ -304,5 +305,79 @@ loopback-only test proxy via `FITNESS_TEST_ANALYSIS_FAILURE_CONTROLS=1`. The UI
 regression toggles `POST /__test/analysis-failure/on` and `/off` to verify raw
 metrics, comparison axes, the independent power curve, and derived-analysis
 retry. These controls are absent from the production backend and disabled in
-the proxy unless explicitly enabled. The default harness requires all six UI
-tests to run without skips.
+the proxy unless explicitly enabled. Each UI scenario resets proxy fault state through `POST /__test/reset`, so the
+one-shot stale curve does not depend on test order. Reset is guarded by the same
+explicit test-only flag. The default harness requires the UI suite to run without skips.
+
+
+## Localization
+
+The app supports English and Simplified Chinese through iOS system/per-app language
+selection. English is the development language and fallback. Native language
+negotiation handles regional English and Chinese script/region aliases; unsupported
+languages fall back to English. Language selection does not change metric units,
+server identifiers, revisions, authorization, or import/export data. Region and
+device time zone control date and number formatting. User titles, names, notes,
+tags and equipment names remain verbatim.
+
+`App/Localizable.xcstrings` owns UI copy and `App/InfoPlist.xcstrings` owns HealthKit
+permission purposes. Both are explicitly included in the Xcode app resource phase;
+`FitnessCore` carries semantic errors and metric labels without app-bundle lookups.
+Custom title and error components retain `LocalizedStringResource` until rendering,
+where they apply the SwiftUI environment locale. Whole messages retain typed
+interpolation; count-dependent actions and summaries use native plural variations.
+Never translate backend diagnostic prose or construct keys from user content.
+
+Build the app to refresh native compiler extraction, then run:
+
+```sh
+python3 ios/check_localizations.py
+swift ios/Tests/Support/verify_localizations.swift \
+  ios/DerivedData/Build/Products/Debug-iphonesimulator/Fitness.app
+python3 ios/check_localizations.py --extracted \
+  ios/DerivedData/Build/Intermediates.noindex/Fitness.build/Debug-iphonesimulator/Fitness.build/Objects-normal/arm64
+```
+
+Every app build runs the catalog-integrity check, so missing translations or invalid
+arguments fail the build. The explicit extraction check also verifies source keys.
+The check verifies both translations, typed placeholders, plural branches and keys
+from the completed Xcode build. Its in-memory corruption probes demonstrate that
+missing translations, wrong argument types and missing plural branches fail.
+The Swift helper checks compiled native resources, English singular/plural forms,
+Chinese counts, resource-locale changes, missing-key fallback, verbatim content and
+the bundled permission purposes.
+Keep catalogs in Git; compiler extraction and compiled resources are build outputs.
+
+The isolated UI harness includes English (`en-GB`) and Simplified Chinese login,
+workout, settings and HealthKit preview journeys, plus unsupported-language fallback
+and `zh-CN` negotiation with localized endpoint errors. Existing Chinese regressions
+now launch explicitly in Chinese. XCTest language/locale launch arguments are test
+configuration only; application code never changes `AppleLanguages`.
+Device HealthKit permission behavior and large-text/pseudolocale acceptance still
+require their separate platform checks.
+
+
+### Localization verification — 2026-09-20 continuation
+
+The final app built on Xcode 27 with the catalog-validation phase enabled.
+All **388 catalog entries**, compiler-extracted keys and compiled English/Chinese
+resources passed validation, including context-specific titles, plurals, fallback
+and both HealthKit purpose descriptions. **61 FitnessCore tests passed**.
+
+The four targeted UI methods have passing results against disposable PostgreSQL
+backends on fresh iPhone 15 / iOS 27 simulators: bilingual login/workout/settings/
+HealthKit-preview journeys; unsupported-language and Chinese-regional fallback;
+body/equipment persistence and backend parameter use; and login/restoration/logout
+with synthetic HealthKit writes, receipts and repeated export after relaunch.
+The final four-method run passed the first three; the remaining method passed
+separately after adapting its test-only iOS 27 historical-data permission step.
+This is not a fresh passing run of the entire older UI suite.
+
+Each test resets the proxy's one-shot fault state. Native label assertions retain
+both label and value without depending on locale-specific accessibility punctuation.
+Analysis rows combine their label/value for accessibility, and numeric fields use
+an explicit row so English parameter labels are not clipped. Current English and
+Chinese field screenshots and the persisted **72.5 kg / 240 W** analysis readout
+were visually inspected. Screenshots contain synthetic data and remain local,
+outside maintained source. Physical-device permissions, large-text/pseudolocale
+coverage and the full older UI suite remain separate verification boundaries.

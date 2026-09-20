@@ -54,7 +54,7 @@ final class HealthImportTests: XCTestCase {
         let store = HealthImportStore(service: service, session: await session())
         await store.upload(preview)
         XCTAssertEqual(store.records[preview.id]?.status, .failed)
-        XCTAssertFalse(store.messages[preview.id]?.contains("已确认") ?? true)
+        XCTAssertFalse(store.messages[preview.id] == .importConfirmed)
         await service.set(.success(Self.record(preview, status: .succeeded)))
         await store.upload(preview, action: .retry)
         var sent = await service.sent
@@ -76,14 +76,14 @@ final class HealthImportTests: XCTestCase {
         for status in [Components.Schemas.ImportStatus.pending, .processing, .suppressed] {
             await service.set(.success(Self.record(preview, status: status)))
             await store.upload(preview)
-            XCTAssertFalse(store.messages[preview.id]?.contains("已确认导入") ?? true)
+            XCTAssertFalse(store.messages[preview.id] == .importConfirmed)
         }
         var malformed = Self.record(preview, status: .succeeded)
         malformed.lastSuccess = nil
         await service.set(.success(malformed))
         await store.upload(preview)
         XCTAssertEqual(store.records[preview.id]?.status, .suppressed)
-        XCTAssertEqual(store.messages[preview.id], HealthImportError.invalidAcknowledgement.errorDescription)
+        XCTAssertEqual(store.messages[preview.id], .healthImport(.invalidAcknowledgement))
         await service.set(.failure(APIResponseError(status: 429, problem: nil, retryAfter: "60")))
         await store.upload(preview)
         XCTAssertTrue(store.pauseBatch)

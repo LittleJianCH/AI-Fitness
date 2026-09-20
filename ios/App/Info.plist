@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
+<key>CFBundleDevelopmentRegion</key><string>$(DEVELOPMENT_LANGUAGE)</string>
+<key>CFBundleLocalizations</key><array><string>en</string><string>zh-Hans</string></array>
 <key>CFBundleDisplayName</key><string>AI Fitness</string>
 <key>CFBundleExecutable</key><string>$(EXECUTABLE_NAME)</string>
 <key>CFBundleIdentifier</key><string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
@@ -9,8 +11,8 @@
 <key>CFBundleShortVersionString</key><string>1.0</string>
 <key>CFBundleVersion</key><string>1</string>
 <key>LSRequiresIPhoneOS</key><true/>
-<key>NSHealthShareUsageDescription</key><string>读取你选择的骑行、跑步及相关测量和路线，预览后导入当前登录的 AI Fitness 后端。</string>
-<key>NSHealthUpdateUsageDescription</key><string>将你确认的后端运动、支持的测量和路线写入 Apple 健康，并保存导出回执以便重试。</string>
+<key>NSHealthShareUsageDescription</key><string>Read your selected cycling and running workouts, related measurements and routes. Preview them before importing to the AI Fitness server you are signed in to.</string>
+<key>NSHealthUpdateUsageDescription</key><string>Write the server workouts, supported measurements and routes you confirm to Apple Health, and save an export receipt for retries.</string>
 <key>UILaunchScreen</key><dict/>
 <key>UISupportedInterfaceOrientations</key><array><string>UIInterfaceOrientationPortrait</string><string>UIInterfaceOrientationLandscapeLeft</string><string>UIInterfaceOrientationLandscapeRight</string></array>
 <key>NSAppTransportSecurity</key><dict><key>NSAllowsLocalNetworking</key><true/></dict>

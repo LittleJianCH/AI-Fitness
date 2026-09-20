@@ -8,7 +8,7 @@ public final class SettingsStore {
     private var cachedSettings: UserSettings?
     public private(set) var isLoading = false
     public private(set) var isSaving = false
-    public private(set) var message: String?
+    public private(set) var message: ClientIssue?
     @ObservationIgnored private let service: any SettingsService
     @ObservationIgnored private let session: SessionStore
     @ObservationIgnored private var generation: UInt64 = 0
@@ -25,7 +25,7 @@ public final class SettingsStore {
         generation &+= 1
         let request = generation
         let identity = session.generation
-        cachedSettings = nil
+        // Keep this account's appearance and parameters visible during refresh.
         message = nil
         guard let token = session.token, session.user != nil else { isLoading = false; return }
         isLoading = true
@@ -35,12 +35,15 @@ public final class SettingsStore {
             guard request == generation, identity == session.generation else { return }
             try Task.checkCancellation()
             cachedSettings = result
+            message = nil
         } catch { handle(error, identity: identity, request: request) }
     }
 
     public func save(_ proposed: UserSettings) async -> Bool {
         invalidateForSessionChange()
-        guard !isSaving, !isLoading, let token = session.token, session.user != nil else { return false }
+        guard !isSaving else { message = .settingsSaving; return false }
+        guard !isLoading else { message = .settingsLoading; return false }
+        guard let token = session.token, session.user != nil else { message = .settingsSignedOut; return false }
         generation &+= 1
         let request = generation
         let identity = session.generation
@@ -52,6 +55,7 @@ public final class SettingsStore {
             guard request == generation, identity == session.generation else { return false }
             try Task.checkCancellation()
             cachedSettings = result
+            message = nil
             return true
         } catch {
             handle(error, identity: identity, request: request)
@@ -73,6 +77,6 @@ public final class SettingsStore {
     private func handle(_ error: any Error, identity: UInt64, request: UInt64) {
         guard request == generation, identity == session.generation else { return }
         if (error as? APIResponseError)?.status == 401 { session.handleUnauthorized(for: identity) }
-        else if !Task.isCancelled && !(error is CancellationError) { message = userFacingError(error) }
+        else if !Task.isCancelled && !(error is CancellationError) { message = ClientIssue(error) }
     }
 }

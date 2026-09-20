@@ -63,8 +63,33 @@ final class ChartSamplesTests: XCTestCase {
         XCTAssertNil(makeMetric([]).nearestPoint(to: 0) { $0.timeIntervalSince1970 })
     }
 
+    func testUnitlessValuesDoNotAddWhitespace() {
+        XCTAssertEqual(WorkoutFormat.number(120, unit: ""), "120")
+        XCTAssertEqual(WorkoutFormat.number(150, unit: "bpm"), "150 bpm")
+    }
+
+    func testPreparedProjectionShowsIsolatedSegmentsAndSelectsUndecimatedSamples() throws {
+        let times = [0.0, 1, 122, 243, 244]
+        let metric = WorkoutMetric(id: "temperature", title: .temperature, unit: "°C", points: times.map {
+            MetricPoint(timestamp: Date(timeIntervalSince1970: $0), value: 20)
+        })
+        let projection = MetricChartProjection(metric: metric) { $0.timeIntervalSince1970 }
+        XCTAssertEqual(projection.rendered.map(\.isolated), [false, false, true, false, false])
+        let sparse = WorkoutMetric(id: "temperature", title: .temperature, unit: "°C", points: (0..<40).map {
+            MetricPoint(timestamp: Date(timeIntervalSince1970: Double($0 * 121)), value: 20)
+        })
+        XCTAssertTrue(MetricChartProjection(metric: sparse) { $0.timeIntervalSince1970 }.rendered.allSatisfy(\.isolated))
+        let dense = makeMetric((0..<14_400).map { Double($0 % 30) })
+        var projections = 0
+        let prepared = MetricChartProjection(metric: dense) { projections += 1; return $0.timeIntervalSince1970 }
+        let omitted = try XCTUnwrap(dense.points.first { sample in !prepared.rendered.contains { $0.id == sample.id } })
+        XCTAssertEqual(prepared.nearest(to: omitted.timestamp.timeIntervalSince1970)?.id, omitted.id)
+        for x in 0..<100 { _ = prepared.nearest(to: Double(x)) }
+        XCTAssertEqual(projections, dense.points.count, "Scrubbing must not recalculate the source coordinates")
+    }
+
     private func makeMetric(_ values: [Double]) -> WorkoutMetric {
-        WorkoutMetric(id: "power", title: "Power", unit: "W", points: values.enumerated().map {
+        WorkoutMetric(id: "power", title: .power, unit: "W", points: values.enumerated().map {
             MetricPoint(timestamp: Date(timeIntervalSince1970: Double($0.offset)), value: $0.element)
         })
     }

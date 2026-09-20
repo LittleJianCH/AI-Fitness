@@ -18,26 +18,26 @@ struct PowerCurveSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            FitnessSectionTitle(title: "最佳持续功率", color: .purple)
+            FitnessSectionTitle(title: "Best sustained power", color: .purple)
                 .accessibilityIdentifier("powerCurve")
             VStack(alignment: .leading, spacing: 18) {
                 if workout.motion.motionPower.isEmpty {
-                    Text("没有足够的连续功率采样，无法计算最佳持续功率。")
+                    Text("There are not enough continuous power samples to calculate best sustained power.")
                 } else if store.isLoading {
-                    ProgressView("正在计算最佳持续功率…")
+                    ProgressView("Calculating best sustained power…")
                 } else if store.needsWorkoutRefresh {
-                    Text("训练已更新，请刷新后查看对应的功率曲线。")
-                    Button("刷新训练", action: refreshWorkout)
+                    Text("The workout has changed. Refresh to view its current power curve.")
+                    Button("Refresh workout", action: refreshWorkout)
                 } else if let message = store.message {
-                    Text(message).foregroundStyle(.secondary)
-                    Button("重试") { reload += 1 }.buttonStyle(.bordered)
+                    IssueText(message).foregroundStyle(.secondary)
+                    Button("Retry") { reload += 1 }.buttonStyle(.bordered)
                 } else if let curve = store.curve {
                     results(curve)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading).padding(20).fitnessCard()
             if let curve = store.curve {
-                Text("单次训练 · W · 包含真实零值。间隔最多 \(curve.maxGapSeconds) 秒时线性插值，更长缺口切断区间，不补零或外推。横轴为持续时长（对数），连线仅辅助阅读；区间时间相对训练开始。")
+                Text("Single workout · W · Includes recorded zeros. Samples up to \(curve.maxGapSeconds) seconds apart are linearly interpolated; longer gaps break the interval without zero filling or extrapolation. Duration uses a logarithmic axis and connecting lines are reading guides. Interval times are relative to workout start.")
                     .font(.subheadline).foregroundStyle(.secondary)
             }
         }
@@ -55,9 +55,9 @@ struct PowerCurveSection: View {
         if let selected, let effort = selected.best {
             Chart(available, id: \.durationSeconds) { point in
                 if let best = point.best {
-                    LineMark(x: .value("持续秒数", Double(point.durationSeconds)), y: .value("W", best.averagePower))
+                    LineMark(x: .value("Duration in seconds", Double(point.durationSeconds)), y: .value("W", best.averagePower))
                         .foregroundStyle(.purple).interpolationMethod(.linear)
-                    PointMark(x: .value("持续秒数", Double(point.durationSeconds)), y: .value("W", best.averagePower))
+                    PointMark(x: .value("Duration in seconds", Double(point.durationSeconds)), y: .value("W", best.averagePower))
                         .foregroundStyle(.purple).symbolSize(point.durationSeconds == selected.durationSeconds ? 70 : 20)
                 }
             }
@@ -70,27 +70,27 @@ struct PowerCurveSection: View {
             }
             .chartYScale(domain: .automatic(includesZero: true))
             .frame(height: 240)
-            .accessibilityLabel("最佳持续功率曲线，使用下方时长选择或数据列表查看数值")
+            .accessibilityLabel("Best sustained power chart. Use the duration picker or data list to inspect values.")
             Text("\(WorkoutFormat.duration(Double(selected.durationSeconds))) · \(WorkoutFormat.number(effort.averagePower, unit: "W", fractionDigits: 1))")
                 .font(.title2.bold()).monospacedDigit().foregroundStyle(.purple)
                 .accessibilityIdentifier("powerCurveSelected")
-            Text("最佳区间：\(offset(effort.start)) – \(offset(effort.end))").font(.subheadline).foregroundStyle(.secondary)
-            Picker("持续时长", selection: Binding(get: { selected.durationSeconds }, set: { selectedDuration = $0 })) {
+            Text("Best interval: \(offset(effort.start)) – \(offset(effort.end))").font(.subheadline).foregroundStyle(.secondary)
+            Picker("Effort duration", selection: Binding(get: { selected.durationSeconds }, set: { selectedDuration = $0 })) {
                 ForEach(available, id: \.durationSeconds) { point in
                     Text(WorkoutFormat.duration(Double(point.durationSeconds))).tag(point.durationSeconds)
                 }
             }.accessibilityIdentifier("powerCurveDuration")
         } else {
-            Text("没有足够的连续功率采样，无法计算最佳持续功率。")
+            Text("There are not enough continuous power samples to calculate best sustained power.")
         }
-        DisclosureGroup("查看最佳功率数据") {
+        DisclosureGroup("View best power data") {
             ForEach(curve.points, id: \.durationSeconds) { point in
                 VStack(alignment: .leading, spacing: 5) {
                     Text(WorkoutFormat.duration(Double(point.durationSeconds))).font(.headline)
                     if let best = point.best {
                         Text(WorkoutFormat.number(best.averagePower, unit: "W", fractionDigits: 1))
                         Text("\(offset(best.start)) – \(offset(best.end))").foregroundStyle(.secondary)
-                    } else { Text("连续采样不足").foregroundStyle(.secondary) }
+                    } else { Text("Insufficient continuous samples").foregroundStyle(.secondary) }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 8)
                 .accessibilityElement(children: .combine)

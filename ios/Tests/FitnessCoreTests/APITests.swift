@@ -49,17 +49,13 @@ final class APITests: XCTestCase {
         } catch let error as APIResponseError {
             XCTAssertEqual(error.status, 500)
             XCTAssertNil(error.problem)
-            XCTAssertFalse(userFacingError(error).contains("sensitive"))
+            XCTAssertFalse(String(describing: ClientIssue(error)).contains("sensitive"))
         }
     }
 
     func testHistoryProblemCodesProduceActionableMessagesWithoutServerDiagnostics() async throws {
-        let cases = [
-            ("analysis_too_large", "这段历史的数据量超过处理上限，请缩短日期范围后重试。"),
-            ("analysis_unavailable", "当前历史数据无法计算，请调整分析条件后重试。"),
-            ("invalid_input", "提交的数据不符合要求，请检查后重试。"),
-        ]
-        for (code, message) in cases {
+        let codes = ["analysis_too_large", "analysis_unavailable", "invalid_input", "future_unknown_code"]
+        for code in codes {
             let body = try JSONSerialization.data(withJSONObject: [
                 "code": code, "message": "sensitive diagnostic", "requestId": "synthetic", "fields": [],
             ] as [String: Any])
@@ -75,10 +71,21 @@ final class APITests: XCTestCase {
             } catch let error as APIResponseError {
                 XCTAssertEqual(error.status, 422)
                 XCTAssertEqual(error.problem?.code, code)
-                XCTAssertEqual(userFacingError(error), message)
-                XCTAssertFalse(userFacingError(error).contains("sensitive"))
+                XCTAssertEqual(ClientIssue(error), .api(status: 422, code: code, requestID: "synthetic", retryAfter: nil))
+                XCTAssertFalse(String(describing: ClientIssue(error)).contains("sensitive"))
             }
         }
+    }
+
+
+    func testSemanticIssuesSeparateTransportCancellationAndUnknownFailures() {
+        struct Unrecognized: Error {}
+        XCTAssertEqual(ClientIssue(URLError(.notConnectedToInternet)), .network)
+        XCTAssertEqual(ClientIssue(URLError(.cancelled)), .cancelled)
+        XCTAssertEqual(ClientIssue(CancellationError()), .cancelled)
+        XCTAssertEqual(ClientIssue(Unrecognized()), .unknown)
+        XCTAssertEqual(ClientIssue(APIResponseError(status: 503, problem: nil, retryAfter: "30")),
+                       .api(status: 503, code: nil, requestID: nil, retryAfter: "30"))
     }
 
     #if os(macOS)

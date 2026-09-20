@@ -7,7 +7,7 @@ public enum HealthImportAction { case normal, retry, refresh }
 @MainActor @Observable
 public final class HealthImportStore {
     public private(set) var records: [String: HealthImportRecord] = [:]
-    public private(set) var messages: [String: String] = [:]
+    public private(set) var messages: [String: ClientIssue] = [:]
     public private(set) var activeID: String?
     public private(set) var pauseBatch = false
     @ObservationIgnored private let service: any HealthImportService
@@ -57,19 +57,19 @@ public final class HealthImportStore {
             records[preview.id] = record
             switch record.status {
             case .succeeded:
-                messages[preview.id] = "已确认导入，重复上传不会新增记录。"
+                messages[preview.id] = .importConfirmed
             case .failed:
-                messages[preview.id] = "后端未能导入这些数据；已有运动记录保持不变。"
+                messages[preview.id] = .importFailed
             case .suppressed:
-                messages[preview.id] = "此来源已被删除并禁止重新导入。"
+                messages[preview.id] = .importSuppressed
             case .pending, .processing:
-                messages[preview.id] = "服务器尚未确认完成，可稍后重新检查。"
+                messages[preview.id] = .importPending
             }
         } catch {
             guard session.generation == identity else { return }
             if (error as? APIResponseError)?.status == 401 { session.handleUnauthorized(for: identity) }
             else if !(error is CancellationError) {
-                messages[preview.id] = (error as? HealthImportError)?.errorDescription ?? userFacingError(error)
+                messages[preview.id] = ClientIssue(error)
                 pauseBatch = (error as? APIResponseError)?.status == 429
             }
         }

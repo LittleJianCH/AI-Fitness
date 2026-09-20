@@ -12,7 +12,7 @@ struct TrainingHistoryScreen: View {
     @State private var zeroInitial = false
     @State private var initialFitness = ""
     @State private var initialFatigue = ""
-    @State private var inputError: String?
+    @State private var inputError: LocalizedStringResource?
     @State private var action: Task<Void, Never>?
 
     init(api: FitnessAPI, session: SessionStore, ending: Date) {
@@ -22,66 +22,67 @@ struct TrainingHistoryScreen: View {
 
     var body: some View {
         Form {
-            Section("历史范围") {
-                DatePicker("结束日期", selection: $endDate, in: ...Date(), displayedComponents: .date)
-                Picker("天数", selection: $count) {
-                    Text("42 天").tag(42)
-                    Text("90 天").tag(90)
-                    Text("180 天").tag(180)
+            Section("History range") {
+                DatePicker("End date", selection: $endDate, in: ...Date(), displayedComponents: .date)
+                Picker("Days", selection: $count) {
+                    Text("42 days").tag(42)
+                    Text("90 days").tag(90)
+                    Text("180 days").tag(180)
                 }
-                Text("日期按 \(TimeZone.current.identifier) 划分。当天的运动计入开始日期；今天的结果会随新记录更新。")
+                Text("Dates use \(TimeZone.current.identifier). Workouts belong to their start date; today's result updates as new records arrive.")
                     .font(.footnote).foregroundStyle(.secondary)
             }
             Section {
-                Toggle("这段历史中的运动均已导入", isOn: $complete)
+                Toggle("All workouts in this range have been imported", isOn: $complete)
             } footer: {
-                Text("确认后，没有运动的日子按休息日计算。未确认时保留未知状态，避免把漏记的运动当作零负荷。")
+                Text("When confirmed, days without workouts count as rest. Otherwise they remain unknown, so missing records are not treated as zero load.")
             }
             Section {
-                Toggle("假设开始前没有训练负荷", isOn: $zeroInitial)
+                Toggle("Assume no training load before the start", isOn: $zeroInitial)
                     .accessibilityIdentifier("assumeNoPriorLoad")
                 if !zeroInitial {
-                    TextField("初始体能 CTL", text: $initialFitness).keyboardType(.decimalPad)
-                    TextField("初始疲劳 ATL", text: $initialFatigue).keyboardType(.decimalPad)
+                    TextField("Initial fitness CTL", text: $initialFitness).keyboardType(.decimalPad)
+                    TextField("Initial fatigue ATL", text: $initialFatigue).keyboardType(.decimalPad)
                 }
-            } header: { Text("初始状态") } footer: {
-                Text("若已有同一 HRSS 模型下的 CTL / ATL，可填写范围开始前一天的值。零起点仅是计算假设，短历史会明显受它影响。")
+            } header: { Text("Initial state") } footer: {
+                Text("If you have CTL / ATL from the same HRSS model, enter the values for the day before this range. A zero start is a calculation assumption that strongly affects short histories.")
             }
             Section {
-                Button("计算体能与疲劳", action: load).disabled(store.isLoading)
+                Button("Calculate fitness and fatigue", action: load).disabled(store.isLoading)
                     .accessibilityIdentifier("calculateTrainingHistory")
-                if store.isLoading { ProgressView("正在计算…") }
-                if let message = inputError ?? store.message { Text(message).foregroundStyle(.red) }
+                if store.isLoading { ProgressView("Calculating…") }
+                if let inputError { LocalizedText(inputError).foregroundStyle(.red) }
+                if let message = store.message { IssueText(message).foregroundStyle(.red) }
             }
             if let history = store.history {
-                Section("训练趋势") {
+                Section("Training trends") {
                     if history.trainingDays.contains(where: { $0.trainingFitness != nil || $0.trainingFatigue != nil }) {
                         Chart(history.trainingDays, id: \.trainingCalendar.calendarDate) { day in
                             if let fitness = day.trainingFitness {
-                                LineMark(x: .value("日期", day.trainingCalendar.calendarStart), y: .value("HRSS / 日", fitness), series: .value("指标", "体能 CTL"))
-                                    .foregroundStyle(by: .value("指标", "体能 CTL"))
+                                LineMark(x: .value("Date", day.trainingCalendar.calendarStart), y: .value("HRSS / day", fitness), series: .value("Metric", String(localized: "Fitness CTL")))
+                                    .foregroundStyle(by: .value("Metric", String(localized: "Fitness CTL")))
                             }
                             if let fatigue = day.trainingFatigue {
-                                LineMark(x: .value("日期", day.trainingCalendar.calendarStart), y: .value("HRSS / 日", fatigue), series: .value("指标", "疲劳 ATL"))
-                                    .foregroundStyle(by: .value("指标", "疲劳 ATL"))
+                                LineMark(x: .value("Date", day.trainingCalendar.calendarStart), y: .value("HRSS / day", fatigue), series: .value("Metric", String(localized: "Fatigue ATL")))
+                                    .foregroundStyle(by: .value("Metric", String(localized: "Fatigue ATL")))
                             }
                         }.frame(height: 240)
                     } else {
-                        Label("暂无可绘制的训练趋势", systemImage: "chart.xyaxis.line")
+                        Label("No training trend available", systemImage: "chart.xyaxis.line")
                             .foregroundStyle(.secondary)
-                        Text("请确认运动记录完整，并为相关运动设置心率参数。心率采样不足时，训练负荷仍保留未知。")
+                        Text("Confirm complete workout records and configure heart rate parameters. Training load remains unknown when heart rate sampling is insufficient.")
                             .font(.footnote).foregroundStyle(.secondary)
                     }
                     if let last = history.trainingDays.last {
-                        analysisRow("期末体能 CTL", last.trainingFitness, "", digits: 1)
-                        analysisRow("期末疲劳 ATL", last.trainingFatigue, "", digits: 1)
-                        analysisRow("负荷平衡 CTL − ATL", last.trainingBalance, "", digits: 1)
-                        analysisRow("起点对当前 CTL 的剩余影响", last.trainingInitialFitnessWeight * 100, "%", digits: 1)
+                        analysisRow("Ending fitness CTL", last.trainingFitness, "", digits: 1)
+                        analysisRow("Ending fatigue ATL", last.trainingFatigue, "", digits: 1)
+                        analysisRow("Training balance CTL − ATL", last.trainingBalance, "", digits: 1)
+                        analysisRow("Remaining influence of the initial CTL", last.trainingInitialFitnessWeight * 100, "%", digits: 1)
                     }
-                    Text("体能使用 42 天、疲劳使用 7 天的指数衰减。基于 HRSS，不能与其他负荷模型的数值直接比较。")
+                    Text("Fitness uses 42-day and fatigue uses 7-day exponential decay. These HRSS values cannot be directly compared with other load models.")
                         .font(.footnote).foregroundStyle(.secondary)
                 }
-                Section("每日负荷") {
+                Section("Daily load") {
                     ForEach(history.trainingDays.reversed(), id: \.trainingCalendar.calendarDate) { day in
                         VStack(alignment: .leading, spacing: 6) {
                             HStack {
@@ -89,16 +90,16 @@ struct TrainingHistoryScreen: View {
                                 Spacer()
                                 Text(WorkoutFormat.number(day.trainingTotalLoad, unit: "HRSS", fractionDigits: 1)).monospacedDigit()
                             }
-                            Text("\(day.trainingWorkoutCount) 次运动 · 已知负荷 " + WorkoutFormat.number(day.trainingKnownLoad, unit: "", fractionDigits: 1))
+                            Text("\(day.trainingWorkoutCount) workouts · Known load \(WorkoutFormat.number(day.trainingKnownLoad, unit: "", fractionDigits: 1))")
                                 .font(.caption).foregroundStyle(.secondary)
-                            if day.trainingTotalLoad == nil { Text("记录完整性、心率覆盖或个人参数不足，此日及后续趋势保留未知。")
+                            if day.trainingTotalLoad == nil { Text("Record completeness, heart rate coverage or personal parameters are insufficient. This day and subsequent trends remain unknown.")
                                 .font(.caption).foregroundStyle(.secondary) }
                         }
                     }
                 }
             }
         }
-        .navigationTitle("体能与疲劳").navigationBarTitleDisplayMode(.inline)
+        .navigationTitle("Fitness and fatigue").navigationBarTitleDisplayMode(.inline)
         .onDisappear { action?.cancel() }
     }
 
@@ -107,7 +108,7 @@ struct TrainingHistoryScreen: View {
         let fitness = try? Double(initialFitness, format: .number)
         let fatigue = try? Double(initialFatigue, format: .number)
         if !zeroInitial && !(fitness.map { $0.isFinite && $0 >= 0 } == true && fatigue.map { $0.isFinite && $0 >= 0 } == true) {
-            inputError = "请选择零起点假设，或填写非负的初始 CTL 和 ATL。"
+            inputError = "Select the zero-start assumption or enter nonnegative initial CTL and ATL values."
             return
         }
         let input = TrainingHistoryRequest(historyAssumeNoPriorLoad: zeroInitial,

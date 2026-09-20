@@ -9,7 +9,7 @@ struct HealthExportScreen: View {
     let session: SessionStore
     @State private var action: Task<Void, Never>?
     @State private var busy = false
-    @State private var message: String?
+    @State private var message: LocalizedStringResource?
     @State private var completed = false
     @State private var confirming = false
     @State private var plan: HealthExportPlan?
@@ -22,40 +22,40 @@ struct HealthExportScreen: View {
         NavigationStack {
             Form {
                 Section {
-                    FitnessIntro(title: "存入 Apple 健康", subtitle: "确认要导出的版本和数据。中途中断时，可以回到这里继续恢复。", symbol: "heart.fill", color: .pink)
+                    FitnessIntro(title: "Save to Apple Health", subtitle: "Confirm the version and data to export. If interrupted, return here to resume.", symbol: "heart.fill", color: .pink)
                 }.listRowBackground(Color.clear)
-                Section("导出预览") {
+                Section("Export preview") {
                     Text((plan?.workout ?? workout).displayTitle)
-                    Text("版本 \((plan?.workout ?? workout).workoutRevision)")
+                    Text("Revision \((plan?.workout ?? workout).workoutRevision)")
                     if let plan, plan.workout.workoutRevision != workout.workoutRevision {
-                        Text("先恢复此前确认的版本，再重新打开此页面导出当前版本。")
+                        Text("Resume the previously confirmed version first, then reopen this page to export the current revision.")
                     }
-                    LabeledContent("路线点", value: String((plan?.workout ?? workout).motion.motionPosition.count))
-                    LabeledContent("测量样本", value: String(quantityCount))
-                    LabeledContent("记录距离", value: WorkoutFormat.distance((plan?.workout ?? workout).recordedCommonSummary.summaryDistance))
+                    LabeledContent(String(localized: "Route points"), value: String((plan?.workout ?? workout).motion.motionPosition.count))
+                    LabeledContent(String(localized: "Measurement samples"), value: String(quantityCount))
+                    LabeledContent(String(localized: "Recorded distance"), value: WorkoutFormat.distance((plan?.workout ?? workout).recordedCommonSummary.summaryDistance))
                 }
                 Section {
-                    DisclosureGroup("导出包含哪些数据") {
-                        Text(HealthExportPlan.projectionNotice).font(.footnote).foregroundStyle(.secondary)
+                    DisclosureGroup("What the export includes") {
+                        LocalizedText(HealthExportPlan.projectionNotice).font(.footnote).foregroundStyle(.secondary)
                     }
                 }
                 Section {
-                    Button(completed ? "已完成导出" : "写入 Apple 健康 / 恢复导出") { confirming = true }
+                    Button(completed ? String(localized: "Export completed") : String(localized: "Write to Apple Health / Resume export")) { confirming = true }
                         .buttonStyle(.borderedProminent).tint(.pink).controlSize(.large)
                         .disabled(busy || completed || plan == nil)
                         .accessibilityIdentifier("confirmHealthExport")
-                    if busy { ProgressView("正在处理导出…") }
-                    if let message { Text(message).accessibilityIdentifier("healthExportResult") }
+                    if busy { ProgressView("Processing export…") }
+                    if let message { LocalizedText(message).accessibilityIdentifier("healthExportResult") }
                 } footer: {
-                    Text("中途离开后，可从此运动详情重新打开并恢复。仅在平台写入和后端回执都确认后显示完成。")
+                    Text("If interrupted, reopen export from this workout to resume. Completion requires both the platform write and the server receipt to be confirmed.")
                 }
             }
             .scrollContentBackground(.hidden).background(FitnessStyle.background)
-            .navigationTitle("导出到 Apple 健康")
+            .navigationTitle("Export to Apple Health")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("关闭") { dismiss() }.accessibilityIdentifier("closeHealthExport") } }
-            .confirmationDialog("确认将预览的数据写入 Apple 健康？", isPresented: $confirming, titleVisibility: .visible) {
-                Button("确认写入") { action = Task { await perform() } }
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() }.accessibilityIdentifier("closeHealthExport") } }
+            .confirmationDialog("Write the previewed data to Apple Health?", isPresented: $confirming, titleVisibility: .visible) {
+                Button("Confirm write") { action = Task { await perform() } }
             }
         }
         .task {
@@ -65,7 +65,7 @@ struct HealthExportScreen: View {
                 let resumed = try await Self.coordinator.planToResume(requested)
                 quantityCount = try resumed.quantities().count
                 plan = resumed
-            } catch { message = (error as? HealthExportError)?.errorDescription ?? userFacingError(error) }
+            } catch { message = ClientIssue(error).resource }
         }
         .onDisappear { action?.cancel() }
     }
@@ -81,11 +81,11 @@ struct HealthExportScreen: View {
             _ = try await Self.coordinator.export(plan, token: token, service: api, writer: HealthWriter())
             guard session.generation == identity, !Task.isCancelled else { return }
             completed = true
-            message = "Apple 健康写入与后端回执均已确认。"
+            message = "The Apple Health write and server receipt are both confirmed."
         } catch {
             guard session.generation == identity, !(error is CancellationError) else { return }
             if (error as? APIResponseError)?.status == 401 { session.handleUnauthorized(for: identity) }
-            else { message = (error as? HealthExportError)?.errorDescription ?? (error as? HealthWriterError)?.errorDescription ?? userFacingError(error) }
+            else { message = (error as? HealthWriterError)?.resource ?? ClientIssue(error).resource }
         }
     }
 }

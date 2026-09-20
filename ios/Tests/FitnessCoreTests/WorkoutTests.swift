@@ -124,13 +124,13 @@ final class WorkoutTests: XCTestCase {
         let heartRate = try XCTUnwrap(workout.metrics.first { $0.id == "heartRate" })
         XCTAssertEqual(heartRate.points.map(\.value), workout.motion.motionHeartRate.map(\.value))
         XCTAssertNil(workout.workoutUserData.workoutNotes)
-        XCTAssertEqual(WorkoutFormat.distance(nil), "无数据")
-        XCTAssertNotEqual(WorkoutFormat.distance(0), "无数据")
+        XCTAssertEqual(WorkoutFormat.distance(nil), "—")
+        XCTAssertNotEqual(WorkoutFormat.distance(0), "—")
         XCTAssertEqual(WorkoutFormat.duration(3661), "1:01:01")
         XCTAssertEqual(WorkoutFormat.pace(4), "4:10 /km")
-        XCTAssertEqual(WorkoutFormat.pace(0), "无数据")
-        XCTAssertEqual(WorkoutFormat.pace(.leastNonzeroMagnitude), "无数据")
-        XCTAssertEqual(WorkoutFormat.duration(.infinity), "无数据")
+        XCTAssertEqual(WorkoutFormat.pace(0), "—")
+        XCTAssertEqual(WorkoutFormat.pace(.leastNonzeroMagnitude), "—")
+        XCTAssertEqual(WorkoutFormat.duration(.infinity), "—")
     }
 
     func testGradeAndTemperaturePresentationPreserveCanonicalUnitsAndNegativeValues() async throws {

@@ -51,7 +51,7 @@ final class WorkoutAnalysisTests: XCTestCase {
         await service.respond(.success(curve))
         await cancelled.value
         XCTAssertNil(store.analysis)
-        XCTAssertNil(store.message)
+        XCTAssertEqual(store.message, .analysisCancelled)
         let stale = Task { await store.load(id: curve.analysisWorkoutId, revision: curve.analysisRevision) }
         await service.waitForRequest()
         session.forgetSavedSession()

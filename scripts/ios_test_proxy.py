@@ -3,6 +3,7 @@
 Inject one stale curve revision per workout. Explicitly enabling
 FITNESS_TEST_ANALYSIS_FAILURE_CONTROLS=1 also permits the UI tests to toggle
 synthetic analysis failures through POST /__test/analysis-failure/on or /off.
+POST /__test/reset clears fault state between independent UI scenarios.
 All API requests still reach the disposable backend; only successful analysis
 responses are replaced. No fault switches are added to the app or backend.
 """
@@ -31,6 +32,14 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 and self.path in ("/__test/analysis-failure/on", "/__test/analysis-failure/off")):
             with lock:
                 failure_enabled = self.path.endswith("/on")
+            self.send_response(204)
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+            return
+        if fault_controls_enabled and self.command == "POST" and self.path == "/__test/reset":
+            with lock:
+                seen.clear()
+                failure_enabled = False
             self.send_response(204)
             self.send_header("Content-Length", "0")
             self.end_headers()

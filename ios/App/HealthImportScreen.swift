@@ -12,7 +12,7 @@ struct HealthImportScreen: View {
     @State private var previews: [HealthImportPreview] = []
     @State private var isBusy = false
     @State private var hasRead = false
-    @State private var message: String?
+    @State private var message: LocalizedStringResource?
     @State private var action: Task<Void, Never>?
 
     init(api: FitnessAPI, session: SessionStore) {
@@ -23,35 +23,35 @@ struct HealthImportScreen: View {
         NavigationStack {
             List {
                 Section {
-                    FitnessIntro(title: "从苹果健康导入 AI Fitness", subtitle: "选择骑行或跑步，预览后再确认上传到当前服务器。", symbol: "heart.fill", color: .pink)
+                    FitnessIntro(title: "Import from Apple Health", subtitle: "Select cycling or running workouts, then review and confirm uploading to the current server.", symbol: "heart.fill", color: .pink)
                 }.listRowBackground(Color.clear)
                 Section {
-                    DatePicker("开始", selection: $from, in: ...to, displayedComponents: .date)
+                    DatePicker("Start", selection: $from, in: ...to, displayedComponents: .date)
                         .disabled(isBusy)
-                    DatePicker("结束", selection: $to, in: from...Date(), displayedComponents: .date)
+                    DatePicker("End", selection: $to, in: from...Date(), displayedComponents: .date)
                         .disabled(isBusy)
                     Button { action = Task { await read() } } label: {
-                        Text("授权并读取").multilineTextAlignment(.center).frame(maxWidth: .infinity, alignment: .center).padding(.vertical, 4)
+                        Text("Authorize and read").multilineTextAlignment(.center).frame(maxWidth: .infinity, alignment: .center).padding(.vertical, 4)
                     }
                         .buttonStyle(.borderedProminent).tint(.pink).controlSize(.large)
                         .buttonBorderShape(.roundedRectangle(radius: 14))
                         .disabled(isBusy).accessibilityIdentifier("readHealthWorkouts")
-                } header: { Text("读取范围") }
+                } header: { Text("Date range") }
                 Section {
-                    Text("最多检查此期间最新的 200 条记录，只支持单项骑行和跑步，并排除本应用回写的记录。空列表可能与读取权限有关，并不代表没有运动。")
+                    Text("Checks up to the latest 200 records in this period. Only single-sport cycling and running are supported; records written by this app are excluded. An empty list may reflect read permissions rather than no workouts.")
                         .font(.footnote).foregroundStyle(.secondary)
-                    if hasRead, choices.isEmpty { Text("当前没有可显示的记录。可调整日期或在系统健康权限中检查。") }
+                    if hasRead, choices.isEmpty { Text("No records are available to display. Adjust the dates or check system Health permissions.") }
                     ForEach(choices) { choice in
                         Button {
                             if selected.contains(choice.id) { selected.remove(choice.id) }
                             else if selected.count < 10 { selected.insert(choice.id) }
-                            else { message = "每批最多选择 10 条运动，请分批导入。" }
+                            else { message = "Select up to 10 workouts per batch." }
                             previews = []
                         } label: {
                             HStack {
                                 Image(systemName: selected.contains(choice.id) ? "checkmark.circle.fill" : "circle")
                                 VStack(alignment: .leading) {
-                                    Text(choice.sport == .cycling ? "骑行" : "跑步")
+                                    Text(choice.sport == .cycling ? String(localized: "Cycling") : String(localized: "Running"))
                                     Text(choice.start.formatted(date: .abbreviated, time: .shortened)).font(.caption)
                                     Text(WorkoutFormat.duration(choice.duration)).font(.caption)
                                 }
@@ -59,37 +59,37 @@ struct HealthImportScreen: View {
                         }.disabled(isBusy)
                     }
                     if !selected.isEmpty {
-                        Button("预览已选 \(selected.count) 条") { action = Task { await prepare() } }
+                        Button("Preview selection (\(selected.count))") { action = Task { await prepare() } }
                             .disabled(isBusy)
                     }
-                } header: { Text("选择运动") }
+                } header: { Text("Select workouts") }
                 if !previews.isEmpty {
                     Section {
-                        Text("预览只包含可读取、关联于这条运动且来自同一来源的样本。缺失数据不会补算；区间样本显示在结束时刻，距离和能量累计可用增量。步数不推算为步频。暂不包含圈段、设备专有字段或其他运动类型。")
+                        Text("The preview includes readable samples associated with this workout and from the same source. Missing data are not estimated. Interval samples use their end time; distance and energy accumulate available increments. Step counts are not converted to cadence. Laps, device-specific fields and other sports are not included.")
                             .font(.footnote).foregroundStyle(.secondary)
                         ForEach(previews) { preview in
                             VStack(alignment: .leading, spacing: 8) {
                                 Text(preview.observation.observationRange.rangeStart.formatted(date: .abbreviated, time: .shortened)).font(.headline)
-                                Text("\(preview.sampleCount) 个样本")
-                                DisclosureGroup("查看摘要及可用数据") {
-                                    SummarySection(title: "苹果健康摘要", summary: preview.summary, isRunning: preview.isRunning, inCard: false)
-                                    Text("心率 \(preview.motion.motionHeartRate.count) · 功率 \(preview.motion.motionPower.count) · 速度 \(preview.motion.motionSpeed.count) · 路线 \(preview.motion.motionPosition.count)")
+                                Text("Samples: \(preview.sampleCount)")
+                                DisclosureGroup("View summary and available data") {
+                                    SummarySection(title: "Apple Health summary", summary: preview.summary, isRunning: preview.isRunning, inCard: false)
+                                    Text("Heart rate \(preview.motion.motionHeartRate.count) · Power \(preview.motion.motionPower.count) · Speed \(preview.motion.motionSpeed.count) · Route \(preview.motion.motionPosition.count)")
                                         .font(.caption)
                                     RouteSection(positions: preview.motion.motionPosition, inCard: false)
                                 }
-                                if let message = store.messages[preview.id] { Text(message).font(.footnote) }
+                                if let message = store.messages[preview.id] { IssueText(message).font(.footnote) }
                                 if let record = store.records[preview.id], record.status != .suppressed {
                                     if record.lastSuccess != nil {
-                                        Button("更新已导入的关联数据") { upload(preview, intent: .refresh) }
+                                        Button("Refresh linked imported data") { upload(preview, intent: .refresh) }
                                             .disabled(isBusy)
                                     } else if record.status == .failed {
-                                        Button("重试失败的导入") { upload(preview, intent: .retry) }
+                                        Button("Retry failed import") { upload(preview, intent: .retry) }
                                             .disabled(isBusy)
                                     }
                                 }
                             }
                         }
-                        Button("确认上传以上 \(previews.count) 条") {
+                        Button("Confirm upload (\(previews.count))") {
                             action = Task {
                                 isBusy = true
                                 defer { isBusy = false }
@@ -100,13 +100,13 @@ struct HealthImportScreen: View {
                                 }
                             }
                         }.disabled(isBusy)
-                    } header: { Text("预览与确认") }
+                    } header: { Text("Preview and confirm") }
                 }
-                if isBusy { ProgressView("正在处理…") }
-                if let message { Text(message).foregroundStyle(.red) }
+                if isBusy { ProgressView("Processing…") }
+                if let message { LocalizedText(message).foregroundStyle(.red) }
             }
             .listStyle(.insetGrouped).scrollContentBackground(.hidden).background(FitnessStyle.background)
-            .navigationTitle("苹果健康")
+            .navigationTitle("Apple Health")
             .onDisappear { action?.cancel() }
         }
     }
@@ -145,6 +145,6 @@ struct HealthImportScreen: View {
 
     private func present(_ error: any Error) {
         if error is CancellationError { return }
-        message = (error as? HealthImportError)?.errorDescription ?? "无法读取苹果健康。请检查系统权限并重试。"
+        message = ClientIssue(error).resource
     }
 }

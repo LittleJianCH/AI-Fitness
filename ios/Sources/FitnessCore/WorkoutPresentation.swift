@@ -9,7 +9,7 @@ public struct MetricPoint: Identifiable, Sendable {
 
 public struct WorkoutMetric: Identifiable, Sendable {
     public let id: String
-    public let title: String
+    public let title: MetricLabel
     public let unit: String
     public let points: [MetricPoint]
 
@@ -57,8 +57,8 @@ public struct WorkoutMetric: Identifiable, Sendable {
 }
 
 public extension Components.Schemas.SportSummary {
-    var sportName: String {
-        switch self { case .case1: "骑行"; case .case2: "跑步" }
+    var sportKind: HealthSport {
+        switch self { case .case1: .cycling; case .case2: .running }
     }
     var recordedCommonSummary: Components.Schemas.CommonSummary {
         switch self {
@@ -68,15 +68,11 @@ public extension Components.Schemas.SportSummary {
     }
 }
 
-public extension WorkoutCard {
-    var displayTitle: String { userData.workoutTitle ?? summary.sportName }
-}
 
 public extension Workout {
-    var sportName: String {
-        switch workoutObservation.observationSport { case .case1: "骑行"; case .case2: "跑步" }
+    var sportKind: HealthSport {
+        switch workoutObservation.observationSport { case .case1: .cycling; case .case2: .running }
     }
-    var displayTitle: String { workoutUserData.workoutTitle ?? sportName }
     var motion: Components.Schemas.MotionData {
         switch workoutObservation.observationSport {
         case .case1(let sport): sport.data.cyclingMotion
@@ -98,22 +94,22 @@ public extension Workout {
     var metrics: [WorkoutMetric] {
         let data = motion
         var result = [
-            WorkoutMetric(id: "heartRate", title: "心率", unit: "bpm", points: data.motionHeartRate.map { .init(timestamp: $0.timestamp, value: $0.value) }),
-            WorkoutMetric(id: "power", title: "功率", unit: "W", points: data.motionPower.map { .init(timestamp: $0.timestamp, value: $0.value) }),
-            WorkoutMetric(id: "speed", title: "速度", unit: "km/h", points: data.motionSpeed.map { .init(timestamp: $0.timestamp, value: $0.value * 3.6) }),
-            WorkoutMetric(id: "grade", title: "坡度", unit: "%", points: data.motionGrade.map { .init(timestamp: $0.timestamp, value: $0.value) }),
-            WorkoutMetric(id: "temperature", title: "环境温度", unit: "°C", points: data.motionEnvironment.ambientTemperature.map { .init(timestamp: $0.timestamp, value: $0.value) }),
-            WorkoutMetric(id: "altitude", title: "海拔", unit: "m", points: data.motionAltitude.map { .init(timestamp: $0.timestamp, value: $0.value) }),
+            WorkoutMetric(id: "heartRate", title: .heartRate, unit: "bpm", points: data.motionHeartRate.map { .init(timestamp: $0.timestamp, value: $0.value) }),
+            WorkoutMetric(id: "power", title: .power, unit: "W", points: data.motionPower.map { .init(timestamp: $0.timestamp, value: $0.value) }),
+            WorkoutMetric(id: "speed", title: .speed, unit: "km/h", points: data.motionSpeed.map { .init(timestamp: $0.timestamp, value: $0.value * 3.6) }),
+            WorkoutMetric(id: "grade", title: .grade, unit: "%", points: data.motionGrade.map { .init(timestamp: $0.timestamp, value: $0.value) }),
+            WorkoutMetric(id: "temperature", title: .temperature, unit: "°C", points: data.motionEnvironment.ambientTemperature.map { .init(timestamp: $0.timestamp, value: $0.value) }),
+            WorkoutMetric(id: "altitude", title: .altitude, unit: "m", points: data.motionAltitude.map { .init(timestamp: $0.timestamp, value: $0.value) }),
         ]
         switch workoutObservation.observationSport {
         case .case1(let sport):
-            result.append(.init(id: "cadence", title: "踏频", unit: "rpm", points: sport.data.cyclingCadence.map { .init(timestamp: $0.timestamp, value: $0.value) }))
+            result.append(.init(id: "cadence", title: .cyclingCadence, unit: "rpm", points: sport.data.cyclingCadence.map { .init(timestamp: $0.timestamp, value: $0.value) }))
         case .case2(let sport):
-            result.append(.init(id: "cadence", title: "步频", unit: "步/分", points: sport.data.runningCadence.map { .init(timestamp: $0.timestamp, value: $0.value) }))
+            result.append(.init(id: "cadence", title: .runningCadence, unit: "spm", points: sport.data.runningCadence.map { .init(timestamp: $0.timestamp, value: $0.value) }))
             let dynamics = sport.data.runningDynamics
-            result.append(.init(id: "stepLength", title: "步长", unit: "m", points: dynamics.stepLength.map { .init(timestamp: $0.timestamp, value: $0.value) }))
-            result.append(.init(id: "verticalOscillation", title: "垂直振幅", unit: "cm", points: dynamics.verticalOscillation.map { .init(timestamp: $0.timestamp, value: $0.value * 100) }))
-            result.append(.init(id: "groundContactTime", title: "触地时间", unit: "ms", points: dynamics.groundContactTime.map { .init(timestamp: $0.timestamp, value: $0.value * 1000) }))
+            result.append(.init(id: "stepLength", title: .stepLength, unit: "m", points: dynamics.stepLength.map { .init(timestamp: $0.timestamp, value: $0.value) }))
+            result.append(.init(id: "verticalOscillation", title: .verticalOscillation, unit: "cm", points: dynamics.verticalOscillation.map { .init(timestamp: $0.timestamp, value: $0.value * 100) }))
+            result.append(.init(id: "groundContactTime", title: .groundContactTime, unit: "ms", points: dynamics.groundContactTime.map { .init(timestamp: $0.timestamp, value: $0.value * 1000) }))
         }
         return result
     }
@@ -133,21 +129,23 @@ public extension WorkoutMetric {
 }
 
 public enum WorkoutFormat {
-    public static func number(_ value: Double?, unit: String, fractionDigits: Int = 0) -> String {
-        guard let value, value.isFinite else { return "无数据" }
-        return value.formatted(.number.precision(.fractionLength(fractionDigits))) + " " + unit
+    public static func number(_ value: Double?, unit: String, fractionDigits: Int = 0, missing: String = "—") -> String {
+        guard let value, value.isFinite else { return missing }
+        return value.formatted(.number.precision(.fractionLength(fractionDigits))) + (unit.isEmpty ? "" : " " + unit)
     }
-    public static func distance(_ metres: Double?) -> String { number(metres.map { $0 / 1000 }, unit: "km", fractionDigits: 2) }
-    public static func duration(_ seconds: Double?) -> String {
-        guard let seconds, seconds.isFinite, seconds >= 0, seconds < Double(Int.max) else { return "无数据" }
+    public static func distance(_ metres: Double?, missing: String = "—") -> String { number(metres.map { $0 / 1000 }, unit: "km", fractionDigits: 2, missing: missing) }
+    public static func duration(_ seconds: Double?, missing: String = "—") -> String {
+        guard let seconds, seconds.isFinite, seconds >= 0, seconds < Double(Int.max) else { return missing }
         let total = Int(seconds.rounded(.down))
         return "\(total / 3600):" + String(format: "%02d:%02d", total / 60 % 60, total % 60)
     }
-    public static func pace(_ metresPerSecond: Double?) -> String {
-        guard let speed = metresPerSecond, speed.isFinite, speed > 0 else { return "无数据" }
+    public static func pace(_ metresPerSecond: Double?, missing: String = "—") -> String {
+        guard let speed = metresPerSecond, speed.isFinite, speed > 0 else { return missing }
         let seconds = 1000 / speed
-        guard seconds.rounded() < Double(Int.max) else { return "无数据" }
+        guard seconds.rounded() < Double(Int.max) else { return missing }
         let total = Int(seconds.rounded())
         return "\(total / 60):" + String(format: "%02d /km", total % 60)
     }
 }
+
+public enum MetricLabel: Sendable { case heartRate, power, speed, grade, temperature, altitude, cyclingCadence, runningCadence, stepLength, verticalOscillation, groundContactTime }

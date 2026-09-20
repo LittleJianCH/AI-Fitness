@@ -46,7 +46,7 @@ public enum TrainingCalendar {
 public final class TrainingHistoryStore {
     public private(set) var history: TrainingHistory?
     public private(set) var isLoading = false
-    public private(set) var message: String?
+    public private(set) var message: ClientIssue?
     @ObservationIgnored private let service: any TrainingHistoryService
     @ObservationIgnored private let session: SessionStore
     @ObservationIgnored private var generation: UInt64 = 0
@@ -73,7 +73,7 @@ public final class TrainingHistoryStore {
         } catch {
             guard request == generation, identity == session.generation else { return }
             if (error as? APIResponseError)?.status == 401 { session.handleUnauthorized(for: identity) }
-            else if !Task.isCancelled && !(error is CancellationError) { message = userFacingError(error) }
+            else if !Task.isCancelled && !(error is CancellationError) { message = ClientIssue(error) }
         }
     }
 }

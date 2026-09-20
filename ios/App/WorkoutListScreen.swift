@@ -26,10 +26,10 @@ struct WorkoutListScreen: View {
     var body: some View {
         NavigationStack {
             List {
-                Picker("运动类型", selection: $sport) {
-                    Text("全部").tag(Optional<WorkoutSportFilter>.none)
-                    Text("骑行").tag(Optional(WorkoutSportFilter.cycling))
-                    Text("跑步").tag(Optional(WorkoutSportFilter.running))
+                Picker("Sport", selection: $sport) {
+                    Text("All").tag(Optional<WorkoutSportFilter>.none)
+                    Text("Cycling").tag(Optional(WorkoutSportFilter.cycling))
+                    Text("Running").tag(Optional(WorkoutSportFilter.running))
                 }
                 .pickerStyle(.segmented)
                 .accessibilityIdentifier("sportFilter")
@@ -37,10 +37,10 @@ struct WorkoutListScreen: View {
                 .listRowBackground(Color.clear).listRowSeparator(.hidden)
 
                 if store.items.isEmpty, store.isLoading {
-                    ProgressView("正在加载运动…").frame(maxWidth: .infinity).padding(32)
+                    ProgressView("Loading workouts…").frame(maxWidth: .infinity).padding(32)
                         .listRowBackground(Color.clear).listRowSeparator(.hidden)
                 } else if store.items.isEmpty, store.hasLoaded, store.message == nil {
-                    ContentUnavailableView("暂无运动记录", systemImage: "figure.run", description: Text("当前筛选下没有记录。"))
+                    ContentUnavailableView("No workouts yet", systemImage: "figure.run", description: Text("No records match the current filters."))
                         .listRowBackground(Color.clear).listRowSeparator(.hidden)
                 }
                 ForEach(months, id: \.date) { month in
@@ -62,8 +62,8 @@ struct WorkoutListScreen: View {
                 }
                 if let message = store.message {
                     VStack(alignment: .leading, spacing: 12) {
-                        Label(message, systemImage: "exclamationmark.circle").foregroundStyle(.red)
-                        Button("重试") { action = Task { await store.refresh(sport: sport) } }.buttonStyle(.bordered)
+                        IssueText(message).foregroundStyle(.red)
+                        Button("Retry") { action = Task { await store.refresh(sport: sport) } }.buttonStyle(.bordered)
                     }
                     .padding().fitnessCard().listRowBackground(Color.clear).listRowSeparator(.hidden)
                 }
@@ -71,7 +71,7 @@ struct WorkoutListScreen: View {
                     Button { action = Task { await store.loadMore() } } label: {
                         HStack {
                             Spacer()
-                            if store.isLoading { ProgressView() } else { Label("加载更多", systemImage: "arrow.down") }
+                            if store.isLoading { ProgressView() } else { Label("Load more", systemImage: "arrow.down") }
                             Spacer()
                         }.padding(10)
                     }
@@ -80,7 +80,7 @@ struct WorkoutListScreen: View {
                 }
             }
             .listStyle(.plain).scrollContentBackground(.hidden).background(FitnessStyle.background)
-            .navigationTitle("运动记录")
+            .navigationTitle("Workout history")
             .navigationDestination(for: String.self) { id in
                 WorkoutDetailScreen(id: id, api: api, session: session)
             }
@@ -94,7 +94,7 @@ struct WorkoutListScreen: View {
 private struct WorkoutRow: View {
     let card: WorkoutCard
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-    private var running: Bool { card.summary.sportName == "跑步" }
+    private var running: Bool { card.summary.sportKind == .running }
     private var accent: Color { running ? .orange : .blue }
 
     var body: some View {
@@ -112,8 +112,8 @@ private struct WorkoutRow: View {
             }
             let layout = dynamicTypeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 16)) : AnyLayout(HStackLayout(alignment: .top, spacing: 12))
             layout {
-                FitnessStat(title: "距离", value: WorkoutFormat.distance(card.summary.recordedCommonSummary.summaryDistance), color: accent)
-                FitnessStat(title: "计时时间", value: WorkoutFormat.duration(card.summary.recordedCommonSummary.summaryTimerTime))
+                FitnessStat(title: "Distance", value: WorkoutFormat.distance(card.summary.recordedCommonSummary.summaryDistance), color: accent)
+                FitnessStat(title: "Timer time", value: WorkoutFormat.duration(card.summary.recordedCommonSummary.summaryTimerTime))
             }
         }
         .padding(.trailing, 4)

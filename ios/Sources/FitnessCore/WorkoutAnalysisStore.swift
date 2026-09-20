@@ -4,7 +4,7 @@ import Observation
 public final class WorkoutAnalysisStore {
     public private(set) var analysis: WorkoutAnalysis?
     public private(set) var isLoading = false
-    public private(set) var message: String?
+    public private(set) var message: ClientIssue?
     public private(set) var needsWorkoutRefresh = false
     @ObservationIgnored private let service: any WorkoutAnalysisService
     @ObservationIgnored private let session: SessionStore
@@ -37,7 +37,8 @@ public final class WorkoutAnalysisStore {
         } catch {
             guard request == generation, identity == session.generation else { return }
             if (error as? APIResponseError)?.status == 401 { session.handleUnauthorized(for: identity) }
-            else if !Task.isCancelled && !(error is CancellationError) { message = userFacingError(error) }
+            else if Task.isCancelled || error is CancellationError { message = .analysisCancelled }
+            else { message = ClientIssue(error) }
         }
     }
 }

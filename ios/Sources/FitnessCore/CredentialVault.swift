@@ -50,7 +50,6 @@ public struct KeychainVault: CredentialVault {
     }
 }
 
-public enum VaultError: LocalizedError {
+public enum VaultError: Error {
     case unavailable
-    public var errorDescription: String? { "无法访问安全凭据存储，请解锁设备后重试。" }
 }
