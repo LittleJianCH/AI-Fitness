@@ -188,3 +188,45 @@ signs the client into its synthetic account. No production health data is used.
 
 No Health Connect, offline database, automatic sync, networking framework,
 external map provider or release deployment is introduced.
+
+JSON responses have a heap-dependent admission limit (up to 8 Mi characters,
+4 Mi on a 256 MiB heap) before parsing, leaving headroom for temporary buffers,
+JSON objects and the model. Oversized records show a specific Web-viewing hint;
+this does not guarantee immunity to unrelated device memory pressure. Session
+pagination rejects repeated cursors and stops after 100 pages.
+
+## Languages
+
+English is the complete default catalog in `res/values/strings.xml`; Simplified
+Chinese lives in `res/values-b+zh+Hans/strings.xml`. Compose resolves native strings
+and plurals at render time. Errors retain semantic `ClientIssue` values in the
+ViewModel; domain/transport code has no Android resource or Context dependency.
+User titles, notes, tags, equipment and device names remain verbatim. Numbers and
+dates use the current platform configuration and local time zone. Raw sample
+and power-interval labels are formatted only when selected; chart and canonical
+timestamps remain unchanged. Language does not change canonical values,
+metric units, calendar identities, or API payloads.
+
+The manifest uses one manual `locales_config.xml`, advertising only `en` and
+`zh-Hans`. Android 13+ exposes these in system per-app language settings; Android
+8–12 use system language selection. There is no independent in-app language
+preference or added AppCompat dependency. Unsupported languages fall back to the
+English defaults; native resource matching handles regional English and Chinese
+script/region aliases. The build also limits dependency resource languages to the
+two supported catalogs.
+
+`checkLocalization` runs with `preBuild` and `checkKotlinFormat`. It checks matching
+keys, typed positional arguments, required plural branches, referenced resources,
+and regression probes for missing translations and mismatched arguments.
+Android Lint remains the native resource validator. On an existing API 33+ test
+emulator, run the disposable backend UI harness once with
+`ORG_GRADLE_PROJECT_testLocale=en` and once with
+`ORG_GRADLE_PROJECT_testLocale=zh-Hans` (environment variables preceding
+`scripts/android_integration_test --device`). `LocalizedJourneyTests` covers
+login, workouts, metrics and settings; `LocalizationTests` covers packaged
+fallback, plurals, configuration changes and verbatim synthetic user content.
+The separate, longer `ConnectedUiTests` scenario also exercises restoration,
+pagination, settings writes, history and logout. See [verification](VERIFICATION.md)
+for the current passing bilingual journeys and full scenarios, and the separate
+historical Gradle/UTP runner timeout. Screenshots are written only for the synthetic fixture journey in
+the debug app’s private files directory.

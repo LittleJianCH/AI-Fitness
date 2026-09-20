@@ -15,6 +15,16 @@ class ContractTests {
         JSONObject(File(System.getProperty("fixtureDir", "../../backend/build"), name).readText())
 
     @Test
+    fun responseBudgetRejectsOversizeBeforeJsonDecoding() {
+        assertEquals(4 * 1024 * 1024, responseCharacterLimit(256L * 1024 * 1024))
+        assertEquals(8 * 1024 * 1024, responseCharacterLimit(Long.MAX_VALUE))
+        assertEquals("1234", java.io.StringReader("1234").readTextBounded(4))
+        org.junit.Assert.assertThrows(ResponseTooLarge::class.java) {
+            java.io.StringReader("12345").readTextBounded(4)
+        }
+    }
+
+    @Test
     fun backendFixturesDecodeAndRoundTrip() {
         val workout = Workout.fromJson(fixture("workout-response.json"))
         assertEquals(workout, Workout.fromJson(workout.toJson()))
@@ -62,6 +72,35 @@ class ContractTests {
             "2026-09-19T00:00:00.123456789Z",
             parseInstant("2026-09-19T00:00:00.123456789123Z").toString(),
         )
+    }
+
+    @Test
+    fun sparseSegmentsKeepStandaloneMarksAndDurationSpacingIsLogarithmic() {
+        val points =
+            listOf(
+                ChartPoint(0.0, 100.0, "a"),
+                ChartPoint(1.0, 101.0, "b"),
+                ChartPoint(122.0, 120.0, "c", breakBefore = true),
+                ChartPoint(243.0, 130.0, "d", breakBefore = true),
+                ChartPoint(244.0, 131.0, "e"),
+            )
+        assertEquals(
+            listOf(false, false, true, false, false),
+            points.indices.map { isolatedChartPoint(points, it) },
+        )
+        val sparse = points.map { it.copy(breakBefore = true) }
+        assertTrue(sparse.indices.all { isolatedChartPoint(sparse, it) })
+        val durations = listOf(1.0, 10.0, 100.0, 1000.0).map { chartX(it, true) }
+        durations.zipWithNext().forEach { (a, b) ->
+            assertEquals(kotlin.math.ln(10.0), b - a, 1e-12)
+        }
+        assertEquals(100.0, chartX(100.0, false), 0.0)
+        assertEquals(
+            "https://example.test",
+            FitnessApi.validateEndpoint("HTTPS://example.test", false),
+        )
+        assertEquals("http://127.0.0.1", FitnessApi.validateEndpoint("HTTP://127.0.0.1", true))
+        rejected { FitnessApi.validateEndpoint("HTTP://example.test", true) }
     }
 
     @Test
@@ -228,10 +267,16 @@ class ContractTests {
         val previous = Locale.getDefault()
         try {
             Locale.setDefault(Locale.US)
-            assertEquals("0.45 m", MetricKind.stepLengthMetric.format(0.45, true))
-            assertEquals("1.50 m", MetricKind.stepLengthMetric.format(1.5, true))
-            assertEquals("0.040 m", MetricKind.verticalOscillationMetric.format(0.04, true))
-            assertEquals("0.249 s", MetricKind.groundContactTimeMetric.format(0.249, true))
+            assertEquals("0.45 m", MetricKind.stepLengthMetric.formatValue(0.45, true, Locale.US))
+            assertEquals("1.50 m", MetricKind.stepLengthMetric.formatValue(1.5, true, Locale.US))
+            assertEquals(
+                "0.040 m",
+                MetricKind.verticalOscillationMetric.formatValue(0.04, true, Locale.US),
+            )
+            assertEquals(
+                "0.249 s",
+                MetricKind.groundContactTimeMetric.formatValue(0.249, true, Locale.US),
+            )
         } finally {
             Locale.setDefault(previous)
         }
@@ -260,14 +305,60 @@ class ContractTests {
     @Test
     fun analysisErrorsHaveActionableMessagesBeforeGenericValidation() {
         assertEquals(
-            "这段历史的数据量超过处理上限，请缩短日期范围后重试。",
-            userMessage(ApiFailure(422, "analysis_too_large")),
+            ClientIssue.AnalysisTooLarge,
+            userIssue(ApiFailure(422, "analysis_too_large")),
         )
         assertEquals(
-            "当前历史数据暂时无法完成分析，请检查记录与个人参数。",
-            userMessage(ApiFailure(422, "analysis_unavailable")),
+            ClientIssue.AnalysisUnavailable,
+            userIssue(ApiFailure(422, "analysis_unavailable")),
         )
-        assertTrue(userMessage(StaleWorkoutAnalysis()).contains("刷新运动详情"))
+        assertEquals(ClientIssue.StaleWorkout, userIssue(StaleWorkoutAnalysis()))
+    }
+
+    @Test
+    fun issuesKeepUnknownFailuresDistinctFromConnectionErrors() {
+        assertEquals(ClientIssue.Unknown, userIssue(ApiFailure(500, "future_code")))
+        assertEquals(ClientIssue.Network, userIssue(java.io.IOException("private diagnostics")))
+        assertEquals(
+            ClientIssue.Unknown,
+            userIssue(IllegalArgumentException("private diagnostics")),
+        )
+        assertEquals(ClientIssue.ResponseTooLarge, userIssue(ResponseTooLarge()))
+        try {
+            userIssue(kotlinx.coroutines.CancellationException())
+            fail("Cancellation must propagate")
+        } catch (_: kotlinx.coroutines.CancellationException) {}
+        assertEquals("0.0 W", formatNumber(0.0, "W", locale = Locale.US))
+        assertNull(formatNumber(null, "W", locale = Locale.US))
+        assertEquals("1,5 km", formatNumber(1.5, "km", locale = Locale.GERMANY))
+    }
+
+    @Test
+    fun timestampLabelsUseLocaleAndLocalZone() {
+        val source = "2026-09-05T23:55:32.123456789Z"
+        val point = ChartPoint(0.0, 250.0, source)
+        assertEquals(
+            "Sep 5, 2026, 11:55:32 PM",
+            formatDateTime(point.label, Locale.US, java.time.ZoneId.of("UTC")),
+        )
+        assertEquals(
+            "2026年9月6日 上午7:55:32",
+            formatDateTime(
+                point.label,
+                Locale.SIMPLIFIED_CHINESE,
+                java.time.ZoneId.of("Asia/Shanghai"),
+            ),
+        )
+        assertEquals(
+            "Mar 8, 2026, 3:30:00 AM",
+            formatDateTime(
+                "2026-03-08T07:30:00Z",
+                Locale.US,
+                java.time.ZoneId.of("America/New_York"),
+            ),
+        )
+        assertEquals(source, point.label)
+        assertEquals(123456789, parseInstant(point.label).nano)
     }
 
     private fun rejected(block: () -> Unit) {

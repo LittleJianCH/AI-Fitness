@@ -36,8 +36,8 @@ data class Detail(
     val workout: Workout,
     val analysis: WorkoutAnalysis? = null,
     val curve: PowerCurve? = null,
-    val analysisError: String? = null,
-    val curveError: String? = null,
+    val analysisError: ClientIssue? = null,
+    val curveError: ClientIssue? = null,
     val analysisLoading: Boolean = true,
     val curveLoading: Boolean = true,
 )
@@ -48,7 +48,7 @@ data class FitnessState(
     val endpoint: String = "",
     val screen: Screen = Screen.Workouts,
     val busy: Boolean = false,
-    val message: String? = null,
+    val message: ClientIssue? = null,
     val workouts: List<WorkoutCard> = emptyList(),
     val cursor: String? = null,
     val detail: Detail? = null,
@@ -82,7 +82,7 @@ class FitnessViewModel(private val vault: CredentialVault, private val debug: Bo
             } catch (error: Exception) {
                 if (identity == generation) {
                     if (error is ApiFailure && error.status == 401 && saved != null) clearSession()
-                    mutable.value = mutable.value.copy(message = userMessage(error))
+                    mutable.value = mutable.value.copy(message = userIssue(error))
                 }
             } finally {
                 if (identity == generation)
@@ -105,7 +105,7 @@ class FitnessViewModel(private val vault: CredentialVault, private val debug: Bo
                 throw cancelled
             } catch (_: Exception) {
                 clearSession()
-                mutable.value = mutable.value.copy(message = "无法解锁已保存的会话，请重新登录。")
+                mutable.value = mutable.value.copy(message = ClientIssue.SavedSessionLocked)
                 return@runOperation
             }
         if (credential == null) return@runOperation
@@ -241,7 +241,7 @@ class FitnessViewModel(private val vault: CredentialVault, private val debug: Bo
         } catch (error: Exception) {
             if (error is ApiFailure && error.status == 401) throw error
             updateDetail(workout) {
-                it.copy(analysisLoading = false, analysisError = userMessage(error))
+                it.copy(analysisLoading = false, analysisError = userIssue(error))
             }
         }
     }
@@ -260,7 +260,7 @@ class FitnessViewModel(private val vault: CredentialVault, private val debug: Bo
             throw cancelled
         } catch (error: Exception) {
             if (error is ApiFailure && error.status == 401) throw error
-            updateDetail(workout) { it.copy(curveLoading = false, curveError = userMessage(error)) }
+            updateDetail(workout) { it.copy(curveLoading = false, curveError = userIssue(error)) }
         }
     }
 
@@ -282,7 +282,12 @@ class FitnessViewModel(private val vault: CredentialVault, private val debug: Bo
         val result = api.saveSettings(token, settings)
         // Existing analysis depends on the settings revision; discard it after a settings write.
         mutable.value =
-            mutable.value.copy(settings = result, detail = null, history = null, message = "已保存")
+            mutable.value.copy(
+                settings = result,
+                detail = null,
+                history = null,
+                message = ClientIssue.Saved,
+            )
     }
 
     fun loadHistory(request: TrainingHistoryRequest) {
@@ -300,14 +305,8 @@ class FitnessViewModel(private val vault: CredentialVault, private val debug: Bo
     fun forgetLocalSession() = runOperation { clearSession() }
 
     fun loadSessions() = authenticated { api, token ->
-        val sessions = mutableListOf<Session>()
-        var cursor: String? = null
-        do {
-            val page = api.sessions(token, cursor)
-            sessions.addAll(page.items)
-            cursor = page.nextCursor
-        } while (cursor != null)
-        mutable.value = mutable.value.copy(sessions = sessions.distinctBy { it.id })
+        val sessions = api.allSessions(token)
+        mutable.value = mutable.value.copy(sessions = sessions)
     }
 
     fun revokeSession(session: Session) = authenticated { api, token ->

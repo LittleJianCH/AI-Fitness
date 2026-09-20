@@ -12,6 +12,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -55,7 +56,9 @@ fun FitnessApp(model: FitnessViewModel) {
                             state.user != null &&
                                 state.screen !in listOf(Screen.Workouts, Screen.Settings)
                         ) {
-                            TextButton(onClick = model::back) { Text("返回") }
+                            TextButton(onClick = model::back) {
+                                Text(stringResource(R.string.back))
+                            }
                         }
                     },
                 )
@@ -67,13 +70,13 @@ fun FitnessApp(model: FitnessViewModel) {
                             selected = state.screen == Screen.Workouts,
                             onClick = { model.navigate(Screen.Workouts) },
                             icon = { Text("◎") },
-                            label = { Text("运动") },
+                            label = { Text(stringResource(R.string.workout)) },
                         )
                         NavigationBarItem(
                             selected = state.screen == Screen.History,
                             onClick = { model.navigate(Screen.History) },
                             icon = { Text("▥") },
-                            label = { Text("训练历史") },
+                            label = { Text(stringResource(R.string.training_history)) },
                         )
                         NavigationBarItem(
                             selected =
@@ -87,7 +90,7 @@ fun FitnessApp(model: FitnessViewModel) {
                                     ),
                             onClick = { model.navigate(Screen.Settings) },
                             icon = { Text("⚙") },
-                            label = { Text("设置") },
+                            label = { Text(stringResource(R.string.settings)) },
                         )
                     }
             },
@@ -96,14 +99,17 @@ fun FitnessApp(model: FitnessViewModel) {
                 if (state.busy) LinearProgressIndicator(Modifier.fillMaxWidth().testTag("busy"))
                 state.message?.let {
                     Text(
-                        it,
+                        it.text(),
                         Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                             .testTag("statusMessage"),
                         color = MaterialTheme.colorScheme.primary,
                     )
                 }
                 when {
-                    state.restoring -> Box(Modifier.padding(24.dp)) { Text("正在恢复登录会话…") }
+                    state.restoring ->
+                        Box(Modifier.padding(24.dp)) {
+                            Text(stringResource(R.string.restoring_session))
+                        }
                     state.user == null -> LoginScreen(state, model)
                     else ->
                         when (val screen = state.screen) {
@@ -123,16 +129,17 @@ fun FitnessApp(model: FitnessViewModel) {
     }
 }
 
+@Composable
 private fun screenTitle(screen: Screen): String =
     when (screen) {
-        Screen.Workouts -> "运动记录"
-        Screen.Settings -> "设置"
-        Screen.Software -> "软件设置"
-        Screen.Body -> "个人身体参数"
-        Screen.Equipment -> "器材"
-        Screen.Account -> "账号与登录会话"
-        Screen.History -> "训练历史"
-        is Screen.Detail -> "运动详情"
+        Screen.Workouts -> stringResource(R.string.workouts)
+        Screen.Settings -> stringResource(R.string.settings)
+        Screen.Software -> stringResource(R.string.software_settings)
+        Screen.Body -> stringResource(R.string.body_settings)
+        Screen.Equipment -> stringResource(R.string.equipment)
+        Screen.Account -> stringResource(R.string.account_sessions)
+        Screen.History -> stringResource(R.string.training_history)
+        is Screen.Detail -> stringResource(R.string.workout_detail)
         is Screen.Metric -> screen.kind.title()
     }
 
@@ -146,13 +153,15 @@ private fun LoginScreen(state: FitnessState, model: FitnessViewModel) {
         contentPadding = PaddingValues(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        item { Text("AI Fitness", style = MaterialTheme.typography.headlineLarge) }
-        item { Text("连接你的服务器，查看运动与训练分析。") }
+        item {
+            Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineLarge)
+        }
+        item { Text(stringResource(R.string.login_intro)) }
         item {
             OutlinedTextField(
                 endpoint,
                 { endpoint = it },
-                label = { Text("服务器 HTTPS 地址") },
+                label = { Text(stringResource(R.string.server_https)) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth().testTag("server"),
             )
@@ -161,7 +170,7 @@ private fun LoginScreen(state: FitnessState, model: FitnessViewModel) {
             OutlinedTextField(
                 username,
                 { username = it },
-                label = { Text("用户名") },
+                label = { Text(stringResource(R.string.username)) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth().testTag("username"),
             )
@@ -170,7 +179,7 @@ private fun LoginScreen(state: FitnessState, model: FitnessViewModel) {
             OutlinedTextField(
                 password,
                 { password = it },
-                label = { Text("密码") },
+                label = { Text(stringResource(R.string.password)) },
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier.fillMaxWidth().testTag("password"),
@@ -189,12 +198,14 @@ private fun LoginScreen(state: FitnessState, model: FitnessViewModel) {
                         password.isNotEmpty(),
                 modifier = Modifier.fillMaxWidth().testTag("login"),
             ) {
-                Text("登录")
+                Text(stringResource(R.string.login))
             }
         }
         if (state.endpoint.isNotEmpty())
             item {
-                TextButton(onClick = model::restore, enabled = !state.busy) { Text("重试恢复已保存会话") }
+                TextButton(onClick = model::restore, enabled = !state.busy) {
+                    Text(stringResource(R.string.retry_restore))
+                }
             }
     }
 }
@@ -208,13 +219,17 @@ private fun WorkoutListScreen(state: FitnessState, model: FitnessViewModel) {
     ) {
         item {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("你的运动", style = MaterialTheme.typography.headlineSmall)
+                Text(
+                    stringResource(R.string.your_workouts),
+                    style = MaterialTheme.typography.headlineSmall,
+                )
                 TextButton(onClick = { model.refreshWorkouts() }, enabled = !state.busy) {
-                    Text("刷新")
+                    Text(stringResource(R.string.refresh))
                 }
             }
         }
-        if (state.workouts.isEmpty() && !state.busy) item { Text("暂无运动记录。同步或导入后，这里会显示你的运动。") }
+        if (state.workouts.isEmpty() && !state.busy)
+            item { Text(stringResource(R.string.empty_workouts)) }
         items(state.workouts, key = { it.id }) { workout ->
             Card(
                 onClick = { model.navigate(Screen.Detail(workout.id)) },
@@ -222,10 +237,10 @@ private fun WorkoutListScreen(state: FitnessState, model: FitnessViewModel) {
             ) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text(
-                        workout.userData.workoutTitle ?: "运动",
+                        workout.userData.workoutTitle ?: stringResource(R.string.workout),
                         style = MaterialTheme.typography.titleLarge,
                     )
-                    Text(workout.range.rangeStart)
+                    Text(dateTime(workout.range.rangeStart))
                     Text(
                         "${number(workout.recorded.summaryDistance?.div(1000), "km")} · ${number(workout.recorded.summaryTimerTime, "s")}"
                     )
@@ -239,7 +254,7 @@ private fun WorkoutListScreen(state: FitnessState, model: FitnessViewModel) {
                     enabled = !state.busy,
                     modifier = Modifier.testTag("loadMore"),
                 ) {
-                    Text("加载更多")
+                    Text(stringResource(R.string.load_more))
                 }
             }
         }

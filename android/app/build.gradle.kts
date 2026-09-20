@@ -15,7 +15,10 @@ android {
         versionCode = 1
         versionName = "0.1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunnerArguments["locale"] =
+            providers.gradleProperty("testLocale").getOrElse("en")
     }
+    androidResources { localeFilters += listOf("en", "b+zh+Hans") }
     buildTypes {
         debug { applicationIdSuffix = ".debug" }
         release { isMinifyEnabled = false }
@@ -62,7 +65,9 @@ val generateContract by
         commandLine("python3", rootProject.file("../scripts/android_generate"))
     }
 
-tasks.named("preBuild") { dependsOn(generateContract) }
+tasks.named("preBuild") {
+    dependsOn(generateContract, rootProject.tasks.named("checkLocalization"))
+}
 
 tasks.withType<Test>().configureEach {
     systemProperty("fixtureDir", rootProject.file("../backend/build").absolutePath)

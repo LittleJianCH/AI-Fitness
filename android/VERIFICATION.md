@@ -1,6 +1,78 @@
 # Android verification — 2026-09-20
 
-## Completed checks
+## Final timestamp and installed-app follow-up
+
+- The final timestamp changes passed offline `checkKotlinFormat`, app and consumer
+  unit tests, both debug APK builds, and Android Lint. Results: **18 app tests passed
+  / 1 skipped**, **22 consumer tests passed / 1 skipped**; the skips require the
+  separate real-backend host harness. Lint remains **0 errors / 11 warnings**.
+- The timestamp regression covers English and Chinese formatting, the local date
+  boundary, a daylight-saving transition, and preservation of the original
+  nanosecond timestamp. Selection formats only the visible label, retaining raw
+  chart timestamps and canonical values.
+- Reinstalled final APKs passed **English 3/3 and Simplified Chinese 3/3** focused
+  instrumentation tests, with no failures or skips. The selected-point timestamp
+  assertion ran in both languages. Eight current synthetic screenshots were
+  exported; the updated metric screens show localized local time instead of ISO
+  timestamps, and both metric layouts were visually inspected.
+- The full `ConnectedUiTests` scenario also passed separately in **English 1/1
+  and Simplified Chinese 1/1**, each against a fresh disposable PostgreSQL/API.
+  This verifies restored login, pagination, cycling/running metric navigation,
+  settings and equipment writes, training history, logout and vault clearing.
+  The first Chinese attempt reached its 120-second test limit while waiting for
+  UI idleness. An isolated rerun with a 240-second limit passed in 58 seconds;
+  the English run passed in 88 seconds. No app change was made between them,
+  and the precise cause of the earlier timeout is not established.
+- These installed runs used bounded direct ADB instrumentation, including
+  `-e class com.aifitness.LocalizedJourneyTests,com.aifitness.LocalizationTests`
+  for the focused journeys and `-e class com.aifitness.ConnectedUiTests` for the
+  full scenario, with the disposable server and explicit locale arguments.
+  They establish current app behavior; they do not establish that the historical
+  Gradle/UTP result-collection stall below has been fixed.
+- Physical devices, older Android versions, large-font settings and pseudolocales
+  remain outside this verification. No generated files, screenshots or temporary
+  test databases belong in Git.
+
+## Earlier localization follow-up
+
+- Offline `formatKotlin :app:testDebugUnitTest :consumer:test :app:assembleDebug
+  :app:lintDebug` passed. App unit tests: **17 passed, 1 skipped**; shared JVM
+  consumer: **21 passed, 1 skipped**. Both skips are the standalone real-backend
+  integration case; these invocations do not provision its server. The new
+  `responseBudgetRejectsOversizeBeforeJsonDecoding` regression ran in both modules.
+- Final debug app and instrumentation APK builds and Android Lint passed after
+  the localization test updates. Lint reported **0 errors, 11 warnings**; the
+  additional notice concerns `localeConfig` being ignored below API 33, where
+  the app uses the system language. Dependencies and locks were unchanged.
+- `checkLocalization` passed for **249 resources**: 247 strings and 2 plurals.
+  Checks cover matching English/Simplified Chinese keys, positional argument
+  types, plural branches, referenced resources, and deliberately missing or
+  incompatible translations. It runs with `preBuild` and `checkKotlinFormat`.
+- Installed APK acceptance passed on the existing Android 15 ARM64 emulator:
+  **English 3/3** and **Simplified Chinese 3/3**, with no failures or skips.
+  `LocalizedJourneyTests` exercised login, workout details, the actual metric
+  screen and settings against a disposable PostgreSQL/API with synthetic records.
+  `LocalizationTests` verified packaged language configuration, English regional
+  and unsupported-language fallback, Chinese script/region aliases, ordered
+  language preferences, plurals, live configuration changes, verbatim user title
+  `settings` and mixed-language notes, and unchanged canonical workout JSON.
+  Eight synthetic screenshots covered login/workout/metric/settings in both
+  languages; representative screens were visually inspected. Direct ADB
+  instrumentation was used for these bounded runs; the temporary server and
+  database were removed afterward.
+- The older full `ConnectedUiTests` scenario **did not pass this follow-up**:
+  it hit a Compose-Espresso idling timeout, and Gradle/UTP then stalled while
+  collecting results. Its earlier successful result below is historical, not
+  evidence that its full restore/pagination/settings-write/history/logout path
+  passed at that checkpoint. The later direct-run results above supersede this
+  app-flow coverage gap. The shorter bilingual acceptance runs do not replace
+  that broader regression coverage. Physical devices, older Android versions,
+  large-font settings and pseudolocales were not exercised in this follow-up.
+
+## Initial client verification (before localization)
+
+The results below record the initial client baseline. Current localization
+acceptance and the historical runner limitation are stated above.
 
 - Pinned official ktfmt CLI applied Kotlin language style to all **20 maintained
   Kotlin source/build files** (including Compose and instrumentation); generated
@@ -92,6 +164,8 @@ contracts, dependency caches, build outputs and test databases are excluded.
 - `android/app/build.gradle.kts`
 - `android/app/gradle.lockfile`
 - `android/app/src/androidTest/java/com/aifitness/ConnectedUiTests.kt`
+- `android/app/src/androidTest/java/com/aifitness/LocalizationTests.kt`
+- `android/app/src/androidTest/java/com/aifitness/LocalizedJourneyTests.kt`
 - `android/app/src/debug/res/xml/network_security_config.xml`
 - `android/app/src/main/AndroidManifest.xml`
 - `android/app/src/main/java/com/aifitness/Charts.kt`
@@ -100,17 +174,22 @@ contracts, dependency caches, build outputs and test databases are excluded.
 - `android/app/src/main/java/com/aifitness/FitnessViewModel.kt`
 - `android/app/src/main/java/com/aifitness/HistoryScreen.kt`
 - `android/app/src/main/java/com/aifitness/MainActivity.kt`
+- `android/app/src/main/java/com/aifitness/Localization.kt`
 - `android/app/src/main/java/com/aifitness/SessionVault.kt`
 - `android/app/src/main/java/com/aifitness/SettingsScreens.kt`
 - `android/app/src/main/java/com/aifitness/TrainingCalendar.kt`
 - `android/app/src/main/java/com/aifitness/WorkoutDetailScreen.kt`
 - `android/app/src/main/java/com/aifitness/WorkoutPresentation.kt`
 - `android/app/src/main/res/values/styles.xml`
+- `android/app/src/main/res/values/strings.xml`
+- `android/app/src/main/res/values-b+zh+Hans/strings.xml`
+- `android/app/src/main/res/xml/locales_config.xml`
 - `android/app/src/main/res/xml/data_extraction_rules.xml`
 - `android/app/src/main/res/xml/network_security_config.xml`
 - `android/app/src/test/java/com/aifitness/ConnectedApiTests.kt`
 - `android/app/src/test/java/com/aifitness/ContractTests.kt`
 - `android/build.gradle.kts`
+- `android/check_localization.py`
 - `android/consumer/build.gradle.kts`
 - `android/consumer/gradle.lockfile`
 - `android/consumer/src/test/kotlin/com/aifitness/TransportTests.kt`

@@ -11,6 +11,13 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 
+class ResponseTooLarge : Exception("Response exceeds client memory budget")
+
+// Reserve space for UTF-16 buffers, JSON objects and the decoded model. This is
+// an admission limit, not a guarantee about arbitrary device memory pressure.
+fun responseCharacterLimit(heapBytes: Long): Int =
+    (heapBytes / 64).coerceIn(65_536L, 8L * 1024 * 1024).toInt()
+
 class StaleWorkoutAnalysis : Exception("Workout revision changed")
 
 class ApiFailure(val status: Int, val code: String?) : Exception("API request failed ($status)")
@@ -78,6 +85,20 @@ class FitnessApi(val endpoint: String) {
             decode = Page_Session::fromJson,
         )
 
+    suspend fun allSessions(token: String): List<Session> {
+        val result = mutableListOf<Session>()
+        val seen = mutableSetOf<String>()
+        var cursor: String? = null
+        repeat(100) {
+            val page = sessions(token, cursor)
+            result.addAll(page.items)
+            val next = page.nextCursor ?: return result.distinctBy { it.id }
+            if (!seen.add(next)) throw ApiFailure(502, "invalid_session_pagination")
+            cursor = next
+        }
+        throw ApiFailure(502, "invalid_session_pagination")
+    }
+
     suspend fun revoke(token: String, id: String) =
         request("DELETE", "/auth/sessions/${encode(id)}", token) { Unit }
 
@@ -123,8 +144,12 @@ class FitnessApi(val endpoint: String) {
                     val status = connection.responseCode
                     if (status !in 200..299) {
                         val problem =
-                            connection.errorStream?.bufferedReader()?.use {
-                                it.readTextBounded(65_536)
+                            try {
+                                connection.errorStream?.bufferedReader()?.use {
+                                    it.readTextBounded(65_536)
+                                }
+                            } catch (_: ResponseTooLarge) {
+                                null
                             }
                         val code =
                             try {
@@ -138,7 +163,11 @@ class FitnessApi(val endpoint: String) {
                         if (status == 204) JSONObject()
                         else
                             connection.inputStream.bufferedReader().use {
-                                JSONObject(it.readTextBounded(64 * 1024 * 1024))
+                                JSONObject(
+                                    it.readTextBounded(
+                                        responseCharacterLimit(Runtime.getRuntime().maxMemory())
+                                    )
+                                )
                             }
                     if (continuation.isActive) continuation.resume(decode(json))
                 } catch (error: Exception) {
@@ -161,40 +190,65 @@ class FitnessApi(val endpoint: String) {
             require(url.path in listOf("", "/", "/api/v1", "/api/v1/"))
             val loopback =
                 url.host.lowercase() in setOf("localhost", "127.0.0.1", "10.0.2.2", "[::1]", "::1")
-            require(url.scheme == "https" || (debug && url.scheme == "http" && loopback))
+            val scheme = url.scheme?.lowercase()
+            require(scheme == "https" || (debug && scheme == "http" && loopback))
             require(url.port == -1 || url.port in 1..65535)
-            return URI(url.scheme, null, url.host, url.port, null, null, null).toASCIIString()
+            return URI(scheme, null, url.host, url.port, null, null, null).toASCIIString()
         }
 
         private fun encode(value: String): String = URLEncoder.encode(value, "UTF-8")
     }
 }
 
-private fun java.io.Reader.readTextBounded(max: Int): String {
+internal fun java.io.Reader.readTextBounded(max: Int): String {
     val result = StringBuilder()
     val buffer = CharArray(8192)
     while (true) {
         val count = read(buffer)
         if (count < 0) break
-        require(result.length + count <= max) { "Response exceeds client limit" }
+        if (count > max - result.length) throw ResponseTooLarge()
         result.append(buffer, 0, count)
     }
     return result.toString()
 }
 
-fun userMessage(error: Exception): String {
-    if (error is StaleWorkoutAnalysis) return "运动已修改，请刷新运动详情以读取同一版本。"
-    when ((error as? ApiFailure)?.code) {
-        "analysis_too_large" -> return "这段历史的数据量超过处理上限，请缩短日期范围后重试。"
-        "analysis_unavailable" -> return "当前历史数据暂时无法完成分析，请检查记录与个人参数。"
-    }
-    return when ((error as? ApiFailure)?.status) {
-        401 -> "登录已失效或账号密码不正确，请重新登录。"
-        403 -> "当前操作未获允许。"
-        404 -> "记录不存在或已删除。"
-        409 -> "设置已在其他设备修改。请重新加载，再应用你的修改。"
-        422 -> "服务器未接受这些参数。请检查数值、心率顺序和生效日期。"
-        429 -> "请求过于频繁，请稍后重试。"
-        else -> "请求未完成，请检查连接后重试。"
+enum class ClientIssue {
+    ResponseTooLarge,
+    StaleWorkout,
+    SessionPagination,
+    AnalysisTooLarge,
+    AnalysisUnavailable,
+    Authentication,
+    Forbidden,
+    Missing,
+    Conflict,
+    Validation,
+    RateLimit,
+    Network,
+    Unknown,
+    SavedSessionLocked,
+    Saved,
+}
+
+fun userIssue(error: Exception): ClientIssue {
+    if (error is kotlinx.coroutines.CancellationException) throw error
+    if (error is ResponseTooLarge) return ClientIssue.ResponseTooLarge
+    if (error is StaleWorkoutAnalysis) return ClientIssue.StaleWorkout
+    if (error is java.io.IOException) return ClientIssue.Network
+    if (error !is ApiFailure) return ClientIssue.Unknown
+    return when (error.code) {
+        "invalid_session_pagination" -> ClientIssue.SessionPagination
+        "analysis_too_large" -> ClientIssue.AnalysisTooLarge
+        "analysis_unavailable" -> ClientIssue.AnalysisUnavailable
+        else ->
+            when (error.status) {
+                401 -> ClientIssue.Authentication
+                403 -> ClientIssue.Forbidden
+                404 -> ClientIssue.Missing
+                409 -> ClientIssue.Conflict
+                422 -> ClientIssue.Validation
+                429 -> ClientIssue.RateLimit
+                else -> ClientIssue.Unknown
+            }
     }
 }

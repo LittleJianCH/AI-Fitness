@@ -3,6 +3,7 @@ package com.aifitness
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.test.core.app.ActivityScenario
+import androidx.test.filters.SdkSuppress
 import androidx.test.platform.app.InstrumentationRegistry
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
@@ -10,6 +11,7 @@ import org.junit.Rule
 import org.junit.Test
 
 /** Required server argument comes only from the disposable-cluster harness. Never mocks HTTP. */
+@SdkSuppress(minSdkVersion = 33)
 class ConnectedUiTests {
     @get:Rule val compose = createEmptyComposeRule()
 
@@ -20,10 +22,19 @@ class ConnectedUiTests {
             "Run scripts/android_integration_test --device on a disposable emulator"
         }
         val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val locale = InstrumentationRegistry.getArguments().getString("locale") ?: "en"
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            context.getSystemService(android.app.LocaleManager::class.java).applicationLocales =
+                android.os.LocaleList.forLanguageTags(locale)
+        }
         SessionVault(context).clear()
         var activity = ActivityScenario.launch(MainActivity::class.java)
         try {
             waitForTag("login")
+            compose
+                .onNodeWithTag("login")
+                .assertTextEquals(if (locale == "zh-Hans") "登录" else "Sign in")
+            screenshot("login")
             compose.onNodeWithTag("server").performTextReplacement(endpoint)
             compose.onNodeWithTag("username").performTextInput("android_fixture_user")
             compose.onNodeWithTag("password").performTextInput("synthetic android fixture password")
@@ -47,6 +58,7 @@ class ConnectedUiTests {
             waitIdle()
             compose.onNodeWithTag("loadMore").assertDoesNotExist()
             openWorkout("Android synthetic cycling 00")
+            screenshot("workout")
             waitForTag("workoutDetail")
             waitIdle()
             compose
@@ -54,15 +66,19 @@ class ConnectedUiTests {
                 .performScrollToNode(hasTestTag("metric-powerMetric"))
             compose.onNodeWithTag("metric-powerMetric").performClick()
             waitForTag("selectedPoint")
-            compose.onNodeWithText("返回").performClick()
+            waitForTag("metricScreen")
+            screenshot("metric")
+            compose.onNodeWithText(text(R.string.back)).performClick()
             waitIdle()
-            compose.onNodeWithTag("workoutDetail").performScrollToNode(hasText("查看训练历史"))
-            compose.onNodeWithText("查看训练历史").performClick()
+            compose
+                .onNodeWithTag("workoutDetail")
+                .performScrollToNode(hasText(text(R.string.view_history)))
+            compose.onNodeWithText(text(R.string.view_history)).performClick()
             waitForTag("trainingHistory")
-            compose.onNodeWithText("返回").performClick()
+            compose.onNodeWithText(text(R.string.back)).performClick()
             waitForTag("workoutDetail")
             waitIdle()
-            compose.onNodeWithText("运动", useUnmergedTree = true).performClick()
+            compose.onNodeWithText(text(R.string.workout), useUnmergedTree = true).performClick()
             openWorkout("Android synthetic running 01")
             for ((metric, expected) in
                 listOf(
@@ -78,24 +94,27 @@ class ConnectedUiTests {
                 compose
                     .onAllNodesWithTag("selectedPoint")[0]
                     .assertTextContains(expected, substring = true)
-                compose.onNodeWithText("距离", useUnmergedTree = true).performClick()
+                compose
+                    .onNodeWithText(text(R.string.distance), useUnmergedTree = true)
+                    .performClick()
                 compose
                     .onAllNodesWithTag("selectedPoint")[0]
                     .assertTextContains(expected, substring = true)
-                compose.onNodeWithText("返回").performClick()
+                compose.onNodeWithText(text(R.string.back)).performClick()
                 waitForTag("workoutDetail")
                 waitIdle()
             }
-            compose.onNodeWithTag("workoutDetail").performScrollToNode(hasText("跑步动态 · 后端计算"))
-            compose.onNodeWithText("跑步动态 · 后端计算").assertExists()
-            compose.onNodeWithText("设置", useUnmergedTree = true).performClick()
-            compose.onNodeWithText("个人身体参数").performClick()
-            waitIdle()
-            compose.onNodeWithText("更新个人参数").performClick()
             compose
-                .onNodeWithTag("生效时间 (UTC ISO 8601)")
-                .performTextReplacement("2020-01-01T00:00:00Z")
-            compose.onNodeWithTag("体重 (kg)").performTextInput("70")
+                .onNodeWithTag("workoutDetail")
+                .performScrollToNode(hasText(text(R.string.running_dynamics)))
+            compose.onNodeWithText(text(R.string.running_dynamics)).assertExists()
+            compose.onNodeWithText(text(R.string.settings), useUnmergedTree = true).performClick()
+            screenshot("settings")
+            compose.onNodeWithText(text(R.string.body_settings)).performClick()
+            waitIdle()
+            compose.onNodeWithText(text(R.string.update_body)).performClick()
+            compose.onNodeWithTag("effective_time").performTextReplacement("2020-01-01T00:00:00Z")
+            compose.onNodeWithTag("body_mass").performTextInput("70")
             compose.onNodeWithTag("bodySettings").performScrollToNode(hasTestTag("saveBody"))
             compose.onNodeWithTag("saveBody").performClick()
             waitIdle()
@@ -103,26 +122,30 @@ class ConnectedUiTests {
                 FitnessApi(endpoint).settings(saved.token)
             }
             assertEquals(70.0, persistedBody.settingsBodyProfiles.single().bodyMassKilograms!!, 0.0)
-            compose.onNodeWithText("返回").performClick()
+            compose.onNodeWithText(text(R.string.back)).performClick()
             waitIdle()
-            compose.onNodeWithText("器材").performClick()
+            compose.onNodeWithText(text(R.string.equipment)).performClick()
             waitIdle()
-            compose.onNodeWithText("添加器材").performClick()
-            compose.onNodeWithTag("器材名称").performTextInput("Synthetic UI bicycle")
+            compose.onNodeWithText(text(R.string.add_equipment)).performClick()
+            compose.onNodeWithTag("equipment_name").performTextInput("Synthetic UI bicycle")
             compose.onNodeWithTag("saveEquipment").performScrollTo().performClick()
             waitIdle()
             compose.onNodeWithText("Synthetic UI bicycle").assertExists()
-            compose.onNodeWithText("训练历史", useUnmergedTree = true).performClick()
-            compose.onNodeWithTag("结束日期 (YYYY-MM-DD)").performTextReplacement("2026-09-10")
-            compose.onNodeWithTag("天数 (1–366)").performTextReplacement("2")
+            compose
+                .onNodeWithText(text(R.string.training_history), useUnmergedTree = true)
+                .performClick()
+            compose.onNodeWithTag("history_end").performTextReplacement("2026-09-10")
+            compose.onNodeWithTag("history_days").performTextReplacement("2")
             compose.onNodeWithTag("historyComplete").performScrollTo().performClick()
             compose.onNodeWithTag("historyNoPrior").performScrollTo().performClick()
             compose.onNodeWithTag("loadHistory").performScrollTo().performClick()
             waitIdle()
-            compose.onNodeWithTag("trainingHistory").performScrollToNode(hasText("训练趋势 · 后端计算"))
-            compose.onNodeWithText("训练趋势 · 后端计算").assertExists()
-            compose.onNodeWithText("设置", useUnmergedTree = true).performClick()
-            compose.onNodeWithText("账号与登录会话").performClick()
+            compose
+                .onNodeWithTag("trainingHistory")
+                .performScrollToNode(hasText(text(R.string.training_trend)))
+            compose.onNodeWithText(text(R.string.training_trend)).assertExists()
+            compose.onNodeWithText(text(R.string.settings), useUnmergedTree = true).performClick()
+            compose.onNodeWithText(text(R.string.account_sessions)).performClick()
             waitForTag("logout")
             waitIdle()
             compose.onNodeWithTag("logout").performClick()
@@ -132,6 +155,23 @@ class ConnectedUiTests {
             activity.close()
         }
     }
+
+    private fun screenshot(screen: String) {
+        compose.waitForIdle()
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val locale = InstrumentationRegistry.getArguments().getString("locale") ?: "en"
+        instrumentation.waitForIdleSync()
+        Thread.sleep(300) // Allow the rendered frame to reach the system screenshot surface.
+        val bitmap = instrumentation.uiAutomation.takeScreenshot()
+        val file = java.io.File(instrumentation.targetContext.filesDir, "i18n-$locale-$screen.png")
+        file.outputStream().use {
+            bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it)
+        }
+        bitmap.recycle()
+    }
+
+    private fun text(id: Int) =
+        InstrumentationRegistry.getInstrumentation().targetContext.getString(id)
 
     private fun waitForTag(tag: String) =
         compose.waitUntil(30_000) {

@@ -7,6 +7,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.aifitness.contract.*
 
@@ -18,7 +19,7 @@ fun WorkoutDetailScreen(state: FitnessState, model: FitnessViewModel) {
             TextButton(
                 onClick = { (state.screen as? Screen.Detail)?.let { model.loadDetail(it.id) } }
             ) {
-                Text("重新加载运动详情")
+                Text(stringResource(R.string.reload_detail))
             }
         return
     }
@@ -31,42 +32,59 @@ fun WorkoutDetailScreen(state: FitnessState, model: FitnessViewModel) {
     ) {
         item {
             Text(
-                workout.workoutUserData.workoutTitle ?: if (workout.running) "跑步" else "骑行",
+                workout.workoutUserData.workoutTitle
+                    ?: if (workout.running) stringResource(R.string.running)
+                    else stringResource(R.string.cycling),
                 style = MaterialTheme.typography.headlineMedium,
             )
         }
         item { RouteCard(workout, analysis?.analysisMaxGapSeconds?.toDouble() ?: 120.0) }
         item {
-            SectionCard("运动概览 · 设备记录") {
-                ValueRow("开始时间", workout.workoutObservation.observationRange.rangeStart)
-                ValueRow("距离", number(workout.recorded.summaryDistance?.div(1000), "km"))
+            SectionCard(stringResource(R.string.recorded_overview)) {
                 ValueRow(
-                    "计时 / 移动",
+                    stringResource(R.string.start_time),
+                    dateTime(workout.workoutObservation.observationRange.rangeStart),
+                )
+                ValueRow(
+                    stringResource(R.string.distance),
+                    number(workout.recorded.summaryDistance?.div(1000), "km"),
+                )
+                ValueRow(
+                    stringResource(R.string.timer_moving),
                     "${number(workout.recorded.summaryTimerTime, "s")} / ${number(workout.recorded.summaryMovingTime, "s")}",
                 )
-                ValueRow("经过时间", number(workout.recorded.summaryElapsedTime, "s"))
                 ValueRow(
-                    "爬升 / 下降",
+                    stringResource(R.string.elapsed_time),
+                    number(workout.recorded.summaryElapsedTime, "s"),
+                )
+                ValueRow(
+                    stringResource(R.string.ascent_descent),
                     "${number(workout.recorded.summaryAscent, "m")} / ${number(workout.recorded.summaryDescent, "m")}",
                 )
-                ValueRow("代谢能量", number(workout.recorded.summaryMetabolicEnergy, "J"))
+                ValueRow(
+                    stringResource(R.string.metabolic_energy),
+                    number(workout.recorded.summaryMetabolicEnergy, "J"),
+                )
             }
         }
         if (analysis == null)
             item {
-                SectionCard("指标分析") {
+                SectionCard(stringResource(R.string.metric_analysis)) {
                     Text(
-                        if (detail.analysisLoading) "正在计算指标…" else detail.analysisError ?: "分析暂不可用"
+                        if (detail.analysisLoading) stringResource(R.string.calculating_metrics)
+                        else
+                            detail.analysisError?.text()
+                                ?: stringResource(R.string.analysis_unavailable)
                     )
                     if (!detail.analysisLoading)
                         TextButton(onClick = model::retryAnalysis, enabled = !state.busy) {
-                            Text("重试指标分析")
+                            Text(stringResource(R.string.retry_analysis))
                         }
                     TextButton(
                         onClick = { model.loadDetail(workout.workoutId) },
                         enabled = !state.busy,
                     ) {
-                        Text("刷新运动详情")
+                        Text(stringResource(R.string.refresh_detail))
                     }
                 }
             }
@@ -80,112 +98,170 @@ fun WorkoutDetailScreen(state: FitnessState, model: FitnessViewModel) {
                     Text(kind.title(), style = MaterialTheme.typography.titleLarge)
                     if (metric != null) {
                         ValueRow(
-                            "后端计算均值",
+                            stringResource(R.string.calculated_average),
                             metric.metricKind.format(
                                 metric.metricStatistics.averageValue,
                                 workout.running,
                             ),
                         )
                         ValueRow(
-                            "范围",
+                            stringResource(R.string.range),
                             "${metric.metricKind.format(metric.metricStatistics.minimumValue, workout.running)} – ${metric.metricKind.format(metric.metricStatistics.maximumValue, workout.running)}",
                         )
-                    } else Text("原始样本可用，后端统计暂不可用。")
-                    Text("查看曲线、分布与关系 →", color = MaterialTheme.colorScheme.primary)
+                    } else Text(stringResource(R.string.raw_samples_hint))
+                    Text(
+                        stringResource(R.string.view_metric),
+                        color = MaterialTheme.colorScheme.primary,
+                    )
                 }
             }
         }
         item { PowerSection(detail, state.busy, model) }
         analysis?.analysisRunning?.let { running ->
             item {
-                SectionCard("跑步动态 · 后端计算") {
-                    ValueRow("步数", number(running.runningSteps, digits = 0))
-                    ValueRow("腾空时间", number(running.runningFlightSeconds, "s", 3))
-                    ValueRow("腾空比例", number(running.runningFlightRatioPercent, "%"))
-                    ValueRow("垂直比", number(running.runningVerticalRatioPercent, "%"))
-                    ValueRow("跑步效能", number(running.runningEffectiveness))
+                SectionCard(stringResource(R.string.running_dynamics)) {
+                    ValueRow(
+                        stringResource(R.string.steps),
+                        number(running.runningSteps, digits = 0),
+                    )
+                    ValueRow(
+                        stringResource(R.string.flight_time),
+                        number(running.runningFlightSeconds, "s", 3),
+                    )
+                    ValueRow(
+                        stringResource(R.string.flight_ratio),
+                        number(running.runningFlightRatioPercent, "%"),
+                    )
+                    ValueRow(
+                        stringResource(R.string.vertical_ratio),
+                        number(running.runningVerticalRatioPercent, "%"),
+                    )
+                    ValueRow(
+                        stringResource(R.string.running_effectiveness),
+                        number(running.runningEffectiveness),
+                    )
                 }
             }
         }
         if (analysis != null)
             item {
-                SectionCard("心率负荷") {
+                SectionCard(stringResource(R.string.heart_load)) {
                     val heart = analysis.analysisHeart
                     ValueRow(
-                        "状态",
+                        stringResource(R.string.status),
                         when (heart.heartLoadStatus) {
-                            HeartLoadStatus.heartLoadAvailable -> "负荷可用"
-                            HeartLoadStatus.heartProfileMissing -> "缺少心率参数"
-                            HeartLoadStatus.heartCoverageInsufficient -> "心率覆盖不足；显示已观测部分"
-                            HeartLoadStatus.heartNoActiveTime -> "没有活动计时时长"
-                            HeartLoadStatus.heartExcluded -> "已排除统计"
-                            HeartLoadStatus.heartCalculationUnavailable -> "当前数据无法计算"
+                            HeartLoadStatus.heartLoadAvailable ->
+                                stringResource(R.string.load_available)
+                            HeartLoadStatus.heartProfileMissing ->
+                                stringResource(R.string.heart_profile_missing)
+                            HeartLoadStatus.heartCoverageInsufficient ->
+                                stringResource(R.string.heart_coverage_insufficient)
+                            HeartLoadStatus.heartNoActiveTime ->
+                                stringResource(R.string.no_active_time)
+                            HeartLoadStatus.heartExcluded -> stringResource(R.string.excluded)
+                            HeartLoadStatus.heartCalculationUnavailable ->
+                                stringResource(R.string.calculation_unavailable)
                         },
                     )
                     ValueRow("HRSS", number(heart.heartHrss))
                     ValueRow("TRIMPexp", number(heart.heartTrimp))
-                    ValueRow("覆盖率", number(heart.heartCoverageFraction?.times(100), "%"))
                     ValueRow(
-                        "覆盖 / 活动时长",
+                        stringResource(R.string.coverage),
+                        number(heart.heartCoverageFraction?.times(100), "%"),
+                    )
+                    ValueRow(
+                        stringResource(R.string.covered_active),
                         "${number(heart.heartCoveredSeconds, "s")} / ${number(heart.heartActiveSeconds, "s")}",
                     )
-                    Text(if (heart.heartUsesRecordedTimer) "使用记录的计时区间。" else "没有计时事件，使用标注的经过时间回退。")
-                    Zones(heart.heartZones, "心率区间", "bpm")
-                    TextButton(onClick = { model.navigate(Screen.History) }) { Text("查看训练历史") }
+                    Text(
+                        if (heart.heartUsesRecordedTimer)
+                            stringResource(R.string.recorded_timer_hint)
+                        else stringResource(R.string.fallback_timer_hint)
+                    )
+                    Zones(heart.heartZones, stringResource(R.string.heart_zones), "bpm")
+                    TextButton(onClick = { model.navigate(Screen.History) }) {
+                        Text(stringResource(R.string.view_history))
+                    }
                 }
             }
         analysis?.analysisSplits.orEmpty().forEach { set ->
             item {
                 Text(
-                    "${number(set.splitLengthMetres / 1000, "km")} 分段",
+                    stringResource(
+                        R.string.split_length,
+                        number(set.splitLengthMetres / 1000, "km"),
+                    ),
                     style = MaterialTheme.typography.titleLarge,
                 )
             }
             if (set.distanceSplits.isEmpty()) {
-                item { Text("暂无可用分段。分段计算需要足够的连续、非递减距离数据。") }
+                item { Text(stringResource(R.string.empty_splits)) }
             }
             items(set.distanceSplits, key = { "${set.splitLengthMetres}-${it.splitIndex}" }) { split
                 ->
-                SectionCard("第 ${split.splitIndex} 段 · ${number(split.splitDistanceMetres, "m")}") {
+                SectionCard(
+                    stringResource(
+                        R.string.split_title,
+                        split.splitIndex,
+                        number(split.splitDistanceMetres, "m"),
+                    )
+                ) {
                     ValueRow(
-                        "开始 / 结束",
+                        stringResource(R.string.start_end),
                         "${number(split.splitStartSeconds, "s")} / ${number(split.splitEndSeconds, "s")}",
                     )
                     ValueRow(
-                        if (workout.running) "配速" else "速度",
+                        if (workout.running) stringResource(R.string.pace)
+                        else stringResource(R.string.speed),
                         if (workout.running) pace(split.splitAverageSpeed)
                         else number(split.splitAverageSpeed, "m/s"),
                     )
                     ValueRow(
-                        "心率 / 功率",
+                        stringResource(R.string.heart_power),
                         "${number(split.splitHeartRate, "bpm")} / ${number(split.splitPower, "W")}",
                     )
                     ValueRow(
-                        "步频 / 踏频",
+                        stringResource(R.string.running_cycling_cadence),
                         number(split.splitCadence, if (workout.running) "steps/min" else "rpm"),
                     )
-                    ValueRow("海拔变化", number(split.splitElevationChange, "m"))
+                    ValueRow(
+                        stringResource(R.string.elevation_change),
+                        number(split.splitElevationChange, "m"),
+                    )
                 }
             }
         }
         analysis?.analysisHalves?.let { halves ->
             item {
-                SectionCard("前后半程比较") {
-                    ValueRow("前半程速度", number(halves.firstHalfSpeed, "m/s"))
-                    ValueRow("后半程速度", number(halves.secondHalfSpeed, "m/s"))
-                    ValueRow("变化", number(halves.secondHalfChangePercent, "%"))
+                SectionCard(stringResource(R.string.halves)) {
+                    ValueRow(
+                        stringResource(R.string.first_half_speed),
+                        number(halves.firstHalfSpeed, "m/s"),
+                    )
+                    ValueRow(
+                        stringResource(R.string.second_half_speed),
+                        number(halves.secondHalfSpeed, "m/s"),
+                    )
+                    ValueRow(
+                        stringResource(R.string.change),
+                        number(halves.secondHalfChangePercent, "%"),
+                    )
                 }
             }
         }
         item { SourceSection(workout) }
         if (analysis != null)
             item {
-                SectionCard("分析说明") {
-                    Text("方法：${analysis.analysisMethod}")
+                SectionCard(stringResource(R.string.analysis_notes)) {
+                    Text(stringResource(R.string.method, analysis.analysisMethod))
                     Text(
-                        "运动版本 ${analysis.analysisRevision} · 参数版本 ${analysis.analysisSettingsRevision}"
+                        stringResource(
+                            R.string.analysis_revisions,
+                            analysis.analysisRevision,
+                            analysis.analysisSettingsRevision,
+                        )
                     )
-                    Text("指标长间隔阈值 ${analysis.analysisMaxGapSeconds}s；缺失数据不等于零。")
+                    Text(stringResource(R.string.analysis_gap, analysis.analysisMaxGapSeconds))
                     analysis.analysisNotes.forEach { Text(it) }
                 }
             }
@@ -195,26 +271,36 @@ fun WorkoutDetailScreen(state: FitnessState, model: FitnessViewModel) {
 @Composable
 private fun PowerSection(detail: Detail, busy: Boolean, model: FitnessViewModel) {
     val power = detail.analysis?.analysisPower
-    SectionCard("功率分析") {
+    SectionCard(stringResource(R.string.power_analysis)) {
         if (power != null) {
-            ValueRow("标准化功率", number(power.powerNormalized, "W"))
-            ValueRow("有效标准化时长", number(power.powerNormalizationSeconds, "s"))
+            ValueRow(stringResource(R.string.normalized_power), number(power.powerNormalized, "W"))
             ValueRow(
-                "变异指数 / 强度因子",
+                stringResource(R.string.normalization_time),
+                number(power.powerNormalizationSeconds, "s"),
+            )
+            ValueRow(
+                stringResource(R.string.variability_intensity),
                 "${number(power.powerVariabilityIndex)} / ${number(power.powerIntensityFactor)}",
             )
-            ValueRow("训练压力", number(power.powerStressScore))
-            ValueRow("机械功", number(power.powerWorkJoules, "J"))
-            ValueRow("功率体重比", number(power.powerWattsPerKilogram, "W/kg"))
+            ValueRow(stringResource(R.string.stress), number(power.powerStressScore))
+            ValueRow(stringResource(R.string.mechanical_work), number(power.powerWorkJoules, "J"))
             ValueRow(
-                "效率 / 解耦",
+                stringResource(R.string.watts_per_kg),
+                number(power.powerWattsPerKilogram, "W/kg"),
+            )
+            ValueRow(
+                stringResource(R.string.efficiency_decoupling),
                 "${number(power.powerEfficiency)} / ${number(power.powerDecouplingPercent, "%")}",
             )
             ValueRow(
-                "使用的 FTP / 体重",
+                stringResource(R.string.used_ftp_mass),
                 "${number(power.powerThresholdWatts, "W")} / ${number(power.powerAthleteKilograms, "kg")}",
             )
-            Zones(detail.analysis?.analysisPowerZones.orEmpty(), "功率区间", "W")
+            Zones(
+                detail.analysis?.analysisPowerZones.orEmpty(),
+                stringResource(R.string.power_zones),
+                "W",
+            )
         }
         val curve = detail.curve
         if (curve != null) {
@@ -228,33 +314,54 @@ private fun PowerSection(detail: Detail, busy: Boolean, model: FitnessViewModel)
                         )
                     }
                 }
-            PointChart(points, "功率持续时间曲线", "s", "W")
-            Text("${curve.method} · 间隔上限 ${curve.maxGapSeconds}s")
+            val intervals = curve.points.mapNotNull { it.best }
+            PointChart(
+                points,
+                stringResource(R.string.power_curve),
+                "s",
+                "W",
+                logarithmicX = true,
+                selectedLabel = { index ->
+                    val interval = intervals[index]
+                    "${dateTime(interval.start)} – ${dateTime(interval.end)}"
+                },
+            )
+            Text(stringResource(R.string.curve_method, curve.method, curve.maxGapSeconds))
             val missing = curve.points.filter { it.best == null }
             if (missing.isNotEmpty())
-                Text("无完整覆盖：${missing.joinToString { "${it.durationSeconds}s" }}")
+                Text(
+                    stringResource(
+                        R.string.curve_missing,
+                        missing.joinToString { "${it.durationSeconds}s" },
+                    )
+                )
         } else {
-            Text(if (detail.curveLoading) "正在加载功率曲线…" else detail.curveError ?: "功率曲线暂不可用")
+            Text(
+                if (detail.curveLoading) stringResource(R.string.loading_curve)
+                else detail.curveError?.text() ?: stringResource(R.string.curve_unavailable)
+            )
             if (!detail.curveLoading)
-                TextButton(onClick = model::retryCurve, enabled = !busy) { Text("重试功率曲线") }
+                TextButton(onClick = model::retryCurve, enabled = !busy) {
+                    Text(stringResource(R.string.retry_curve))
+                }
         }
     }
 }
 
 @Composable
 fun Zones(zones: List<ZoneDuration>, title: String, unit: String) {
-    if (zones.isEmpty()) Text("$title：缺少参数或覆盖数据")
+    if (zones.isEmpty()) Text(stringResource(R.string.zones_missing, title))
     else
         PointChart(
             zones.map {
                 ChartPoint(
                     it.zoneIndex.toDouble(),
                     it.zoneSeconds,
-                    "${number(it.zoneLower, unit)} – ${it.zoneUpper?.let { upper -> number(upper, unit) } ?: "以上"}",
+                    "${number(it.zoneLower, unit)} – ${it.zoneUpper?.let { upper -> number(upper, unit) } ?: stringResource(R.string.and_above)}",
                 )
             },
             title,
-            "区",
+            stringResource(R.string.zone),
             "s",
             bars = true,
         )
@@ -262,40 +369,53 @@ fun Zones(zones: List<ZoneDuration>, title: String, unit: String) {
 
 @Composable
 private fun SourceSection(workout: Workout) {
-    SectionCard("来源记录与上下文") {
-        Text("以下为源记录中的圈与汇总，与计算分段、计算指标分别展示。")
+    SectionCard(stringResource(R.string.source_context)) {
+        Text(stringResource(R.string.source_context_hint))
         ValueRow(
-            "记录海拔均值 / 最低 / 最高",
+            stringResource(R.string.recorded_altitude),
             "${number(workout.recorded.summaryAltitude.averageValue, "m")} / ${number(workout.recorded.summaryAltitude.minimumValue, "m")} / ${number(workout.recorded.summaryAltitude.maximumValue, "m")}",
         )
-        ValueRow("记录机械功", number(workout.recorded.summaryMechanicalWork, "J"))
+        ValueRow(
+            stringResource(R.string.recorded_work),
+            number(workout.recorded.summaryMechanicalWork, "J"),
+        )
         when (val sport = workout.workoutObservation.observationSport) {
             is SportCycling -> {
-                ValueRow("自行车", sport.data.cyclingContext.bicycleName ?: "暂无数据")
-                ValueRow("自行车质量", number(sport.data.cyclingContext.bicycleMass, "kg"))
-                if (sport.data.cyclingLaps.isEmpty()) Text("无源圈记录")
+                ValueRow(
+                    stringResource(R.string.bicycle),
+                    sport.data.cyclingContext.bicycleName ?: stringResource(R.string.not_recorded),
+                )
+                ValueRow(
+                    stringResource(R.string.bicycle_mass),
+                    number(sport.data.cyclingContext.bicycleMass, "kg"),
+                )
+                if (sport.data.cyclingLaps.isEmpty()) Text(stringResource(R.string.empty_laps))
                 sport.data.cyclingLaps.forEachIndexed { index, lap ->
                     Text(
-                        lap.lapLabel ?: "源圈 ${index + 1}",
+                        lap.lapLabel ?: stringResource(R.string.source_lap, index + 1),
                         style = MaterialTheme.typography.titleMedium,
                     )
-                    Text("${lap.lapRange.rangeStart} – ${lap.lapRange.rangeEnd}")
+                    Text(
+                        "${dateTime(lap.lapRange.rangeStart)} – ${dateTime(lap.lapRange.rangeEnd)}"
+                    )
                     ValueRow(
-                        "记录距离 / 计时",
+                        stringResource(R.string.recorded_distance_timer),
                         "${number(lap.lapSummary.recordedSummary.cyclingCommonSummary.summaryDistance, "m")} / ${number(lap.lapSummary.recordedSummary.cyclingCommonSummary.summaryTimerTime, "s")}",
                     )
                 }
             }
             is SportRunning -> {
-                if (sport.data.runningLaps.isEmpty()) Text("无源圈记录")
+                if (sport.data.runningLaps.isEmpty()) Text(stringResource(R.string.empty_laps))
                 sport.data.runningLaps.forEachIndexed { index, lap ->
                     Text(
-                        lap.lapLabel ?: "源圈 ${index + 1}",
+                        lap.lapLabel ?: stringResource(R.string.source_lap, index + 1),
                         style = MaterialTheme.typography.titleMedium,
                     )
-                    Text("${lap.lapRange.rangeStart} – ${lap.lapRange.rangeEnd}")
+                    Text(
+                        "${dateTime(lap.lapRange.rangeStart)} – ${dateTime(lap.lapRange.rangeEnd)}"
+                    )
                     ValueRow(
-                        "记录距离 / 计时",
+                        stringResource(R.string.recorded_distance_timer),
                         "${number(lap.lapSummary.recordedSummary.runningCommonSummary.summaryDistance, "m")} / ${number(lap.lapSummary.recordedSummary.runningCommonSummary.summaryTimerTime, "s")}",
                     )
                 }
@@ -309,7 +429,7 @@ private fun SourceSection(workout: Workout) {
 @Composable
 fun MetricScreen(detail: Detail?, kind: MetricKind) {
     if (detail == null) {
-        Text("请重新打开运动以加载最新分析。")
+        Text(stringResource(R.string.reopen_workout))
         return
     }
     val workout = detail.workout
@@ -323,13 +443,22 @@ fun MetricScreen(detail: Detail?, kind: MetricKind) {
     LazyColumn(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
+        modifier = Modifier.testTag("metricScreen"),
     ) {
         item {
             SectionCard(kind.title()) {
                 Row {
-                    FilterChip(distance, { distance = true }, label = { Text("距离") })
+                    FilterChip(
+                        distance,
+                        { distance = true },
+                        label = { Text(stringResource(R.string.distance)) },
+                    )
                     Spacer(Modifier.width(8.dp))
-                    FilterChip(!distance, { distance = false }, label = { Text("时间") })
+                    FilterChip(
+                        !distance,
+                        { distance = false },
+                        label = { Text(stringResource(R.string.time)) },
+                    )
                 }
                 PointChart(
                     points,
@@ -338,30 +467,38 @@ fun MetricScreen(detail: Detail?, kind: MetricKind) {
                     kind.unit(workout.running),
                     if (distance) null else gap,
                     yDigits = kind.digits(),
+                    selectedLabel = { index -> dateTime(points[index].label) },
                 )
-                Text("选点来自原始样本。距离轴仅映射有效距离区间，不跨间隔推算。")
-                if (analysis == null) Text(detail.analysisError ?: "后端统计暂不可用，返回详情页可重试。")
+                Text(stringResource(R.string.raw_selection_hint))
+                if (analysis == null)
+                    Text(
+                        detail.analysisError?.text()
+                            ?: stringResource(R.string.metric_unavailable_hint)
+                    )
             }
         }
         metric?.let {
             item {
-                SectionCard("统计 · 后端计算") {
+                SectionCard(stringResource(R.string.calculated_statistics)) {
                     ValueRow(
-                        "均值",
+                        stringResource(R.string.average),
                         kind.format(it.metricStatistics.averageValue, workout.running),
                     )
                     if (workout.running && kind == MetricKind.speedMetric)
-                        ValueRow("平均配速", pace(it.metricStatistics.averageValue))
+                        ValueRow(
+                            stringResource(R.string.average_pace),
+                            pace(it.metricStatistics.averageValue),
+                        )
                     ValueRow(
-                        "最小 / 最大",
+                        stringResource(R.string.minimum_maximum),
                         "${kind.format(it.metricStatistics.minimumValue, workout.running)} / ${kind.format(it.metricStatistics.maximumValue, workout.running)}",
                     )
                     ValueRow(
-                        "排除零均值",
+                        stringResource(R.string.average_without_zeros),
                         kind.format(it.metricAverageExcludingZeros, workout.running),
                     )
                     ValueRow(
-                        "样本 / 覆盖",
+                        stringResource(R.string.samples_coverage),
                         "${it.metricSampleCount} / ${number(it.metricCoveredSeconds, "s")}",
                     )
                     PointChart(
@@ -373,7 +510,7 @@ fun MetricScreen(detail: Detail?, kind: MetricKind) {
                                 upperX = bin.binUpper,
                             )
                         },
-                        "分布",
+                        stringResource(R.string.distribution),
                         kind.unit(workout.running),
                         "s",
                         bars = true,
@@ -391,14 +528,18 @@ fun MetricScreen(detail: Detail?, kind: MetricKind) {
                 "${relationship.relationshipX.title()} / ${relationship.relationshipY.title()}"
             ) {
                 ValueRow(
-                    "相关系数 / 对齐样本",
+                    stringResource(R.string.correlation_samples),
                     "${number(relationship.relationshipCorrelation, digits = 3)} / ${relationship.relationshipSampleCount}",
                 )
                 PointChart(
                     relationship.relationshipPoints.map {
-                        ChartPoint(it.relationshipXValue, it.relationshipYValue, "后端对齐样本")
+                        ChartPoint(
+                            it.relationshipXValue,
+                            it.relationshipYValue,
+                            stringResource(R.string.aligned_sample),
+                        )
                     },
-                    "关系",
+                    stringResource(R.string.relationship),
                     relationship.relationshipX.unit(workout.running),
                     relationship.relationshipY.unit(workout.running),
                     scatter = true,

@@ -7,6 +7,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.aifitness.contract.*
@@ -21,23 +22,37 @@ fun SettingsScreen(state: FitnessState, model: FitnessViewModel) {
         verticalArrangement = Arrangement.spacedBy(12.dp),
         modifier = Modifier.testTag("settings"),
     ) {
-        item { Text("你的偏好、身体参数与运动器材。", style = MaterialTheme.typography.titleMedium) }
+        item {
+            Text(
+                stringResource(R.string.settings_intro),
+                style = MaterialTheme.typography.titleMedium,
+            )
+        }
         listOf(
-                "软件设置" to Screen.Software,
-                "个人身体参数" to Screen.Body,
-                "器材" to Screen.Equipment,
-                "账号与登录会话" to Screen.Account,
+                R.string.software_settings to Screen.Software,
+                R.string.body_settings to Screen.Body,
+                R.string.equipment to Screen.Equipment,
+                R.string.account_sessions to Screen.Account,
             )
             .forEach { (label, screen) ->
                 item {
                     Card(onClick = { model.navigate(screen) }, modifier = Modifier.fillMaxWidth()) {
-                        Text(label, Modifier.padding(20.dp))
+                        Text(stringResource(label), Modifier.padding(20.dp))
                     }
                 }
             }
-        item { Text("已保存到当前账号 · 版本 ${state.settings?.settingsRevision ?: "待加载"}") }
         item {
-            TextButton(onClick = model::refreshSettings, enabled = !state.busy) { Text("重新加载设置") }
+            Text(
+                stringResource(
+                    R.string.settings_revision,
+                    state.settings?.settingsRevision ?: stringResource(R.string.loading),
+                )
+            )
+        }
+        item {
+            TextButton(onClick = model::refreshSettings, enabled = !state.busy) {
+                Text(stringResource(R.string.reload_settings))
+            }
         }
     }
 }
@@ -49,12 +64,13 @@ fun SoftwareScreen(state: FitnessState, model: FitnessViewModel) {
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         item {
-            SectionCard("外观") {
+            SectionCard(stringResource(R.string.appearance)) {
                 state.settings?.let { settings ->
                     listOf(
-                            Appearance.systemAppearance to "跟随系统",
-                            Appearance.lightAppearance to "浅色",
-                            Appearance.darkAppearance to "深色",
+                            Appearance.systemAppearance to
+                                stringResource(R.string.system_appearance),
+                            Appearance.lightAppearance to stringResource(R.string.light_appearance),
+                            Appearance.darkAppearance to stringResource(R.string.dark_appearance),
                         )
                         .forEach { (appearance, label) ->
                             Row {
@@ -77,14 +93,16 @@ fun SoftwareScreen(state: FitnessState, model: FitnessViewModel) {
             }
         }
         item {
-            SectionCard("连接与显示") {
-                ValueRow("服务器", state.endpoint)
-                ValueRow("单位", "公制 · km / kg / W")
-                ValueRow("本地时区", ZoneId.systemDefault().id)
+            SectionCard(stringResource(R.string.connection_display)) {
+                ValueRow(stringResource(R.string.server), state.endpoint)
+                ValueRow(stringResource(R.string.units), stringResource(R.string.metric_units))
+                ValueRow(stringResource(R.string.local_time_zone), ZoneId.systemDefault().id)
             }
         }
     }
 }
+
+private class FormFailure(val resource: Int) : IllegalArgumentException()
 
 private data class SportDraft(
     val watts: String = "",
@@ -98,12 +116,10 @@ private data class SportDraft(
         val heart =
             if (hrFields.all { it == null }) null
             else {
-                require(hrFields.all { it != null } && weighting != null) {
-                    "请完整填写心率参数并选择 TRIMP 指数。"
-                }
-                require(hrFields[0]!! < hrFields[1]!! && hrFields[1]!! <= hrFields[2]!!) {
-                    "需要：静息心率 < 阈值心率 ≤ 最大心率。"
-                }
+                if (!(hrFields.all { it != null } && weighting != null))
+                    throw FormFailure(R.string.invalid_heart_profile)
+                if (!(hrFields[0]!! < hrFields[1]!! && hrFields[1]!! <= hrFields[2]!!))
+                    throw FormFailure(R.string.invalid_heart_order)
                 HeartRateProfile(
                     heartRateResting = hrFields[0]!!,
                     heartRateThreshold = hrFields[1]!!,
@@ -129,18 +145,32 @@ private data class SportDraft(
 private fun optionalNumber(input: String): Double? {
     if (input.isBlank()) return null
     val value = input.toDoubleOrNull()
-    require(value != null && value.isFinite() && value > 0) { "请输入大于零的数字，或留空。" }
+    if (value == null || !value.isFinite() || value <= 0)
+        throw FormFailure(R.string.invalid_positive)
     return value
 }
 
 @Composable
-private fun SportFields(title: String, value: SportDraft, change: (SportDraft) -> Unit) {
+private fun SportFields(
+    title: String,
+    key: String,
+    value: SportDraft,
+    change: (SportDraft) -> Unit,
+) {
     Text(title, style = MaterialTheme.typography.titleLarge)
-    Field("$title FTP (W)", value.watts) { change(value.copy(watts = it)) }
-    Field("$title 静息心率 (bpm)", value.resting) { change(value.copy(resting = it)) }
-    Field("$title 阈值心率 (bpm)", value.threshold) { change(value.copy(threshold = it)) }
-    Field("$title 最大心率 (bpm)", value.maximum) { change(value.copy(maximum = it)) }
-    Text("TRIMP 指数需要明确选择，不根据身份推断。")
+    Field(stringResource(R.string.sport_ftp, title), value.watts, "$key-watts") {
+        change(value.copy(watts = it))
+    }
+    Field(stringResource(R.string.sport_resting, title), value.resting, "$key-resting") {
+        change(value.copy(resting = it))
+    }
+    Field(stringResource(R.string.sport_threshold, title), value.threshold, "$key-threshold") {
+        change(value.copy(threshold = it))
+    }
+    Field(stringResource(R.string.sport_maximum, title), value.maximum, "$key-maximum") {
+        change(value.copy(maximum = it))
+    }
+    Text(stringResource(R.string.trimp_hint))
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         listOf(LoadWeighting.exponent192 to "1.92", LoadWeighting.exponent167 to "1.67").forEach {
             (weighting, title) ->
@@ -154,13 +184,13 @@ private fun SportFields(title: String, value: SportDraft, change: (SportDraft) -
 }
 
 @Composable
-fun Field(label: String, value: String, change: (String) -> Unit) {
+fun Field(label: String, value: String, tag: String, change: (String) -> Unit) {
     OutlinedTextField(
         value,
         change,
         label = { Text(label) },
         singleLine = true,
-        modifier = Modifier.fillMaxWidth().testTag(label),
+        modifier = Modifier.fillMaxWidth().testTag(tag),
     )
 }
 
@@ -183,23 +213,35 @@ fun BodyScreen(state: FitnessState, model: FitnessViewModel) {
         remember(settings.settingsRevision) { mutableStateOf(SportDraft.from(latest?.bodyCycling)) }
     var running by
         remember(settings.settingsRevision) { mutableStateOf(SportDraft.from(latest?.bodyRunning)) }
-    var error by remember { mutableStateOf<String?>(null) }
+    var error by remember { mutableStateOf<Int?>(null) }
     LazyColumn(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
         modifier = Modifier.testTag("bodySettings"),
     ) {
-        item { Text("每次更新新增历史记录。运动内参数优先；缺少时使用运动开始时生效的个人参数。选择过去的生效时间会影响此后运动的分析。") }
+        item { Text(stringResource(R.string.body_history_hint)) }
         if (!editing)
-            item { Button(onClick = { editing = true }, enabled = !state.busy) { Text("更新个人参数") } }
-        else {
-            item { Field("生效时间 (UTC ISO 8601)", effective) { effective = it } }
-            item { Field("体重 (kg)", mass) { mass = it } }
-            item { Field("身高 (m)", height) { height = it } }
-            item { SportFields("骑行", cycling) { cycling = it } }
-            item { SportFields("跑步", running) { running = it } }
             item {
-                error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                Button(onClick = { editing = true }, enabled = !state.busy) {
+                    Text(stringResource(R.string.update_body))
+                }
+            }
+        else {
+            item {
+                Field(stringResource(R.string.effective_time), effective, "effective_time") {
+                    effective = it
+                }
+            }
+            item { Field(stringResource(R.string.body_mass), mass, "body_mass") { mass = it } }
+            item { Field(stringResource(R.string.height), height, "height") { height = it } }
+            item {
+                SportFields(stringResource(R.string.cycling), "cycling", cycling) { cycling = it }
+            }
+            item {
+                SportFields(stringResource(R.string.running), "running", running) { running = it }
+            }
+            item {
+                error?.let { Text(stringResource(it), color = MaterialTheme.colorScheme.error) }
                 Row {
                     Button(
                         onClick = {
@@ -221,41 +263,50 @@ fun BodyScreen(state: FitnessState, model: FitnessViewModel) {
                                 )
                                 error = null
                             } catch (failure: IllegalArgumentException) {
-                                error = failure.message ?: "请检查输入。"
+                                error =
+                                    (failure as? FormFailure)?.resource ?: R.string.invalid_input
                             } catch (_: java.time.format.DateTimeParseException) {
-                                error = "生效时间需要有效的 UTC ISO 8601 日期与时间。"
+                                error = R.string.invalid_effective_time
                             }
                         },
                         enabled = !state.busy,
                         modifier = Modifier.testTag("saveBody"),
                     ) {
-                        Text("保存身体参数")
+                        Text(stringResource(R.string.save_body))
                     }
-                    TextButton(onClick = { editing = false }, enabled = !state.busy) { Text("取消") }
+                    TextButton(onClick = { editing = false }, enabled = !state.busy) {
+                        Text(stringResource(R.string.cancel))
+                    }
                 }
             }
         }
         items(settings.settingsBodyProfiles.reversed(), key = { it.bodyProfileId }) { profile ->
-            SectionCard(profile.bodyEffectiveFrom) {
+            SectionCard(dateTime(profile.bodyEffectiveFrom)) {
                 ValueRow(
-                    "体重 / 身高",
+                    stringResource(R.string.mass_height),
                     "${number(profile.bodyMassKilograms, "kg")} / ${number(profile.bodyHeightMetres, "m", 2)}",
                 )
-                listOf("骑行" to profile.bodyCycling, "跑步" to profile.bodyRunning).forEach {
-                    (label, sport) ->
-                    ValueRow("$label FTP", number(sport.sportThresholdWatts, "W"))
-                    sport.sportHeartRate?.let { hr ->
+                listOf(
+                        stringResource(R.string.cycling) to profile.bodyCycling,
+                        stringResource(R.string.running) to profile.bodyRunning,
+                    )
+                    .forEach { (label, sport) ->
                         ValueRow(
-                            "$label 静息 / 阈值 / 最大",
-                            "${number(hr.heartRateResting)} / ${number(hr.heartRateThreshold)} / ${number(hr.heartRateMaximum)}",
+                            stringResource(R.string.sport_ftp_summary, label),
+                            number(sport.sportThresholdWatts, "W"),
                         )
-                        ValueRow(
-                            "TRIMP 指数",
-                            if (hr.heartRateWeighting == LoadWeighting.exponent192) "1.92"
-                            else "1.67",
-                        )
+                        sport.sportHeartRate?.let { hr ->
+                            ValueRow(
+                                stringResource(R.string.sport_heart_summary, label),
+                                "${number(hr.heartRateResting)} / ${number(hr.heartRateThreshold)} / ${number(hr.heartRateMaximum)}",
+                            )
+                            ValueRow(
+                                stringResource(R.string.trimp_exponent),
+                                if (hr.heartRateWeighting == LoadWeighting.exponent192) "1.92"
+                                else "1.67",
+                            )
+                        }
                     }
-                }
             }
         }
     }
@@ -270,12 +321,12 @@ fun EquipmentScreen(state: FitnessState, model: FitnessViewModel) {
     var mass by remember(settings.settingsRevision) { mutableStateOf("") }
     var kind by remember(settings.settingsRevision) { mutableStateOf(EquipmentKind.bicycle) }
     var retired by remember(settings.settingsRevision) { mutableStateOf(false) }
-    var error by remember { mutableStateOf<String?>(null) }
+    var error by remember { mutableStateOf<Int?>(null) }
     LazyColumn(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        item { Text("管理自行车与跑鞋；目录修改不会重写运动内的器材记录。") }
+        item { Text(stringResource(R.string.equipment_hint)) }
         item {
             Button(
                 onClick = {
@@ -288,37 +339,45 @@ fun EquipmentScreen(state: FitnessState, model: FitnessViewModel) {
                 },
                 enabled = !state.busy,
             ) {
-                Text("添加器材")
+                Text(stringResource(R.string.add_equipment))
             }
         }
         if (editing)
             item {
-                SectionCard(if (selected == null) "新器材" else "编辑器材") {
-                    Field("器材名称", name) { name = it }
-                    Field("器材质量 (kg)", mass) { mass = it }
+                SectionCard(
+                    if (selected == null) stringResource(R.string.new_equipment)
+                    else stringResource(R.string.edit_equipment)
+                ) {
+                    Field(stringResource(R.string.equipment_name), name, "equipment_name") {
+                        name = it
+                    }
+                    Field(stringResource(R.string.equipment_mass), mass, "equipment_mass") {
+                        mass = it
+                    }
                     if (selected == null)
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             FilterChip(
                                 kind == EquipmentKind.bicycle,
                                 { kind = EquipmentKind.bicycle },
-                                label = { Text("自行车") },
+                                label = { Text(stringResource(R.string.bicycle)) },
                             )
                             FilterChip(
                                 kind == EquipmentKind.runningShoes,
                                 { kind = EquipmentKind.runningShoes },
-                                label = { Text("跑鞋") },
+                                label = { Text(stringResource(R.string.running_shoes)) },
                             )
                         }
                     Row {
                         Checkbox(retired, { retired = it })
-                        Text("已退役", Modifier.padding(top = 12.dp))
+                        Text(stringResource(R.string.retired), Modifier.padding(top = 12.dp))
                     }
-                    error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                    error?.let { Text(stringResource(it), color = MaterialTheme.colorScheme.error) }
                     Row {
                         Button(
                             onClick = {
                                 try {
-                                    require(name.isNotBlank()) { "请输入器材名称。" }
+                                    if (name.isBlank())
+                                        throw FormFailure(R.string.invalid_equipment_name)
                                     val item =
                                         Equipment(
                                             equipmentId =
@@ -338,16 +397,18 @@ fun EquipmentScreen(state: FitnessState, model: FitnessViewModel) {
                                     model.saveSettings(settings.copy(settingsEquipment = equipment))
                                     error = null
                                 } catch (failure: IllegalArgumentException) {
-                                    error = failure.message
+                                    error =
+                                        (failure as? FormFailure)?.resource
+                                            ?: R.string.invalid_input
                                 }
                             },
                             enabled = !state.busy,
                             modifier = Modifier.testTag("saveEquipment"),
                         ) {
-                            Text("保存器材")
+                            Text(stringResource(R.string.save_equipment))
                         }
                         TextButton(onClick = { editing = false }, enabled = !state.busy) {
-                            Text("取消")
+                            Text(stringResource(R.string.cancel))
                         }
                     }
                 }
@@ -355,11 +416,20 @@ fun EquipmentScreen(state: FitnessState, model: FitnessViewModel) {
         items(settings.settingsEquipment, key = { it.equipmentId }) { equipment ->
             SectionCard(equipment.equipmentName) {
                 ValueRow(
-                    "类型",
-                    if (equipment.equipmentKind == EquipmentKind.bicycle) "自行车" else "跑鞋",
+                    stringResource(R.string.type),
+                    if (equipment.equipmentKind == EquipmentKind.bicycle)
+                        stringResource(R.string.bicycle)
+                    else stringResource(R.string.running_shoes),
                 )
-                ValueRow("质量", number(equipment.equipmentMassKilograms, "kg"))
-                ValueRow("状态", if (equipment.equipmentRetired) "已退役" else "使用中")
+                ValueRow(
+                    stringResource(R.string.mass),
+                    number(equipment.equipmentMassKilograms, "kg"),
+                )
+                ValueRow(
+                    stringResource(R.string.status),
+                    if (equipment.equipmentRetired) stringResource(R.string.retired)
+                    else stringResource(R.string.in_use),
+                )
                 TextButton(
                     onClick = {
                         selected = equipment
@@ -370,7 +440,7 @@ fun EquipmentScreen(state: FitnessState, model: FitnessViewModel) {
                         editing = true
                     }
                 ) {
-                    Text("编辑")
+                    Text(stringResource(R.string.edit))
                 }
             }
         }
@@ -387,40 +457,40 @@ fun AccountScreen(state: FitnessState, model: FitnessViewModel) {
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         item {
-            SectionCard("账号") {
-                ValueRow("用户名", state.user?.username.orEmpty())
-                ValueRow("服务器", state.endpoint)
+            SectionCard(stringResource(R.string.account)) {
+                ValueRow(stringResource(R.string.username), state.user?.username.orEmpty())
+                ValueRow(stringResource(R.string.server), state.endpoint)
                 Button(
                     onClick = model::logout,
                     enabled = !state.busy,
                     modifier = Modifier.testTag("logout"),
                 ) {
-                    Text("退出登录")
+                    Text(stringResource(R.string.logout))
                 }
-                Text("退出登录会撤销服务器会话。连接失败时会保留凭据以便重试。")
+                Text(stringResource(R.string.logout_hint))
                 if (state.message != null)
                     TextButton(onClick = model::forgetLocalSession, enabled = !state.busy) {
-                        Text("仅清除此设备凭据（不撤销服务器会话）")
+                        Text(stringResource(R.string.forget_local))
                     }
             }
         }
         item {
-            SectionCard("修改密码") {
+            SectionCard(stringResource(R.string.change_password)) {
                 OutlinedTextField(
                     current,
                     { current = it },
-                    label = { Text("当前密码") },
+                    label = { Text(stringResource(R.string.current_password)) },
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(),
                 )
                 OutlinedTextField(
                     new,
                     { new = it },
-                    label = { Text("新密码") },
+                    label = { Text(stringResource(R.string.new_password)) },
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(),
                 )
-                Text("密码修改成功后，所有会话都会撤销，需要重新登录。")
+                Text(stringResource(R.string.password_hint))
                 Button(
                     onClick = {
                         model.changePassword(current, new)
@@ -429,25 +499,30 @@ fun AccountScreen(state: FitnessState, model: FitnessViewModel) {
                     },
                     enabled = !state.busy && current.isNotEmpty() && new.isNotEmpty(),
                 ) {
-                    Text("修改密码并退出")
+                    Text(stringResource(R.string.change_password_logout))
                 }
             }
         }
         item {
             Row {
-                TextButton(onClick = model::loadSessions, enabled = !state.busy) { Text("刷新会话") }
+                TextButton(onClick = model::loadSessions, enabled = !state.busy) {
+                    Text(stringResource(R.string.refresh_sessions))
+                }
                 TextButton(onClick = { confirmAll = true }, enabled = !state.busy) {
-                    Text("撤销所有会话")
+                    Text(stringResource(R.string.revoke_all))
                 }
             }
         }
         items(state.sessions, key = { it.id }) { session ->
-            SectionCard(session.deviceName ?: "设备会话") {
-                Text(if (session.current) "当前会话" else "其他会话")
-                ValueRow("最近活动", session.lastSeenAt)
-                ValueRow("绝对到期", session.absoluteExpiresAt)
+            SectionCard(session.deviceName ?: stringResource(R.string.device_session)) {
+                Text(
+                    if (session.current) stringResource(R.string.current_session)
+                    else stringResource(R.string.other_session)
+                )
+                ValueRow(stringResource(R.string.last_active), dateTime(session.lastSeenAt))
+                ValueRow(stringResource(R.string.expires), dateTime(session.absoluteExpiresAt))
                 TextButton(onClick = { model.revokeSession(session) }, enabled = !state.busy) {
-                    Text("撤销此会话")
+                    Text(stringResource(R.string.revoke_session))
                 }
             }
         }
@@ -455,8 +530,8 @@ fun AccountScreen(state: FitnessState, model: FitnessViewModel) {
     if (confirmAll)
         AlertDialog(
             onDismissRequest = { confirmAll = false },
-            title = { Text("撤销所有登录会话？") },
-            text = { Text("包括当前设备；所有设备都需要重新登录。") },
+            title = { Text(stringResource(R.string.revoke_all_title)) },
+            text = { Text(stringResource(R.string.revoke_all_hint)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -464,9 +539,13 @@ fun AccountScreen(state: FitnessState, model: FitnessViewModel) {
                         model.revokeAll()
                     }
                 ) {
-                    Text("撤销")
+                    Text(stringResource(R.string.revoke))
                 }
             },
-            dismissButton = { TextButton(onClick = { confirmAll = false }) { Text("取消") } },
+            dismissButton = {
+                TextButton(onClick = { confirmAll = false }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            },
         )
 }

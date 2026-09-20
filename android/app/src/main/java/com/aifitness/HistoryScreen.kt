@@ -7,6 +7,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.aifitness.contract.*
 import java.time.LocalDate
@@ -21,39 +22,43 @@ fun HistoryScreen(state: FitnessState, model: FitnessViewModel) {
     var noPrior by remember { mutableStateOf(false) }
     var priorFitness by remember { mutableStateOf("") }
     var priorFatigue by remember { mutableStateOf("") }
-    var error by remember { mutableStateOf<String?>(null) }
+    var error by remember { mutableStateOf<Int?>(null) }
     LazyColumn(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
         modifier = Modifier.testTag("trainingHistory"),
     ) {
         item {
-            SectionCard("历史范围") {
-                Field("结束日期 (YYYY-MM-DD)", end) { end = it }
-                Field("天数 (1–366)", count) { count = it }
-                Field("时区", zone) { zone = it }
+            SectionCard(stringResource(R.string.history_range)) {
+                Field(stringResource(R.string.history_end), end, "history_end") { end = it }
+                Field(stringResource(R.string.history_days), count, "history_days") { count = it }
+                Field(stringResource(R.string.time_zone), zone, "time_zone") { zone = it }
                 Row {
                     Checkbox(
                         complete,
                         { complete = it },
                         modifier = Modifier.testTag("historyComplete"),
                     )
-                    Text("确认这段时间的运动记录完整", Modifier.padding(top = 12.dp))
+                    Text(stringResource(R.string.history_complete), Modifier.padding(top = 12.dp))
                 }
-                Text("未确认完整的空白日期保持未知；确认完整的空白日期才视为休息。跨夏令时使用真实本地日边界。")
+                Text(stringResource(R.string.history_completeness_hint))
                 Row {
                     Checkbox(
                         noPrior,
                         { noPrior = it },
                         modifier = Modifier.testTag("historyNoPrior"),
                     )
-                    Text("明确假设此前无训练负荷", Modifier.padding(top = 12.dp))
+                    Text(stringResource(R.string.history_no_prior), Modifier.padding(top = 12.dp))
                 }
                 if (!noPrior) {
-                    Field("初始 CTL (HRSS)", priorFitness) { priorFitness = it }
-                    Field("初始 ATL (HRSS)", priorFatigue) { priorFatigue = it }
+                    Field(stringResource(R.string.initial_ctl), priorFitness, "initial_ctl") {
+                        priorFitness = it
+                    }
+                    Field(stringResource(R.string.initial_atl), priorFatigue, "initial_atl") {
+                        priorFatigue = it
+                    }
                 }
-                error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                error?.let { Text(stringResource(it), color = MaterialTheme.colorScheme.error) }
                 Button(
                     onClick = {
                         try {
@@ -77,59 +82,68 @@ fun HistoryScreen(state: FitnessState, model: FitnessViewModel) {
                             model.loadHistory(request)
                             error = null
                         } catch (_: Exception) {
-                            error = "请检查日期、时区、1–366 天范围，以及非负的初始 CTL / ATL。"
+                            error = R.string.invalid_history
                         }
                     },
                     enabled = !state.busy,
                     modifier = Modifier.testTag("loadHistory"),
                 ) {
-                    Text("计算训练历史")
+                    Text(stringResource(R.string.calculate_history))
                 }
             }
         }
         state.history?.let { history ->
             item {
-                SectionCard("训练趋势 · 后端计算") {
+                SectionCard(stringResource(R.string.training_trend)) {
                     Text(history.trainingMethod)
                     Text(
-                        "参数版本 ${history.trainingSettingsRevision} · 初始 CTL ${number(history.trainingInitialFitness)} / ATL ${number(history.trainingInitialFatigue)}"
+                        stringResource(
+                            R.string.history_revision,
+                            history.trainingSettingsRevision,
+                            number(history.trainingInitialFitness),
+                            number(history.trainingInitialFatigue),
+                        )
                     )
                     PointChart(
                         historyPoints(history.trainingDays) { it.trainingFitness },
-                        "适能 CTL",
-                        "日",
+                        stringResource(R.string.fitness_ctl),
+                        stringResource(R.string.day),
                         "HRSS",
                     )
                     PointChart(
                         historyPoints(history.trainingDays) { it.trainingFatigue },
-                        "疲劳 ATL",
-                        "日",
+                        stringResource(R.string.fatigue_atl),
+                        stringResource(R.string.day),
                         "HRSS",
                     )
                     PointChart(
                         historyPoints(history.trainingDays) { it.trainingBalance },
-                        "状态 TSB",
-                        "日",
+                        stringResource(R.string.balance_tsb),
+                        stringResource(R.string.day),
                         "HRSS",
                     )
-                    Text("未知日期不会连线；不足覆盖的负荷不会按比例补齐。")
+                    Text(stringResource(R.string.history_gap_hint))
                 }
             }
             items(history.trainingDays, key = { it.trainingCalendar.calendarDate }) { day ->
                 SectionCard(day.trainingCalendar.calendarDate) {
                     ValueRow(
-                        "总负荷",
-                        day.trainingTotalLoad?.let { number(it, "HRSS") } ?: "未知：记录或覆盖不完整",
+                        stringResource(R.string.total_load),
+                        day.trainingTotalLoad?.let { number(it, "HRSS") }
+                            ?: stringResource(R.string.unknown_load),
                     )
                     ValueRow(
-                        "已知部分 / 运动数",
+                        stringResource(R.string.known_load_count),
                         "${number(day.trainingKnownLoad)} / ${day.trainingWorkoutCount}",
                     )
                     ValueRow(
                         "CTL / ATL / TSB",
                         "${number(day.trainingFitness)} / ${number(day.trainingFatigue)} / ${number(day.trainingBalance)}",
                     )
-                    ValueRow("初始 CTL 剩余权重", number(day.trainingInitialFitnessWeight * 100, "%"))
+                    ValueRow(
+                        stringResource(R.string.initial_weight),
+                        number(day.trainingInitialFitnessWeight * 100, "%"),
+                    )
                 }
             }
         }

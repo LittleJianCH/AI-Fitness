@@ -52,3 +52,15 @@ fun registerFormatter(name: String, checkOnly: Boolean) =
 registerFormatter("formatKotlin", false)
 
 registerFormatter("checkKotlinFormat", true)
+
+val checkLocalization by
+    tasks.registering(Exec::class) {
+        group = "verification"
+        description = "Check English and Simplified Chinese catalog completeness and arguments."
+        inputs.file("check_localization.py")
+        inputs.dir("app/src/main/res")
+        inputs.dir("app/src/main/java")
+        commandLine("python3", file("check_localization.py"))
+    }
+
+tasks.named("checkKotlinFormat") { dependsOn(checkLocalization) }
