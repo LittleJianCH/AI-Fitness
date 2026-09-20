@@ -127,7 +127,13 @@ native /usr/bin/xcodebuild -project ios/Fitness.xcodeproj -scheme Fitness -confi
     -resultBundlePath "$result_path" \
     -skipPackagePluginValidation \
     "FITNESS_TEST_SERVER=http://127.0.0.1:$proxy_port" test >ios/build/integration-xcode.log 2>&1
-native /usr/bin/xcrun xcresulttool get --path "$result_path" --format json >ios/build/integration-result.json
+# Xcode 16 and later require explicit opt-in for this result object schema.
+xcresult_help=$(native /usr/bin/xcrun xcresulttool get object --help 2>/dev/null || true)
+if [[ "$xcresult_help" == *"--legacy"* ]]; then
+    native /usr/bin/xcrun xcresulttool get object --legacy --path "$result_path" --format json >ios/build/integration-result.json
+else
+    native /usr/bin/xcrun xcresulttool get --path "$result_path" --format json >ios/build/integration-result.json
+fi
 native /usr/bin/python3 - <<'PY'
 import json
 with open('ios/build/integration-result.json') as source:

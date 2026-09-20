@@ -337,7 +337,7 @@ private func fieldText(_ value: Double?) -> String {
 
 private func parseOptionalPositive(_ text: String) throws -> Double? {
     guard !text.trimmingCharacters(in: .whitespaces).isEmpty else { return nil }
-    guard let value = try? Double(text, format: .number), value.isFinite, value > 0 else {
+    guard let value = NumericInput.parse(text), value > 0 else {
         throw FormError.message("Values must be greater than zero. Leave missing data empty.")
     }
     return value

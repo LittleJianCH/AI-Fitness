@@ -381,3 +381,21 @@ Chinese field screenshots and the persisted **72.5 kg / 240 W** analysis readout
 were visually inspected. Screenshots contain synthetic data and remain local,
 outside maintained source. Physical-device permissions, large-text/pseudolocale
 coverage and the full older UI suite remain separate verification boundaries.
+
+### Numeric input validation
+
+Settings and initial CTL/ATL inputs consume the entire localized numeric string.
+Malformed suffixes, repeated decimal separators and nonfinite values are rejected;
+locale-specific decimal/grouping syntax is retained. `NumericInputTests` covers
+English, Simplified Chinese and comma-decimal locales, and the settings UI journey
+checks that an invalid weight is rejected without persistence, then verifies a
+valid submission.
+
+Review-fix verification on 2026-09-21 passed **63 FitnessCore tests** and exercised
+all eight UI scenarios against disposable PostgreSQL backends on iPhone 15 / iOS
+17.5 simulators. Seven scenarios passed in the full run; the settings scenario
+passed in a focused rerun after accounting for lazy form rows and avoiding cursor
+position assumptions. Its result also verifies rejected input is not persisted,
+valid parameters survive relaunch, and the backend uses the saved weight/power.
+The harness detects the newer Xcode result reader's required legacy-schema flag.
+No physical iPhone or Android phone was connected; device verification remains open.

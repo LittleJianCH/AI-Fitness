@@ -105,8 +105,8 @@ struct TrainingHistoryScreen: View {
 
     private func load() {
         inputError = nil
-        let fitness = try? Double(initialFitness, format: .number)
-        let fatigue = try? Double(initialFatigue, format: .number)
+        let fitness = NumericInput.parse(initialFitness)
+        let fatigue = NumericInput.parse(initialFatigue)
         if !zeroInitial && !(fitness.map { $0.isFinite && $0 >= 0 } == true && fatigue.map { $0.isFinite && $0 >= 0 } == true) {
             inputError = "Select the zero-start assumption or enter nonnegative initial CTL and ATL values."
             return
