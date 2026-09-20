@@ -3,11 +3,13 @@ package com.aifitness
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.aifitness.contract.*
@@ -481,14 +483,24 @@ fun AccountScreen(state: FitnessState, model: FitnessViewModel) {
                     { current = it },
                     label = { Text(stringResource(R.string.current_password)) },
                     visualTransformation = PasswordVisualTransformation(),
-                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions =
+                        KeyboardOptions(
+                            keyboardType = KeyboardType.Password,
+                            autoCorrectEnabled = false,
+                        ),
+                    modifier = Modifier.fillMaxWidth().testTag("currentPassword"),
                 )
                 OutlinedTextField(
                     new,
                     { new = it },
                     label = { Text(stringResource(R.string.new_password)) },
                     visualTransformation = PasswordVisualTransformation(),
-                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions =
+                        KeyboardOptions(
+                            keyboardType = KeyboardType.Password,
+                            autoCorrectEnabled = false,
+                        ),
+                    modifier = Modifier.fillMaxWidth().testTag("newPassword"),
                 )
                 Text(stringResource(R.string.password_hint))
                 Button(

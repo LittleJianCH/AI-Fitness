@@ -140,7 +140,13 @@ signs the client into its synthetic account. No production health data is used.
 - Login restores an encrypted native session and validates it through `/me`.
   AES-GCM ciphertext lives in private preferences; its key lives in Android
   Keystore. Backup is disabled. Passwords are never persisted or saveable state.
-  A 401 clears the session. Logout clears credentials after server revocation;
+  Login and password-change fields declare password IME input and disable
+  autocorrection; device tests
+  verify the actual input-connection flags.
+  A 401 clears the session after authentication expires. Password changes first
+  recheck `/me`, since an incorrect current password also returns 401; a valid
+  session remains signed in with a localized correction prompt.
+  Logout clears credentials after server revocation;
   failed logout keeps the credential for retry. Explicit local removal is
   labelled as not revoking the server session.
 - HTTPS is required in release. Debug permits cleartext only for `localhost`,
@@ -154,7 +160,10 @@ signs the client into its synthetic account. No production health data is used.
   publish first; analysis and power curve have independent errors/retries, and
   stale revisions explicitly request a detail refresh. A settings write clears
   prior analysis/history. Lifecycle-owned jobs prevent late cancelled requests
-  from repopulating a different screen or account.
+  from repopulating a different screen or account. Navigating from detail to
+  one of its metrics preserves the pending analysis and power-curve requests;
+  a controlled-response regression covers navigation while analysis remains
+  pending.
 - Raw metric navigation remains available if derived analysis fails. Only the
   statistics, distributions and relationships depend on that response. Distance
   chart projection preserves resets/gaps even at exact distance timestamps or

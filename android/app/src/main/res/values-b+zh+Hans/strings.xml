@@ -254,4 +254,5 @@
     <plurals name="route_positions">
         <item quantity="other">GPS 路线示意图，%1$d 个位置点</item>
     </plurals>
+    <string name="issue_current_password">当前密码不正确，请重试。</string>
 </resources>

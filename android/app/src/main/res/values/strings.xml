@@ -256,4 +256,5 @@
         <item quantity="one">GPS route diagram, %1$d position</item>
         <item quantity="other">GPS route diagram, %1$d positions</item>
     </plurals>
+    <string name="issue_current_password">Current password is incorrect. Please try again.</string>
 </resources>

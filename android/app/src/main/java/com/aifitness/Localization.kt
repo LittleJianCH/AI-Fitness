@@ -51,6 +51,7 @@ fun ClientIssue.text(): String =
             ClientIssue.AnalysisTooLarge -> R.string.issue_analysis_large
             ClientIssue.AnalysisUnavailable -> R.string.issue_analysis_unavailable
             ClientIssue.Authentication -> R.string.issue_auth
+            ClientIssue.IncorrectCurrentPassword -> R.string.issue_current_password
             ClientIssue.Forbidden -> R.string.issue_forbidden
             ClientIssue.Missing -> R.string.issue_missing
             ClientIssue.Conflict -> R.string.issue_conflict

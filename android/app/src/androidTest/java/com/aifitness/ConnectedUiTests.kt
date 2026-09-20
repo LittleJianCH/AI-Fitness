@@ -37,6 +37,7 @@ class ConnectedUiTests {
             screenshot("login")
             compose.onNodeWithTag("server").performTextReplacement(endpoint)
             compose.onNodeWithTag("username").performTextInput("android_fixture_user")
+            assertPasswordInput(activity, "password")
             compose.onNodeWithTag("password").performTextInput("synthetic android fixture password")
             compose.onNodeWithTag("login").performClick()
             waitForTag("workoutList")
@@ -148,6 +149,24 @@ class ConnectedUiTests {
             compose.onNodeWithText(text(R.string.account_sessions)).performClick()
             waitForTag("logout")
             waitIdle()
+            assertPasswordInput(activity, "currentPassword")
+            assertPasswordInput(activity, "newPassword")
+            compose.onNodeWithTag("currentPassword").performTextInput("Synthetic-wrong-password")
+            compose.onNodeWithTag("newPassword").performTextInput("Synthetic-replacement-password")
+            compose
+                .onNode(hasScrollToIndexAction())
+                .performScrollToNode(hasText(text(R.string.change_password_logout)))
+            compose.onNodeWithText(text(R.string.change_password_logout)).performClick()
+            waitIdle()
+            compose
+                .onNodeWithTag("statusMessage")
+                .assertTextEquals(text(R.string.issue_current_password))
+            assertEquals(saved, SessionVault(context).read())
+            assertEquals(
+                "android_fixture_user",
+                runBlocking { FitnessApi(endpoint).me(saved.token).username },
+            )
+            compose.onNode(hasScrollToIndexAction()).performScrollToNode(hasTestTag("logout"))
             compose.onNodeWithTag("logout").performClick()
             waitForTag("login")
             assertNull(SessionVault(context).read())
@@ -168,6 +187,22 @@ class ConnectedUiTests {
             bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it)
         }
         bitmap.recycle()
+    }
+
+    private fun assertPasswordInput(activity: ActivityScenario<MainActivity>, tag: String) {
+        compose.onNode(hasScrollToIndexAction()).performScrollToNode(hasTestTag(tag))
+        compose.onNodeWithTag(tag).performClick()
+        compose.waitForIdle()
+        activity.onActivity { screen ->
+            val info = android.view.inputmethod.EditorInfo()
+            val connection = screen.currentFocus?.onCreateInputConnection(info)
+            assertNotNull("Password field must expose an IME connection", connection)
+            assertEquals(
+                android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD,
+                info.inputType and android.text.InputType.TYPE_MASK_VARIATION,
+            )
+            assertEquals(0, info.inputType and android.text.InputType.TYPE_TEXT_FLAG_AUTO_CORRECT)
+        }
     }
 
     private fun text(id: Int) =

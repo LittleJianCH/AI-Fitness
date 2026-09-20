@@ -219,6 +219,7 @@ enum class ClientIssue {
     AnalysisTooLarge,
     AnalysisUnavailable,
     Authentication,
+    IncorrectCurrentPassword,
     Forbidden,
     Missing,
     Conflict,

@@ -160,6 +160,15 @@ class FitnessViewModel(private val vault: CredentialVault, private val debug: Bo
     }
 
     fun navigate(screen: Screen) {
+        // Metrics belong to the current detail and share its in-flight analysis.
+        if (
+            screen is Screen.Metric &&
+                mutable.value.detail != null &&
+                (mutable.value.screen is Screen.Detail || mutable.value.screen is Screen.Metric)
+        ) {
+            mutable.value = mutable.value.copy(screen = screen)
+            return
+        }
         if (screen == Screen.History && mutable.value.screen != Screen.History) {
             historyReturn =
                 when (val current = mutable.value.screen) {
@@ -325,7 +334,16 @@ class FitnessViewModel(private val vault: CredentialVault, private val debug: Bo
     }
 
     fun changePassword(current: String, new: String) = authenticated { api, token ->
-        api.changePassword(token, current, new)
+        try {
+            api.changePassword(token, current, new)
+        } catch (error: ApiFailure) {
+            if (error.status != 401) throw error
+            // This endpoint also returns 401 for an incorrect current password.
+            // A failed session check still reaches the normal expiry handler.
+            api.me(token)
+            mutable.value = mutable.value.copy(message = ClientIssue.IncorrectCurrentPassword)
+            return@authenticated
+        }
         clearSession()
     }
 }
