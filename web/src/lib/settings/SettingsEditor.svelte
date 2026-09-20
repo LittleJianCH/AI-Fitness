@@ -51,6 +51,19 @@
 		};
 		notice = '';
 	}
+	function selectEquipment(entry: Equipment) {
+		if (equipment?.equipmentId === entry.equipmentId) return;
+		const original = draft.settingsEquipment.find(
+			(item) => item.equipmentId === equipment?.equipmentId
+		);
+		if (
+			equipment &&
+			JSON.stringify(equipment) !== JSON.stringify(original) &&
+			!window.confirm(L.settings_discard_equipment())
+		)
+			return;
+		equipment = structuredClone($state.snapshot(entry));
+	}
 	async function save() {
 		if (busy || conflict) return;
 		error = '';
@@ -234,10 +247,7 @@
 				<p class="small subtle">{L.settings_equipment_note()}</p>
 				<ul>
 					{#each draft.settingsEquipment as entry (entry.equipmentId)}<li>
-							<button
-								type="button"
-								class="button"
-								onclick={() => (equipment = structuredClone($state.snapshot(entry)))}
+							<button type="button" class="button" onclick={() => selectEquipment(entry)}
 								>{entry.equipmentName} · {entry.equipmentKind === 'bicycle'
 									? L.equipment_bike()
 									: L.equipment_shoes()}{entry.equipmentRetired

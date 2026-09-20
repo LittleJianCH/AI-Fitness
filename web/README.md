@@ -350,3 +350,10 @@ plural messages, generated runtime fallback for a missing translation, safe swit
 without duplicate leave prompts, and unchanged synthetic user content/revisions.
 Browser checks include English at a narrow viewport with doubled text size.
 The existing Chinese UI tests use an explicit browser locale.
+
+### Settings draft protection
+
+A failed background settings refresh keeps the editor and its unsaved values
+mounted; retrying the read does not reset the draft. Selecting another equipment
+entry asks before discarding changes, and selecting the current entry keeps them.
+Connected preferences regressions exercise these paths at desktop and mobile widths.

@@ -3,6 +3,81 @@ import { test } from './fixtures';
 import { register, login } from './helpers';
 import { getSettings200Response } from '../../src/lib/api/generated/schemas';
 
+test('settings drafts survive failed background refresh and retry', async ({ page }) => {
+	await page.clock.install();
+	await login(page, await register(page));
+	await page.goto('/settings');
+	await page.getByRole('button', { name: '更新个人参数', exact: true }).click();
+	await page.getByLabel('生效时间（本地）').fill('2026-01-01T00:00');
+	const mass = page.getByLabel('体重 (kg)', { exact: true });
+	await mass.fill('73.5');
+	await page.clock.fastForward(31_000);
+	// Inject only a failed refresh; initial data and the final save use the real API.
+	await page.route('**/api/v1/settings', (route) =>
+		route.fulfill({
+			status: 503,
+			json: {
+				code: 'internal_error',
+				message: 'Synthetic refresh failure',
+				requestId: 'synthetic',
+				fields: []
+			}
+		})
+	);
+	await page.evaluate(() => {
+		window.dispatchEvent(new Event('offline'));
+		window.dispatchEvent(new Event('online'));
+	});
+	await expect(page.getByRole('alert')).toBeVisible();
+	await expect(mass).toHaveValue('73.5');
+	await page.unroute('**/api/v1/settings');
+	await page.getByRole('button', { name: '重试', exact: true }).click();
+	await expect(page.getByRole('alert')).toHaveCount(0);
+	await expect(mass).toHaveValue('73.5');
+	await page.getByRole('button', { name: '保存设置', exact: true }).click();
+	await expect(page.getByText('设置已保存到当前账号。')).toBeVisible();
+	const saved = getSettings200Response.parse(
+		await (await page.request.get('/api/v1/settings')).json()
+	);
+	expect(saved.settingsBodyProfiles[0].bodyMassKilograms).toBe(73.5);
+});
+
+test('equipment selection confirms discard and preserves cancelled edits', async ({ page }) => {
+	await login(page, await register(page));
+	await page.goto('/settings');
+	for (const name of ['Synthetic bike A', 'Synthetic bike B']) {
+		await page.getByRole('button', { name: '添加器材', exact: true }).click();
+		await page.getByLabel('器材名称').fill(name);
+		await page.getByRole('button', { name: '保存设置', exact: true }).click();
+		await expect(page.getByText('设置已保存到当前账号。')).toBeVisible();
+	}
+	const bikeA = page.getByRole('button', { name: 'Synthetic bike A · 自行车', exact: true });
+	const bikeB = page.getByRole('button', { name: 'Synthetic bike B · 自行车', exact: true });
+	const name = page.getByLabel('器材名称');
+	await bikeA.click();
+	await name.fill('Edited bike A');
+	// Re-selecting the current entry must not reset it either.
+	await bikeA.click();
+	await expect(name).toHaveValue('Edited bike A');
+	page.once('dialog', async (dialog) => {
+		expect(dialog.message()).toBe('放弃当前器材的未保存修改？');
+		await dialog.dismiss();
+	});
+	await bikeB.click();
+	await expect(name).toHaveValue('Edited bike A');
+	await page.getByRole('button', { name: '保存设置', exact: true }).click();
+	await expect(
+		page.getByRole('button', { name: 'Edited bike A · 自行车', exact: true })
+	).toBeVisible();
+	await bikeB.click();
+	await name.fill('Discard this name');
+	page.once('dialog', (dialog) => dialog.accept());
+	await page.getByRole('button', { name: 'Edited bike A · 自行车', exact: true }).click();
+	await expect(name).toHaveValue('Edited bike A');
+	await bikeB.click();
+	await expect(name).toHaveValue('Synthetic bike B');
+});
+
 test('body history, appearance and equipment persist across restart with stale revision protection', async ({
 	page,
 	restartBackend

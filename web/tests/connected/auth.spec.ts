@@ -32,12 +32,8 @@ test('registration, safe return navigation, real reads, session restoration and 
 	);
 	expect(cookie).toMatchObject({ secure: true, httpOnly: true, sameSite: 'Lax', path: '/' });
 	expect(await page.evaluate(() => document.cookie)).not.toContain('__Host-ai-fitness-session');
-	expect(
-		await page.evaluate(() => Object.keys(localStorage).filter((key) => key !== 'fitness-theme'))
-	).toEqual([]);
-	expect(await page.evaluate(() => localStorage.getItem('fitness-theme'))).toMatch(
-		/^(system|light|dark)$/
-	);
+	// Only an explicit browser theme choice is stored locally.
+	expect(await page.evaluate(() => Object.keys(localStorage))).toEqual([]);
 	await page.getByRole('button', { name: '退出登录', exact: true }).click();
 	await expect(page.getByRole('button', { name: '登录', exact: true })).toBeVisible();
 	await page.goBack();
@@ -131,6 +127,7 @@ test('failed login during initial restoration leaves a usable anonymous session'
 		await page.getByLabel('密码', { exact: true }).fill('incorrect-synthetic-password');
 		await page.getByRole('button', { name: '登录', exact: true }).click();
 		await expect(page.getByRole('alert')).toHaveText('用户名或密码不正确，请重试。');
+		page.once('dialog', (dialog) => dialog.accept());
 		await page.getByRole('link', { name: '训练', exact: true }).click();
 		await expect(page).toHaveURL(/\/login\?next=/);
 		await expect(page.getByRole('button', { name: '登录', exact: true })).toBeVisible();

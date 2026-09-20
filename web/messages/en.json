@@ -617,5 +617,6 @@
 	"eyebrow_your_settings": "YOUR SETTINGS",
 	"eyebrow_product_preview": "PRODUCT PREVIEW",
 	"eyebrow_training_history": "TRAINING HISTORY",
-	"eyebrow_metric_analysis": "METRIC ANALYSIS"
+	"eyebrow_metric_analysis": "METRIC ANALYSIS",
+	"settings_discard_equipment": "Discard unsaved changes to this equipment?"
 }

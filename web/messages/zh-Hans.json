@@ -590,5 +590,6 @@
 	"eyebrow_your_settings": "个人设置",
 	"eyebrow_product_preview": "产品预览",
 	"eyebrow_training_history": "训练历史",
-	"eyebrow_metric_analysis": "指标分析"
+	"eyebrow_metric_analysis": "指标分析",
+	"settings_discard_equipment": "放弃当前器材的未保存修改？"
 }

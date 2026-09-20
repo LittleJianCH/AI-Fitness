@@ -25,10 +25,10 @@
 </header>
 {#if demo}<div class="status">{L.settings_demo()}</div>
 {:else}
-	{#if query.isPending}<p role="status">{L.settings_loading()}</p>{:else if query.isError}<Feedback
-			error={query.error}
-			retry={() => query.refetch()}
-		/>{:else if query.data}<SettingsEditor initial={query.data} />{/if}
+	{#if query.isError}<Feedback error={query.error} retry={() => query.refetch()} />{/if}
+	{#if query.data}<SettingsEditor initial={query.data} />{:else if query.isPending}<p role="status">
+			{L.settings_loading()}
+		</p>{/if}
 	<section class="section">
 		<h2>{L.settings_account()}</h2>
 		<AccountSettings />
