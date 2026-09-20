@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m as L } from '$lib/paraglide/messages.js';
 	import { onMount, type Snippet } from 'svelte';
 
 	let { title, onclose, children }: { title: string; onclose: () => void; children: Snippet } =
@@ -22,7 +23,9 @@
 <dialog bind:this={dialog} aria-label={title} {onclose}>
 	<header>
 		<h2>{title}</h2>
-		<button class="button" onclick={() => dialog.close()} aria-label="关闭详情">关闭 ×</button>
+		<button class="button" onclick={() => dialog.close()} aria-label={L.action_close_details()}
+			>{L.action_close()}</button
+		>
 	</header>
 	<div class="dialog-content">
 		{#if ready}{@render children()}{/if}

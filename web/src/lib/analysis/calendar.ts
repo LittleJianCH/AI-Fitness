@@ -1,3 +1,4 @@
+import { m as L } from '$lib/paraglide/messages.js';
 import { z } from 'zod';
 import type { CalendarDay, TrainingHistoryRequest } from '../api/generated/client';
 import { postAnalysisTrainingHistoryBody } from '../api/generated/schemas';
@@ -32,14 +33,14 @@ export function historyRequest(
 	fitness: number | undefined,
 	fatigue: number | undefined
 ): TrainingHistoryRequest {
-	if (!days.length) throw new Error('请选择 1–366 个连续本地日期。');
-	if (initial !== 'zero' && initial !== 'known') throw new Error('请明确选择开始前的训练负荷。');
+	if (!days.length) throw new Error(L.history_invalid_range());
+	if (initial !== 'zero' && initial !== 'known') throw new Error(L.history_initial_required());
 	if (
 		initial === 'known' &&
 		!z.tuple([z.number().nonnegative(), z.number().nonnegative()]).safeParse([fitness, fatigue])
 			.success
 	)
-		throw new Error('请填写有效的初始 CTL 和 ATL。');
+		throw new Error(L.history_initial_invalid());
 	return postAnalysisTrainingHistoryBody.parse({
 		historyCalendar: days.map((d) => ({
 			...d,

@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { formatLocale } from '$lib/i18n/format';
+
+	import { m as L } from '$lib/paraglide/messages.js';
 	import { metricValueText } from '$lib/analysis/presentation';
 	import type { Workout } from '$lib/api/generated/client';
 	import { metrics, metricKinds, motion, duration, valueText } from '$lib/workouts/presentation';
@@ -31,13 +34,20 @@
 
 <div class="point-details">
 	<div class="point-title">
-		<strong>{time ? duration((Date.parse(time) - Date.parse(start)) / 1000) : '未记录'}</strong
-		><span>{pinned ? '已固定' : '时间点明细'}</span>
+		<strong
+			>{time
+				? duration((Date.parse(time) - Date.parse(start)) / 1000)
+				: L.value_not_recorded()}</strong
+		><span>{pinned ? L.point_pinned() : L.point_details()}</span>
 	</div>
 	<p class="point-context">
-		累计 {distance ? `${valueText(distance.value, 0.001, 1)} km` : '未记录'}<br />{time
-			? new Date(time).toLocaleTimeString('zh-CN', { hour12: false })
-			: '未记录'} · 本地记录时间
+		{L.point_cumulative({
+			distance: distance ? `${valueText(distance.value, 0.001, 1)} km` : L.value_not_recorded()
+		})}<br />{L.point_local_recorded_time({
+			time: time
+				? new Date(time).toLocaleTimeString(formatLocale(), { hour12: false })
+				: L.value_not_recorded()
+		})}
 	</p>
 	<dl class:compact>
 		{#each items as metric (metric.key)}{@const sample = sampleAt(metric.samples, time)}

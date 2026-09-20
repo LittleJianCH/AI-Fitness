@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m as L } from '$lib/paraglide/messages.js';
 	import { createQuery } from '@tanstack/svelte-query';
 	import AccountSettings from '$lib/auth/components/AccountSettings.svelte';
 	import { useSession } from '$lib/auth/session.svelte';
@@ -14,22 +15,22 @@
 	}));
 </script>
 
-<svelte:head><title>设置 · AI Fitness</title></svelte:head>
+<svelte:head><title>{L.page_settings_title()}</title></svelte:head>
 <header class="page-heading">
 	<div>
-		<div class="eyebrow">YOUR SETTINGS</div>
-		<h1>设置</h1>
-		<p class="subtle">软件偏好、个人身体参数、器材与账号。</p>
+		<div class="eyebrow">{L.eyebrow_your_settings()}</div>
+		<h1>{L.page_settings()}</h1>
+		<p class="subtle">{L.settings_intro()}</p>
 	</div>
 </header>
-{#if demo}<div class="status">设置需要登录真实账号，演示模式仅供查看。</div>
+{#if demo}<div class="status">{L.settings_demo()}</div>
 {:else}
-	{#if query.isPending}<p role="status">正在加载设置…</p>{:else if query.isError}<Feedback
+	{#if query.isPending}<p role="status">{L.settings_loading()}</p>{:else if query.isError}<Feedback
 			error={query.error}
 			retry={() => query.refetch()}
 		/>{:else if query.data}<SettingsEditor initial={query.data} />{/if}
 	<section class="section">
-		<h2>账号与登录会话</h2>
+		<h2>{L.settings_account()}</h2>
 		<AccountSettings />
 	</section>
 {/if}

@@ -75,18 +75,50 @@ export function distanceCoordinates(
 	});
 }
 
-// Distance may pause or reset, so binary search is not valid for this axis.
-export function nearestCoordinateIndex(
+// Sort once per series. Search expands from the nearest horizontal coordinate
+// and stops once its horizontal distance exceeds the best pixel distance.
+export type CoordinatePoint = Readonly<{ x: number; y: number; index: number }>;
+export function coordinateIndex(
 	coordinates: readonly (number | undefined)[],
-	target: number
+	values: readonly number[]
+): CoordinatePoint[] {
+	return coordinates
+		.flatMap((x, index) => (x === undefined ? [] : [{ x, y: values[index], index }]))
+		.sort((a, b) => a.x - b.x || a.index - b.index);
+}
+export function nearestCoordinateIndex(
+	points: readonly CoordinatePoint[],
+	targetX: number,
+	targetY: number,
+	xPerPixel = 1,
+	yPerPixel = 1
 ): number | undefined {
-	let best: number | undefined;
-	let difference = Infinity;
-	coordinates.forEach((x, index) => {
-		if (x !== undefined && Math.abs(x - target) < difference) {
-			best = index;
-			difference = Math.abs(x - target);
+	let low = 0,
+		high = points.length;
+	while (low < high) {
+		const middle = Math.floor((low + high) / 2);
+		if (points[middle].x < targetX) low = middle + 1;
+		else high = middle;
+	}
+	let left = low - 1,
+		right = low,
+		best: number | undefined,
+		distance = Infinity;
+	const dx = (i: number) => Math.abs((points[i].x - targetX) / xPerPixel);
+	while (left >= 0 || right < points.length) {
+		const l = left >= 0 ? dx(left) : Infinity;
+		const r = right < points.length ? dx(right) : Infinity;
+		if (Math.min(l, r) ** 2 > distance) break;
+		const i = l <= r ? left-- : right++;
+		const point = points[i];
+		const squared = dx(i) ** 2 + ((point.y - targetY) / yPerPixel) ** 2;
+		if (
+			squared < distance ||
+			(squared === distance && (best === undefined || point.index < best))
+		) {
+			best = point.index;
+			distance = squared;
 		}
-	});
+	}
 	return best;
 }

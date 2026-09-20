@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m as L } from '$lib/paraglide/messages.js';
 	import { createQuery } from '@tanstack/svelte-query';
 	import { useSession } from '$lib/auth/session.svelte';
 	import {
@@ -54,21 +55,21 @@
 			if (JSON.stringify(next) === JSON.stringify(submitted)) void query.refetch();
 			else submitted = next;
 		} catch (cause) {
-			validation = cause instanceof Error ? cause.message : '请检查输入。';
+			validation = cause instanceof Error ? cause.message : L.validation_check_inputs();
 		}
 	}
 	const rows = $derived(query.data?.trainingDays ?? []);
 </script>
 
-<svelte:head><title>体能与疲劳趋势 · AI Fitness</title></svelte:head>
+<svelte:head><title>{L.page_history_title()}</title></svelte:head>
 <header class="page-heading">
 	<div>
-		<div class="eyebrow">TRAINING HISTORY</div>
-		<h1>体能与疲劳趋势</h1>
-		<p class="subtle">HRSS · CTL / ATL · 本地日历 {zone}</p>
+		<div class="eyebrow">{L.eyebrow_training_history()}</div>
+		<h1>{L.page_history()}</h1>
+		<p class="subtle">{L.history_subtitle()} {zone}</p>
 	</div>
 </header>
-{#if demo}<p>训练历史需要登录真实账号。</p>{:else}
+{#if demo}<p>{L.history_sign_in()}</p>{:else}
 	<form
 		class="surface"
 		onsubmit={(event) => {
@@ -76,28 +77,39 @@
 			calculate();
 		}}
 	>
-		<h2>分析输入</h2>
+		<h2>{L.history_inputs()}</h2>
 		<div class="fields">
-			<label>开始日期<input type="date" required bind:value={from} /></label><label
-				>结束日期<input type="date" required bind:value={through} /></label
+			<label>{L.label_start_date()}<input type="date" required bind:value={from} /></label><label
+				>{L.label_end_date()}<input type="date" required bind:value={through} /></label
 			>
 			<label
-				>开始前的训练负荷<select required bind:value={initial}
-					><option value="" disabled>请选择</option><option value="zero"
-						>明确假设此前无训练负荷</option
-					><option value="known">填写已知 CTL / ATL</option></select
+				>{L.history_initial_load()}<select required bind:value={initial}
+					><option value="" disabled>{L.action_select()}</option><option value="zero"
+						>{L.history_assume_zero()}</option
+					><option value="known">{L.history_enter_initial()}</option></select
 				></label
 			>
 			{#if initial === 'known'}<label
-					>初始 CTL<input type="number" required min="0" step="any" bind:value={fitness} /></label
+					>{L.history_initial_ctl()}<input
+						type="number"
+						required
+						min="0"
+						step="any"
+						bind:value={fitness}
+					/></label
 				><label
-					>初始 ATL<input type="number" required min="0" step="any" bind:value={fatigue} /></label
+					>{L.history_initial_atl()}<input
+						type="number"
+						required
+						min="0"
+						step="any"
+						bind:value={fatigue}
+					/></label
 				>{/if}
 		</div>
-		<h3>每日记录完整性</h3>
+		<h3>{L.history_completeness()}</h3>
 		<p class="small subtle">
-			仅确认已完整记录的日期。完整且无训练的日期视为休息；未确认或心率覆盖不足的日期为未知，之后的
-			CTL / ATL 也保持未知。不会用功率或配速负荷补足。
+			{L.history_completeness_note()}
 		</p>
 		<label
 			><input
@@ -105,10 +117,10 @@
 				checked={days.length > 0 && days.every((d) => complete.includes(d.calendarDate))}
 				onchange={(e) =>
 					(complete = e.currentTarget.checked ? days.map((d) => d.calendarDate) : [])}
-			/>确认所选日期全部记录完整</label
+			/>{L.history_confirm_all()}</label
 		>
 		<details>
-			<summary>逐日确认（{days.length} 天）</summary>
+			<summary>{L.history_confirm_days({ count: days.length })}</summary>
 			<div class="days">
 				{#each days as day (day.calendarDate)}<label
 						><input
@@ -120,60 +132,69 @@
 			</div>
 		</details>
 		{#if validation}<p class="form-error" role="alert">{validation}</p>{/if}
-		<button class="button primary" disabled={query.isFetching}>计算训练历史</button>
+		<button class="button primary" disabled={query.isFetching}>{L.history_calculate()}</button>
 	</form>
-	{#if submitted}<section class="section" aria-label="训练历史结果">
-			<h2>训练历史结果</h2>
+	{#if submitted}<section class="section" aria-label={L.history_results()}>
+			<h2>{L.history_results()}</h2>
 			<p class="small subtle">
-				已提交日期：{submitted.historyCalendar[0].calendarDate} — {submitted.historyCalendar.at(-1)
-					?.calendarDate} · 初始状态：{submitted.historyAssumeNoPriorLoad
-					? '明确假设零负荷'
-					: `CTL ${submitted.historyPriorFitness} / ATL ${submitted.historyPriorFatigue}`}。修改输入后请重新计算。
+				{L.history_submitted({
+					start: submitted.historyCalendar[0].calendarDate,
+					end: submitted.historyCalendar.at(-1)?.calendarDate ?? '',
+					initial: submitted.historyAssumeNoPriorLoad
+						? L.history_zero_assumption()
+						: `CTL ${submitted.historyPriorFitness} / ATL ${submitted.historyPriorFatigue}`
+				})}
 			</p>
-			{#if query.isPending}<p role="status">正在计算训练历史…</p>{:else if query.isError}<Feedback
+			{#if query.isPending}<p role="status">
+					{L.history_calculating()}
+				</p>{:else if query.isError}<Feedback
 					error={query.error}
 					retry={() => query.refetch()}
 				/>{:else if query.data}<div class="surface">
 					<AnalysisPlot
 						kind="line"
-						xLabel="本地日期"
-						yLabel="HRSS 负荷"
+						xLabel={L.history_local_date()}
+						yLabel={L.history_hrss()}
 						labels={rows.map((d) => d.trainingCalendar.calendarDate)}
 						series={[
-							{ name: 'CTL 体能', values: rows.map((d) => d.trainingFitness ?? null) },
-							{ name: 'ATL 疲劳', values: rows.map((d) => d.trainingFatigue ?? null) },
-							{ name: '负荷平衡', values: rows.map((d) => d.trainingBalance ?? null) }
+							{ name: L.history_ctl(), values: rows.map((d) => d.trainingFitness ?? null) },
+							{ name: L.history_atl(), values: rows.map((d) => d.trainingFatigue ?? null) },
+							{ name: L.history_balance(), values: rows.map((d) => d.trainingBalance ?? null) }
 						]}
 					/>
-					<div class="table-scroll" role="region" aria-label="训练历史表">
+					<div class="table-scroll" role="region" aria-label={L.history_table()}>
 						<table>
 							<thead
 								><tr
-									><th>日期</th><th>完整性</th><th>训练数</th><th>已知部分 HRSS</th><th
-										>全天 HRSS</th
-									><th>CTL</th><th>ATL</th><th>平衡</th><th>初始 CTL 剩余权重</th></tr
+									><th>{L.label_date()}</th><th>{L.history_completeness_column()}</th><th
+										>{L.history_workouts()}</th
+									><th>{L.history_known_hrss()}</th><th>{L.history_daily_hrss()}</th><th>CTL</th><th
+										>ATL</th
+									><th>{L.label_balance()}</th><th>{L.history_initial_weight()}</th></tr
 								></thead
 							><tbody
 								>{#each rows as row (row.trainingCalendar.calendarDate)}<tr
 										><td>{row.trainingCalendar.calendarDate}</td><td
-											>{row.trainingCalendar.calendarRecordingComplete ? '已确认' : '未知'}</td
+											>{row.trainingCalendar.calendarRecordingComplete
+												? L.status_confirmed()
+												: L.status_unknown()}</td
 										><td>{row.trainingWorkoutCount}</td><td
 											>{valueText(row.trainingKnownLoad, 1, 2)}</td
 										><td
 											>{row.trainingTotalLoad === undefined
-												? '未知'
+												? L.status_unknown()
 												: valueText(row.trainingTotalLoad, 1, 2)}</td
 										><td
 											>{row.trainingFitness === undefined
-												? '未知'
+												? L.status_unknown()
 												: valueText(row.trainingFitness, 1, 2)}</td
 										><td
 											>{row.trainingFatigue === undefined
-												? '未知'
+												? L.status_unknown()
 												: valueText(row.trainingFatigue, 1, 2)}</td
 										><td
 											>{row.trainingBalance === undefined
-												? '未知'
+												? L.status_unknown()
 												: valueText(row.trainingBalance, 1, 2)}</td
 										><td>{valueText(row.trainingInitialFitnessWeight, 100, 1)}%</td></tr
 									>{/each}</tbody
@@ -181,7 +202,10 @@
 						</table>
 					</div>
 					<p class="small subtle">
-						算法 {query.data.trainingMethod} · 参数版本 {query.data.trainingSettingsRevision} · 所有负荷与衰减由后端计算；不用于判断健康风险。
+						{L.history_method_note({
+							method: query.data.trainingMethod,
+							revision: query.data.trainingSettingsRevision
+						})}
 					</p>
 				</div>{/if}
 		</section>{/if}

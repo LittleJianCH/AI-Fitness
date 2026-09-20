@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m as L } from '$lib/paraglide/messages.js';
 	import type { Workout, MetricKind } from '$lib/api/generated/client';
 	import { workoutAnalysisQuery } from './query.svelte';
 	import { metricInfo } from './presentation';
@@ -17,12 +18,12 @@
 	);
 </script>
 
-<section class="section" aria-label="指标统计与分布">
-	<h2>统计与分布</h2>
-	{#if query.isPending}<p role="status">正在读取分析…</p>{:else if query.isError}<Feedback
+<section class="section" aria-label={L.analysis_statistics_region()}>
+	<h2>{L.analysis_statistics()}</h2>
+	{#if query.isPending}<p role="status">{L.analysis_loading()}</p>{:else if query.isError}<Feedback
 			error={query.error}
 			retry={refresh}
-		/>{:else if metric}<Statistics {metric} />{:else}<p>此指标暂无可用分析。</p>{/if}
+		/>{:else if metric}<Statistics {metric} />{:else}<p>{L.analysis_metric_unavailable()}</p>{/if}
 	{#if query.data && (kind === 'powerMetric' || kind === 'heartRateMetric')}<div
 			class="surface section"
 		>
@@ -31,20 +32,22 @@
 					? query.data.analysisPowerZones
 					: query.data.analysisHeart.heartZones}
 				unit={kind === 'powerMetric' ? 'W' : 'bpm'}
-				title={kind === 'powerMetric' ? '功率分区' : '心率分区'}
+				title={kind === 'powerMetric' ? L.analysis_power_zones() : L.analysis_heart_zones()}
 			/>
 		</div>{/if}
 </section>
 {#if relationships.length}<section class="section">
-		<h2>相关分析</h2>
+		<h2>{L.analysis_relationships()}</h2>
 		{#each relationships as relationship, i (i)}
 			{@const x = metricInfo[relationship.relationshipX]}{@const y =
 				metricInfo[relationship.relationshipY]}
 			<div class="surface relationship">
-				<h3>{x.title}与{y.title}</h3>
+				<h3>{L.analysis_pair({ x: x.title, y: y.title })}</h3>
 				<p class="small subtle">
-					样本相关系数 {valueText(relationship.relationshipCorrelation, 1, 3)} · 对齐样本 {relationship.relationshipSampleCount}
-					· 图中最多 600 点
+					{L.analysis_correlation_summary({
+						correlation: valueText(relationship.relationshipCorrelation, 1, 3),
+						count: relationship.relationshipSampleCount
+					})}
 				</p>
 				<AnalysisPlot
 					kind="scatter"
@@ -56,8 +59,12 @@
 					])}
 				/>
 				<details>
-					<summary>查看对齐样本</summary>
-					<div class="table-scroll" role="region" aria-label={`${x.title}与${y.title}样本表`}>
+					<summary>{L.analysis_aligned_samples()}</summary>
+					<div
+						class="table-scroll"
+						role="region"
+						aria-label={L.analysis_pair_table({ x: x.title, y: y.title })}
+					>
 						<table>
 							<thead><tr><th>{x.title} ({x.unit})</th><th>{y.title} ({y.unit})</th></tr></thead
 							><tbody
@@ -71,7 +78,7 @@
 					</div>
 				</details>
 			</div>{/each}
-		<p class="small subtle">由后端按真实时间对齐，不跨空档外推；相关性不表示因果关系。</p>
+		<p class="small subtle">{L.analysis_correlation_note()}</p>
 	</section>{/if}
 
 <style>

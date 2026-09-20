@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m as L } from '$lib/paraglide/messages.js';
 	import type { TimedPosition } from '$lib/api/generated/client';
 
 	let {
@@ -47,8 +48,8 @@
 		viewBox="0 0 360 280"
 		role="img"
 		aria-label={import.meta.env.MODE === 'demo'
-			? '合成轨迹示意，无地图底图'
-			: '轨迹示意，无地图底图'}
+			? L.route_synthetic_description()
+			: L.route_description()}
 		class="route-plot"
 	>
 		<rect width="360" height="280" fill="var(--map-land)" />
@@ -117,10 +118,14 @@
 			/>{/if}
 	</svg>
 {/snippet}
-{#if onSelect}<button class="interactive-route" onclick={choose} aria-label="点击轨迹选择时间点"
+{#if onSelect}<button class="interactive-route" onclick={choose} aria-label={L.route_choose_time()}
 		>{@render graphic()}</button
 	>{:else}{@render graphic()}{/if}
-<div class="route-legend"><span>○ 起点</span><span>□ 终点</span><span>● 当前时间点</span></div>
+<div class="route-legend">
+	<span>{L.route_start_legend()}</span><span>{L.route_end_legend()}</span><span
+		>{L.route_current_legend()}</span
+	>
+</div>
 
 <style>
 	.route-plot {

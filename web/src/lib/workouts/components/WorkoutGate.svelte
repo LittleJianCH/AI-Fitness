@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m as L } from '$lib/paraglide/messages.js';
 	import { useSession } from '$lib/auth/session.svelte';
 	import { createQuery } from '@tanstack/svelte-query';
 	import { loadWorkout, type Scenario } from '$lib/api/read';
@@ -16,7 +17,7 @@
 	}));
 </script>
 
-{#if query.isPending}<div class="status" role="status">正在读取训练详情…</div>
+{#if query.isPending}<div class="status" role="status">{L.workout_loading()}</div>
 {:else if query.data}{#if query.isError}<Feedback
 			error={query.error}
 			retry={() => query.refetch()}

@@ -4,6 +4,10 @@ const test = base.extend<{ consoleErrors: string[] }>({
 		async ({ page }, use) => {
 			const errors: string[] = [];
 			page.on('pageerror', (error) => errors.push(error.message));
+			page.on('console', (message) => {
+				if (/hydrat/i.test(message.text()) && ['warning', 'error'].includes(message.type()))
+					errors.push(message.text());
+			});
 			await page.exposeFunction('recordWindowError', (message: string) => errors.push(message));
 			await page.addInitScript(() => {
 				window.addEventListener('error', (event) => {
@@ -77,7 +81,9 @@ test('summary-only and unavailable metrics keep their meaning', async ({ page })
 	await page.goto(`/workouts/${indoor}`);
 	await expect(page.getByRole('heading', { name: '室内骑行 · 仅汇总' })).toBeVisible();
 	await expect(page.getByRole('link', { name: '查看完整轨迹' })).toHaveCount(0);
-	await expect(page.getByText('仅记录汇总 · 无逐点曲线')).toBeVisible();
+	await expect(
+		page.getByRole('button', { name: '放大功率图表' }).getByText('仅记录汇总 · 无逐点曲线')
+	).toBeVisible();
 	await expect(page.getByRole('link', { name: /功率/ })).toHaveCount(0);
 	await expect(page.getByRole('slider')).toHaveCount(0);
 	await page.goto(`/workouts/${noHr}`);
@@ -307,4 +313,29 @@ test('the linked cursor keeps moving through the space between charts', async ({
 	const before = await time.inputValue();
 	await page.mouse.move(box.x + box.width - 30, box.y + box.height - 4);
 	await expect(time).not.toHaveValue(before);
+});
+
+test('English demo navigation preserves synthetic titles and fits large narrow text', async ({
+	page
+}) => {
+	await page.goto(`/workouts/${ride}`);
+	await page.getByTestId('language-picker').selectOption('en');
+	await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+	await expect(
+		page.getByRole('heading', { name: '周末环湖 · 耐力骑行', exact: true })
+	).toBeVisible();
+	await page.getByRole('button', { name: 'Enlarge Heart rate chart', exact: true }).click();
+	await expect(page.getByRole('dialog')).toBeVisible();
+	await page.keyboard.press('Escape');
+	await page.setViewportSize({ width: 320, height: 852 });
+	await page.evaluate(() => {
+		const sizes = [...document.querySelectorAll<HTMLElement>('body, body *')].map((element) => ({
+			element,
+			font: parseFloat(getComputedStyle(element).fontSize)
+		}));
+		for (const { element, font } of sizes) element.style.fontSize = `${font * 2}px`;
+	});
+	await expect
+		.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
+		.toBe(true);
 });

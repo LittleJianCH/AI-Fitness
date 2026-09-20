@@ -1,6 +1,9 @@
 <script lang="ts">
+	import { m as L } from '$lib/paraglide/messages.js';
+	import { m } from '$lib/paraglide/messages.js';
+	import { protectUnsavedChanges } from '$lib/i18n/guard.svelte';
 	import { onDestroy, untrack } from 'svelte';
-	import { beforeNavigate, goto } from '$app/navigation';
+	import { goto } from '$app/navigation';
 	import { navigating } from '$app/state';
 	import { resolve } from '$app/paths';
 	import { useQueryClient } from '@tanstack/svelte-query';
@@ -44,20 +47,13 @@
 				pendingTag !== '')
 	);
 	const conflict = $derived(error instanceof ApiError && error.code === 'revision_conflict');
-	beforeNavigate((navigation) => {
-		if (
-			dirty &&
-			(navigation.type === 'leave' ||
-				!window.confirm('修改尚未保存，离开会丢失当前填写内容。确定离开？'))
-		)
-			navigation.cancel();
-	});
+	protectUnsavedChanges(
+		() => dirty,
+		() => m.discard_edit(),
+		() => busy
+	);
 	async function reload() {
-		if (
-			busy ||
-			(dirty && !window.confirm('重新加载会丢弃当前修改，使用服务器上的最新内容。继续？'))
-		)
-			return;
+		if (busy || (dirty && !window.confirm(L.workout_confirm_reload()))) return;
 		busy = true;
 		const owner = session.user?.id;
 		try {
@@ -134,7 +130,9 @@
 			busy ||
 			conflict ||
 			!window.confirm(
-				`删除“${baseline.workoutUserData.workoutTitle ?? '未命名训练'}”？此操作无法撤销，当前修改也会丢弃。`
+				L.workout_confirm_delete({
+					title: baseline.workoutUserData.workoutTitle ?? L.workout_untitled()
+				})
 			)
 		)
 			return;
@@ -172,32 +170,35 @@
 
 <div class="editor">
 	<form class="surface form-stack" onsubmit={save}>
-		<p class="subtle">修改标题、备注与标签。训练的时间、距离和测量数据保持原样。</p>
+		<p class="subtle">{L.workout_edit_note()}</p>
 		<fieldset class="form-stack" disabled={busy}>
-			<legend class="sr-only">训练信息</legend>
-			<label>标题（可选）<input bind:value={title} /></label>
-			<label>备注（可选）<textarea bind:value={notes}></textarea></label>
+			<legend class="sr-only">{L.workout_information()}</legend>
+			<label>{L.workout_optional_title()}<input bind:value={title} /></label>
+			<label>{L.workout_optional_notes()}<textarea bind:value={notes}></textarea></label>
 			<TagsInput bind:tags bind:pending={pendingTag} bind:this={tagInput} />
 		</fieldset>
 		{#if error}<p role="alert" class="form-error">{errorText(error)}</p>{/if}
-		{#if conflict}<p role="status">当前填写内容已保留。载入最新版本后，可以重新修改并保存。</p>{/if}
+		{#if conflict}<p role="status">{L.workout_edit_conflict()}</p>{/if}
 		<div class="form-actions">
 			<button class="button primary" disabled={busy || conflict}
-				>{busy ? '正在处理…' : '保存修改'}</button
+				>{busy ? L.action_processing() : L.action_save_changes()}</button
 			>
-			<a class="button" href={resolve('/workouts/[id]', { id: baseline.workoutId })}>返回详情</a>
-			<button class="button" type="button" disabled={busy} onclick={reload}>重新加载最新版本</button
+			<a class="button" href={resolve('/workouts/[id]', { id: baseline.workoutId })}
+				>{L.action_back_details()}</a
+			>
+			<button class="button" type="button" disabled={busy} onclick={reload}
+				>{L.action_reload_latest()}</button
 			>
 		</div>
 	</form>
 	<section class="surface form-stack">
-		<h2>删除训练</h2>
+		<h2>{L.action_delete_workout()}</h2>
 		<p class="subtle">
-			删除后无法恢复。从文件或 Apple Health 导入的训练，删除后重复导入也不会自动恢复。
+			{L.workout_delete_note()}
 		</p>
 		<div>
 			<button class="button danger" disabled={busy || conflict} onclick={remove}
-				>删除这条训练</button
+				>{L.action_delete_this_workout()}</button
 			>
 		</div>
 	</section>

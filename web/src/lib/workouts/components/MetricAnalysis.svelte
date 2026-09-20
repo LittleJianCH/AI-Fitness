@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { formatNumber } from '$lib/i18n/format';
+	import { m as L } from '$lib/paraglide/messages.js';
 	import { metricValueText, pace } from '$lib/analysis/presentation';
 	import type { Workout } from '$lib/api/generated/client';
 	import {
@@ -37,12 +39,14 @@
 	);
 	const range = $derived(workout.workoutObservation.observationRange);
 	const recorded = $derived(recordedMetricSummary(workout, metric.key));
-	const average = $derived(
-		(demo ? metric.average : statistics?.averageValue) ?? recorded.averageValue
+	const calculatedAverage = $derived(
+		(demo ? undefined : statistics?.averageValue) ?? metric.average
 	);
-	const maximum = $derived(
-		(demo ? metric.maximum : statistics?.maximumValue) ?? recorded.maximumValue
+	const calculatedMaximum = $derived(
+		(demo ? undefined : statistics?.maximumValue) ?? metric.maximum
 	);
+	const average = $derived(calculatedAverage ?? recorded.averageValue);
+	const maximum = $derived(calculatedMaximum ?? recorded.maximumValue);
 	const selected = $derived(metric.samples[index]);
 	const runningSpeed = $derived(
 		metric.key === 'speed' && workout.workoutObservation.observationSport.type === 'running'
@@ -57,27 +61,28 @@
 	);
 	const hasDistance = $derived(distances.some((value) => value !== undefined));
 	const distanceText = (value: number | undefined) =>
-		value === undefined ? '距离未记录' : `${value.toFixed(2)} km`;
+		value === undefined ? L.value_distance_missing() : `${formatNumber(value, 2)} km`;
 </script>
 
-<svelte:head><title>{metric.title}分析 · AI Fitness</title></svelte:head>
+<svelte:head><title>{L.metric_analysis_document({ metric: metric.title })}</title></svelte:head>
 {#if !embedded}<header class="page-heading">
 		<div>
-			<div class="eyebrow">METRIC ANALYSIS</div>
-			<h1>{metric.title}分析</h1>
+			<div class="eyebrow">{L.eyebrow_metric_analysis()}</div>
+			<h1>{L.metric_analysis_heading({ metric: metric.title })}</h1>
 			<p class="subtle">
-				{workout.workoutUserData.workoutTitle ?? '未命名训练'} · {dateText(range.rangeStart)}
+				{workout.workoutUserData.workoutTitle ?? L.workout_untitled()} · {dateText(
+					range.rangeStart
+				)}
 			</p>
 		</div>
 	</header>{/if}
 <p class="small subtle">
-	{#if (demo ? metric.average : statistics?.averageValue) !== undefined || (demo ? metric.maximum : statistics?.maximumValue) !== undefined}计算统计包含真实零值；超过
-		2 分钟的空档不计入时间加权平均。{:else}当前显示记录自带的汇总。曲线保留原始采样；缺失记录不补零。{/if}
+	{#if calculatedAverage !== undefined || calculatedMaximum !== undefined}{L.metric_calculated_note()}{:else}{L.metric_recorded_note()}{/if}
 </p>
 {#if average !== undefined || maximum !== undefined}<div class="summary-strip">
 		<div>
 			<div class="summary-label">
-				{(demo ? metric.average : statistics?.averageValue) !== undefined ? '计算平均' : '记录平均'}
+				{calculatedAverage !== undefined ? L.stat_calculated_average() : L.stat_recorded_average()}
 			</div>
 			<div class="summary-number">
 				{metricValueText(average, metricKinds[metric.key], metric.key === 'speed' ? 1 : 0)}<small
@@ -87,7 +92,7 @@
 		</div>
 		<div>
 			<div class="summary-label">
-				{(demo ? metric.maximum : statistics?.maximumValue) !== undefined ? '计算最大' : '记录最大'}
+				{calculatedMaximum !== undefined ? L.stat_calculated_maximum() : L.stat_recorded_maximum()}
 			</div>
 			<div class="summary-number">
 				{metricValueText(maximum, metricKinds[metric.key], metric.key === 'speed' ? 1 : 0)}<small
@@ -98,43 +103,46 @@
 		{#if runningSpeed}
 			<div>
 				<div class="summary-label">
-					{(demo ? metric.average : statistics?.averageValue) !== undefined
-						? '平均配速'
-						: '记录平均配速'}
+					{calculatedAverage !== undefined ? L.stat_average_pace() : L.stat_recorded_average_pace()}
 				</div>
 				<div class="summary-number">{pace(average)}</div>
 			</div>
 			<div>
 				<div class="summary-label">
-					{(demo ? metric.maximum : statistics?.maximumValue) !== undefined
-						? '最快采样配速'
-						: '记录最快配速'}
+					{calculatedMaximum !== undefined
+						? L.stat_fastest_sample_pace()
+						: L.stat_recorded_fastest_pace()}
 				</div>
 				<div class="summary-number">{pace(maximum)}</div>
 			</div>
 		{/if}
 	</div>
-{:else}<p class="small subtle">此指标暂无汇总统计，可以查看下方真实采样。</p>{/if}
+{:else}<p class="small subtle">{L.metric_summary_missing()}</p>{/if}
 {#if runningSpeed}<p class="small subtle">
-		配速由对应速度换算；平均配速对应平均速度，最快采样配速不是持续一公里的最佳配速。零速度没有有限配速。
+		{L.metric_pace_note()}
 	</p>{/if}
 {#if selected}<section class="surface analysis-chart">
-		<h2>{metric.title}{axis === 'time' ? '时间' : '距离'}曲线</h2>
+		<h2>
+			{L.metric_chart_heading({
+				metric: metric.title,
+				axis: axis === 'time' ? L.label_time() : L.label_distance()
+			})}
+		</h2>
 		<label
-			>图表横轴
+			>{L.metric_axis()}
 			<select bind:value={axis}>
-				<option value="time">时间</option>
-				<option value="distance">距离</option>
+				<option value="time">{L.label_time()}</option>
+				<option value="distance">{L.label_distance()}</option>
 			</select>
 		</label>
 		<p class="small subtle">
-			横轴为{axis === 'time' ? '经过时间' : '累计距离（km）'} · 超过 2 分钟的采样间隔以断线显示
+			{L.metric_axis_note({ axis: axis === 'time' ? L.label_elapsed() : L.label_cumulative_km() })}
 		</p>
 		{#if axis === 'distance'}<p class="small subtle">
-				距离按记录时间对齐；仅在相邻距离记录间插值，不跨空档或距离重置外推。指标数值仍为原始样本。
+				{L.metric_distance_note()}
 			</p>{/if}
 		{#if axis === 'distance' && !hasDistance}<p role="status">
-				没有可对齐的距离采样，请切换时间轴查看原始曲线。
+				{L.metric_distance_missing()}
 			</p>{:else}
 			<TimeChart
 				{metric}
@@ -155,10 +163,11 @@
 			>
 		</div>
 		{#if runningSpeed}<p class="selected-pace" aria-live="polite">
-				此刻配速：{pace(selected.value)}
+				{L.metric_current_pace({ pace: pace(selected.value) })}
 			</p>{/if}
 		<label class="slider-label" for="sample"
-			>选择真实样本 <span class="subtle small">{index + 1} / {metric.samples.length}</span></label
+			>{L.metric_select_sample()}
+			<span class="subtle small">{index + 1} / {metric.samples.length}</span></label
 		><input
 			id="sample"
 			type="range"
@@ -166,23 +175,35 @@
 			max={metric.samples.length - 1}
 			step="1"
 			bind:value={index}
-			aria-valuetext={`${duration((Date.parse(selected.timestamp) - Date.parse(range.rangeStart)) / 1000)}，${metricValueText(selected.value, metricKinds[metric.key], 1)} ${metric.unit}${runningSpeed ? `，配速 ${pace(selected.value)}` : ''}`}
+			aria-valuetext={runningSpeed
+				? L.metric_running_sample_value({
+						time: duration((Date.parse(selected.timestamp) - Date.parse(range.rangeStart)) / 1000),
+						value: metricValueText(selected.value, metricKinds[metric.key], 1),
+						unit: metric.unit,
+						pace: pace(selected.value)
+					})
+				: L.metric_sample_value({
+						time: duration((Date.parse(selected.timestamp) - Date.parse(range.rangeStart)) / 1000),
+						value: metricValueText(selected.value, metricKinds[metric.key], 1),
+						unit: metric.unit
+					})}
 		/>
 		<div class="sample-buttons">
-			<button class="button" disabled={index === 0} onclick={() => index--}>上一个样本</button
+			<button class="button" disabled={index === 0} onclick={() => index--}
+				>{L.action_previous_sample()}</button
 			><button class="button" disabled={index === metric.samples.length - 1} onclick={() => index++}
-				>下一个样本</button
+				>{L.action_next_sample()}</button
 			>
 		</div>
 		<details>
-			<summary>查看样本数据表</summary>
-			<div class="table-scroll" role="region" aria-label="指标样本表">
+			<summary>{L.metric_sample_table_show()}</summary>
+			<div class="table-scroll" role="region" aria-label={L.metric_sample_table()}>
 				<table>
 					<thead
 						><tr
-							><th>经过时间</th>{#if axis === 'distance'}<th>累计距离</th>{/if}<th
-								>{metric.title} ({metric.unit})</th
-							></tr
+							><th>{L.label_elapsed()}</th>{#if axis === 'distance'}<th
+									>{L.label_cumulative_distance()}</th
+								>{/if}<th>{metric.title} ({metric.unit})</th></tr
 						></thead
 					><tbody
 						>{#each metric.samples as sample, sampleIndex (sample.timestamp)}<tr
@@ -199,36 +220,38 @@
 			</div>
 		</details>
 	</section>{:else}<div class="status">
-		<h2>这次训练仅包含汇总数据</h2>
-		<p>没有逐点样本，因此不展示曲线。汇总值按其实际来源标注为计算或记录。</p>
+		<h2>{L.metric_summary_only_title()}</h2>
+		<p>{L.metric_summary_only()}</p>
 	</div>{/if}
 {#if !demo}<MetricDetails {workout} kind={metricKinds[metric.key]} />{/if}
 {#if metric.key === 'power'}
 	{#if metric.samples.length > 0}<PowerCurveAnalysis {workout} />
-	{:else}<section class="section" aria-label="最佳持续功率">
-			<h2>最佳持续功率</h2>
-			<p>没有足够的连续功率采样，无法计算最佳持续功率。</p>
+	{:else}<section class="section" aria-label={L.power_best_sustained()}>
+			<h2>{L.power_best_sustained()}</h2>
+			<p>{L.power_curve_missing()}</p>
 		</section>{/if}
 {/if}
 {#if embedded && metric.key === 'cadence' && workout.workoutObservation.observationSport.type === 'running'}<p
 		class="small subtle"
 	>
-		跑步步频使用双脚总步数（步/分钟）。
+		{L.running_cadence_note()}
 	</p>{/if}
 {#if !embedded}<section class="section">
-		<h2>如何阅读这些数据</h2>
+		<h2>{L.metric_reading_guide()}</h2>
 		<div class="surface">
 			<p>
-				标为“计算”的统计来自后端对当前修订采样的计算；标为“记录”的统计直接来自训练记录。曲线按原始时间排列，保留真实零值，显示中的断线或缩放不改变统计值。
+				{L.metric_provenance_note()}
 			</p>
 			{#if metric.key === 'heart-rate'}<p>
-					心率分区使用训练开始时生效的个人参数。运动后恢复读数暂不在当前模型范围内。
+					{L.metric_heart_note()}
 				</p>{/if}{#if metric.key === 'cadence' && workout.workoutObservation.observationSport.type === 'running'}<p
 				>
-					跑步步频使用双脚总步数（步/分钟）。
+					{L.running_cadence_note()}
 				</p>{/if}
 			<p class="small subtle">
-				数据来源：{demo ? '合成演示响应' : '当前账号的训练记录'} · 时间显示使用本地时区
+				{L.metric_source_note({
+					source: demo ? L.data_synthetic_response() : L.data_account_workout()
+				})}
 			</p>
 		</div>
 	</section>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m as L } from '$lib/paraglide/messages.js';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import WorkoutGate from '$lib/workouts/components/WorkoutGate.svelte';
@@ -8,18 +9,20 @@
 	const id = $derived(page.params.id ?? '');
 </script>
 
-<svelte:head><title>编辑训练 · AI Fitness</title></svelte:head>
-<nav class="breadcrumb" aria-label="面包屑">
-	<a href={resolve('/workouts')}>训练</a><span>/</span>
-	<a href={resolve('/workouts/[id]', { id })}>训练详情</a><span>/</span><span>编辑</span>
+<svelte:head><title>{L.page_edit_title()}</title></svelte:head>
+<nav class="breadcrumb" aria-label={L.navigation_breadcrumb()}>
+	<a href={resolve('/workouts')}>{L.navigation_workouts()}</a><span>/</span>
+	<a href={resolve('/workouts/[id]', { id })}>{L.workout_details()}</a><span>/</span><span
+		>{L.action_edit()}</span
+	>
 </nav>
 <header class="page-heading">
 	<div>
-		<div class="eyebrow">WORKOUT DETAILS</div>
-		<h1>编辑训练</h1>
+		<div class="eyebrow">{L.eyebrow_workout_details()}</div>
+		<h1>{L.workout_edit()}</h1>
 	</div>
 </header>
-{#if demo}<div class="status">编辑与删除需要登录真实账号，演示模式仅供查看。</div>
+{#if demo}<div class="status">{L.workout_edit_demo()}</div>
 {:else}<WorkoutGate {id} scenario="normal">
 		{#snippet children(workout)}{#key id}<WorkoutEditor {workout} />{/key}{/snippet}
 	</WorkoutGate>{/if}

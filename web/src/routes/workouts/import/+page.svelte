@@ -1,7 +1,9 @@
 <script lang="ts">
+	import { m as L } from '$lib/paraglide/messages.js';
+	import { m } from '$lib/paraglide/messages.js';
+	import { protectUnsavedChanges } from '$lib/i18n/guard.svelte';
 	import { browser } from '$app/environment';
 	import { onDestroy } from 'svelte';
-	import { beforeNavigate } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { createQuery, useQueryClient } from '@tanstack/svelte-query';
 	import { useSession } from '$lib/auth/session.svelte';
@@ -40,16 +42,11 @@
 	let error = $state<Error | null>(null);
 	let result = $state<ImportRecord | null>(null);
 	const pending = $derived(result?.status === 'pending' || result?.status === 'processing');
-	beforeNavigate((navigation) => {
-		if (
-			(busy || uncertain) &&
-			(navigation.type === 'leave' ||
-				!window.confirm(
-					'导入结果尚未确认，离开后可在训练列表检查，或重新上传同一文件确认结果。确定离开？'
-				))
-		)
-			navigation.cancel();
-	});
+	protectUnsavedChanges(
+		() => busy || uncertain,
+		() => m.discard_import(),
+		() => busy
+	);
 	function selectFile(event: Event & { currentTarget: HTMLInputElement }) {
 		file = event.currentTarget.files?.[0] ?? null;
 		result = null;
@@ -61,8 +58,7 @@
 		event.preventDefault();
 		if (busy || !file || !policy.data) return;
 		if (file.size === 0 || file.size > policy.data.maximumFitBytes) {
-			validation =
-				file.size === 0 ? '这个文件是空的，请重新选择。' : '文件超过大小限制，请重新选择。';
+			validation = file.size === 0 ? L.import_empty_file() : L.import_file_too_large();
 			return;
 		}
 		const selected = file;
@@ -125,36 +121,36 @@
 	function failureText(code: string | undefined) {
 		switch (code) {
 			case 'unsupported_fit':
-				return '暂时仅支持包含单次骑行或跑步的 FIT 活动文件。';
+				return L.import_unsupported();
 			case 'missing_fit_time':
-				return '文件缺少有效的训练时间，暂时无法导入。';
+				return L.import_missing_time();
 			case 'fit_resource_limit':
-				return '文件中的数据量超出解析限制。';
+				return L.import_limit_exceeded();
 			case 'invalid_fit':
-				return '文件损坏或不是有效的 FIT 活动文件，请重新导出后再试。';
+				return L.import_invalid_file();
 			default:
-				return '文件未通过解析或数据校验，请检查来源并重新导出。';
+				return L.import_invalid_data();
 		}
 	}
 </script>
 
-<svelte:head><title>上传 FIT · AI Fitness</title></svelte:head>
+<svelte:head><title>{L.page_upload_title()}</title></svelte:head>
 <header class="page-heading">
 	<div>
-		<p class="eyebrow">IMPORT WORKOUT</p>
-		<h1>上传 FIT 文件</h1>
-		<p class="subtle">从运动设备导出的文件中导入一次骑行或跑步。</p>
+		<p class="eyebrow">{L.eyebrow_import_workout()}</p>
+		<h1>{L.import_heading()}</h1>
+		<p class="subtle">{L.import_intro()}</p>
 	</div>
 </header>
-{#if demo}<div class="status">上传需要登录真实账号，演示模式仅供查看。</div>
-{:else}<section class="surface upload-panel form-stack" aria-label="FIT 导入">
-		<p>原始文件会私有保存，便于后续重新处理。同一账号重复上传相同文件会返回已有记录。</p>
-		{#if policy.isPending}<p role="status">正在读取上传限制…</p>
+{#if demo}<div class="status">{L.import_demo()}</div>
+{:else}<section class="surface upload-panel form-stack" aria-label={L.import_region()}>
+		<p>{L.import_privacy_note()}</p>
+		{#if policy.isPending}<p role="status">{L.import_policy_loading()}</p>
 		{:else if policy.isError}<p class="form-error" role="alert">{errorText(policy.error)}</p>
-			<button class="button" onclick={() => policy.refetch()}>重试读取限制</button>
+			<button class="button" onclick={() => policy.refetch()}>{L.import_policy_retry()}</button>
 		{:else if policy.data}<form class="form-stack" onsubmit={submit}>
 				<label
-					>FIT 文件<input
+					>{L.import_file()}<input
 						type="file"
 						accept=".fit,.FIT,application/octet-stream"
 						required
@@ -163,35 +159,40 @@
 					/></label
 				>
 				<p class="small subtle">
-					每次一个文件，最大 {policy.data.maximumFitBytes / 1024 / 1024} MiB。
+					{L.import_maximum({ size: policy.data.maximumFitBytes / 1024 / 1024 })}
 				</p>
 				{#if validation}<p class="form-error" role="alert">{validation}</p>{/if}
 				{#if error}<p class="form-error" role="alert">{errorText(error)}</p>{/if}
 				{#if uncertain}<p role="status">
-						结果尚未确认。请重试上传同一文件，服务器会核对已有记录。
+						{L.import_uncertain()}
 					</p>{/if}
 				<div class="form-actions">
 					<button
 						class="button primary"
 						disabled={busy || !file || pending || (!!result && !uncertain)}
-						>{busy ? '正在处理…' : uncertain ? '重试上传' : '开始导入'}</button
-					><a class="button" href={resolve('/workouts')}>返回训练</a>
+						>{busy
+							? L.action_processing()
+							: uncertain
+								? L.import_retry()
+								: L.import_start()}</button
+					><a class="button" href={resolve('/workouts')}>{L.action_back_workouts()}</a>
 				</div>
 			</form>{/if}
 		{#if result}<div class="import-result" role="status">
-				{#if result.status === 'succeeded'}<h2>训练已导入</h2>
-					<p>已确认保存。重复上传同一文件会显示已有训练。</p>
+				{#if result.status === 'succeeded'}<h2>{L.import_success_title()}</h2>
+					<p>{L.import_success_note()}</p>
 					{#each result.lastSuccess?.parts ?? [] as part (part.workoutId)}<a
 							class="button primary"
-							href={resolve(`/workouts/${part.workoutId}`)}>查看训练</a
+							href={resolve(`/workouts/${part.workoutId}`)}>{L.action_view_workout()}</a
 						>{/each}
-				{:else if result.status === 'suppressed'}<h2>这份文件的训练已被移除</h2>
-					<p>重复上传不会恢复已删除的训练。</p>
-				{:else if result.status === 'failed'}<h2>未能导入</h2>
+				{:else if result.status === 'suppressed'}<h2>{L.import_removed_title()}</h2>
+					<p>{L.import_removed_note()}</p>
+				{:else if result.status === 'failed'}<h2>{L.import_failed_title()}</h2>
 					<p>{failureText(result.failure?.code)}</p>
-				{:else}<h2>正在处理这份文件</h2>
-					<p>稍后检查结果，确认训练是否已保存。</p>
-					<button class="button" disabled={busy} onclick={refresh}>检查结果</button>{/if}
+				{:else}<h2>{L.import_pending_title()}</h2>
+					<p>{L.import_pending_note()}</p>
+					<button class="button" disabled={busy} onclick={refresh}>{L.import_check_result()}</button
+					>{/if}
 			</div>{/if}
 	</section>{/if}
 

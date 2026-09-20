@@ -6,6 +6,7 @@ export default defineConfig({
 	reporter: [['list']],
 	timeout: 30_000,
 	use: {
+		locale: 'zh-CN',
 		baseURL: 'https://localhost:5181',
 		timezoneId: 'Asia/Shanghai',
 		ignoreHTTPSErrors: true,

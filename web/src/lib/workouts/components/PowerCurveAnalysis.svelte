@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m as L } from '$lib/paraglide/messages.js';
 	import { page } from '$app/state';
 	import { createQuery, useQueryClient } from '@tanstack/svelte-query';
 	import { useSession } from '$lib/auth/session.svelte';
@@ -44,14 +45,14 @@
 	}
 </script>
 
-<section class="power-curve section" aria-label="最佳持续功率">
-	<h2>最佳持续功率</h2>
-	<p class="small subtle">每个持续时长的最高平均功率 · 单次训练 · W</p>
+<section class="power-curve section" aria-label={L.power_best_sustained()}>
+	<h2>{L.power_best_sustained()}</h2>
+	<p class="small subtle">{L.power_curve_intro()}</p>
 	<div class="surface">
-		{#if query.isPending}<p role="status">正在计算最佳持续功率…</p>
+		{#if query.isPending}<p role="status">{L.power_curve_loading()}</p>
 		{:else if query.isError}<Feedback error={query.error} retry={() => query.refetch()} />
-		{:else if !current}<p role="status">训练已更新，请刷新后查看对应的功率曲线。</p>
-			<button class="button" onclick={refreshWorkout}>刷新训练</button>
+		{:else if !current}<p role="status">{L.power_curve_stale()}</p>
+			<button class="button" onclick={refreshWorkout}>{L.workout_refresh()}</button>
 		{:else}
 			{#if selected?.best}
 				<PowerCurveChart
@@ -64,11 +65,15 @@
 						>{duration(selected.durationSeconds)} · {valueText(selected.best.averagePower, 1, 1)} W</strong
 					>
 					<span class="small subtle"
-						>最佳区间：{offset(selected.best.start)} – {offset(selected.best.end)}</span
+						>{L.power_interval_value({
+							start: offset(selected.best.start),
+							end: offset(selected.best.end)
+						})}</span
 					>
 				</div>
 				<label
-					>选择持续时长 <select
+					>{L.power_curve_select_duration()}
+					<select
 						value={selected.durationSeconds}
 						onchange={(event) => (selectedDuration = Number(event.currentTarget.value))}
 					>
@@ -77,18 +82,24 @@
 							>{/each}
 					</select></label
 				>
-			{:else}<p>没有足够的连续功率采样，无法计算最佳持续功率。</p>{/if}
+			{:else}<p>{L.power_curve_missing()}</p>{/if}
 			<details>
-				<summary>查看最佳功率数据表</summary>
-				<div class="table-scroll" role="region" aria-label="最佳功率数据表">
+				<summary>{L.power_curve_table_show()}</summary>
+				<div class="table-scroll" role="region" aria-label={L.power_curve_table()}>
 					<table>
-						<thead><tr><th>持续时长</th><th>平均功率</th><th>最佳区间</th></tr></thead>
+						<thead
+							><tr
+								><th>{L.label_sustained_duration()}</th><th>{L.label_average_power()}</th><th
+									>{L.power_best_interval()}</th
+								></tr
+							></thead
+						>
 						<tbody
 							>{#each points as point (point.durationSeconds)}<tr>
 									<td>{duration(point.durationSeconds)}</td><td
 										>{point.best
 											? `${valueText(point.best.averagePower, 1, 1)} W`
-											: '连续采样不足'}</td
+											: L.power_insufficient_samples()}</td
 									>
 									<td
 										>{point.best
@@ -103,8 +114,7 @@
 		{/if}
 	</div>
 	{#if current && query.data}<p class="small subtle">
-			按经过时间计算，包含真实零值；相邻采样间隔最多 {query.data.maxGapSeconds}
-			秒时线性插值，更长缺口切断区间，不补零、不向首尾外推。横轴按对数显示持续时长，关键时长间连线仅辅助阅读。最佳区间时间相对训练开始。
+			{L.power_curve_method({ seconds: query.data.maxGapSeconds })}
 		</p>{/if}
 </section>
 

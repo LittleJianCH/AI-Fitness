@@ -3,12 +3,15 @@ import { developmentServer } from './dev/server.ts';
 import adapter from '@sveltejs/adapter-auto';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
+import { paraglideVitePlugin } from '@inlang/paraglide-js';
+import { paraglideOptions } from './paraglide.config.js';
 
 export default defineConfig(({ mode, command, isPreview }) => ({
 	...(command === 'serve' && !isPreview && mode === 'connected'
 		? { server: developmentServer(process.env) }
 		: {}),
 	plugins: [
+		paraglideVitePlugin(paraglideOptions),
 		...(mode === 'demo' ? [demoPlugin()] : []),
 		sveltekit({
 			compilerOptions: {

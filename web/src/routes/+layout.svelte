@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$lib/paraglide/messages.js';
 	import '../app.css';
 	import { onMount } from 'svelte';
 	import { provideSession } from '$lib/auth/session.svelte';
@@ -9,6 +10,7 @@
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import LanguagePicker from '$lib/components/LanguagePicker.svelte';
 	import ThemePicker from '$lib/components/ThemePicker.svelte';
 	import Icon from '$lib/components/Icon.svelte';
 	import Preferences from '$lib/settings/Preferences.svelte';
@@ -60,50 +62,54 @@
 	}
 </script>
 
-<svelte:head><meta name="description" content="AI Fitness 训练复盘与数据分析" /></svelte:head>
+<svelte:head><meta name="description" content={m.app_description()} /></svelte:head>
 <!-- Same-document focus navigation preserves the current route. -->
 <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
-<a class="skip" href="#main">跳到主要内容</a>
+<a class="skip" href="#main">{m.app_skip()}</a>
 <aside class="sidebar">
-	<a class="brand" href={resolve(`/workouts${suffix}`)} aria-label="AI Fitness 训练"
+	<a class="brand" href={resolve(`/workouts${suffix}`)} aria-label={m.app_brand()}
 		><span class="brand-icon">↗</span><span class="brand-name">AI Fitness</span></a
 	>
-	<span class="workspace-label">训练数据工作区</span>
-	<nav aria-label="主导航">
+	<span class="workspace-label">{m.app_workspace()}</span>
+	<nav aria-label={m.app_navigation()}>
 		<a
 			class:active={page.url.pathname.includes('/workouts')}
 			aria-current={page.url.pathname.includes('/workouts') ? 'page' : undefined}
-			href={resolve(`/workouts${suffix}`)}><Icon /><span>训练</span></a
+			href={resolve(`/workouts${suffix}`)}><Icon /><span>{m.nav_workouts()}</span></a
 		>
 		{#if !demo}<a
 				href={resolve('/training-history')}
 				class:active={page.url.pathname.includes('/training-history')}
 				aria-current={page.url.pathname.includes('/training-history') ? 'page' : undefined}
-				><span>趋势</span></a
+				><span>{m.nav_trends()}</span></a
 			><a
 				class:active={page.url.pathname.includes('/settings')}
 				aria-current={page.url.pathname.includes('/settings') ? 'page' : undefined}
-				href={resolve('/settings')}><Icon kind="settings" /><span>设置</span></a
+				href={resolve('/settings')}><Icon kind="settings" /><span>{m.nav_settings()}</span></a
 			>{/if}
 	</nav>
 	{#if demo}<a class="bottom-link" href={resolve('/demo')}
-			><Icon kind="info" /><span>关于演示</span></a
+			><Icon kind="info" /><span>{m.nav_demo()}</span></a
 		>{/if}
-	<ThemePicker />
+	<ThemePicker /><LanguagePicker />
 </aside>
 <QueryClientProvider {client}>
 	<main class="app-content" id="main">
 		<div class="page">
 			{#if demo}<div class="demo-bar">
 					<span
-						><span class="demo-dot"></span>演示模式
-						<span class="demo-note">· 全部为合成数据</span></span
+						><span class="demo-dot"></span>{m.demo_mode()}
+						<span class="demo-note">{m.demo_synthetic()}</span></span
 					><label
-						>场景 <select value={scenario} onchange={changeScenario} aria-label="演示场景"
-							><option value="normal">正常数据</option><option value="slow">慢速加载</option><option
-								value="empty">空列表</option
-							><option value="error">服务失败</option><option value="invalid">无效响应</option
-							><option value="unauthenticated">会话失效</option></select
+						>{m.demo_scenario()}
+						<select value={scenario} onchange={changeScenario} aria-label={m.demo_select()}
+							><option value="normal">{m.demo_normal()}</option><option value="slow"
+								>{m.demo_slow()}</option
+							><option value="empty">{m.demo_empty()}</option><option value="error"
+								>{m.demo_error()}</option
+							><option value="invalid">{m.demo_invalid()}</option><option value="unauthenticated"
+								>{m.demo_session()}</option
+							></select
 						></label
 					>
 				</div>{/if}
@@ -111,7 +117,7 @@
 					<span class="small subtle">{session.user.username}</span><button
 						class="button"
 						disabled={loggingOut}
-						onclick={logout}>{loggingOut ? '正在退出…' : '退出登录'}</button
+						onclick={logout}>{loggingOut ? m.auth_signing_out() : m.auth_sign_out()}</button
 					>
 				</div>{/if}
 			{#if logoutError && session.user}<p class="form-error" role="alert">
@@ -210,6 +216,8 @@
 	}
 	.demo-bar label {
 		display: flex;
+		flex-wrap: wrap;
+		max-width: 100%;
 		align-items: center;
 		gap: 8px;
 	}

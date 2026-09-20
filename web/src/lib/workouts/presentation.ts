@@ -1,3 +1,5 @@
+import { dayKey, formatLocale, browserTimeZone } from '$lib/i18n/format';
+import { m as L } from '$lib/paraglide/messages.js';
 import type { Workout, WorkoutCard, CommonSummary, MetricKind } from '../api/generated/client';
 
 import type { NumericSample } from './chart-data';
@@ -69,7 +71,7 @@ export function metrics(workout: Workout): Metric[] {
 	const result: Metric[] = [
 		{
 			key: 'power',
-			title: '功率',
+			title: L.metric_power(),
 			unit: 'W',
 			color: '#7350C7',
 			average: s?.summaryPower.averageValue,
@@ -79,7 +81,7 @@ export function metrics(workout: Workout): Metric[] {
 		},
 		{
 			key: 'heart-rate',
-			title: '心率',
+			title: L.metric_heart_rate(),
 			unit: 'bpm',
 			color: '#D43A4A',
 			average: s?.summaryHeartRate.averageValue,
@@ -89,8 +91,8 @@ export function metrics(workout: Workout): Metric[] {
 		},
 		{
 			key: 'cadence',
-			title: sport.type === 'cycling' ? '踏频' : '步频',
-			unit: sport.type === 'cycling' ? 'rpm' : '步/分钟',
+			title: sport.type === 'cycling' ? L.metric_cycling_cadence() : L.metric_running_cadence(),
+			unit: sport.type === 'cycling' ? 'rpm' : L.unit_steps_minute(),
 			color: '#9A6300',
 			average: cadence?.averageValue,
 			maximum: cadence?.maximumValue,
@@ -99,7 +101,7 @@ export function metrics(workout: Workout): Metric[] {
 		},
 		{
 			key: 'speed',
-			title: '速度',
+			title: L.metric_speed(),
 			unit: 'km/h',
 			color: '#1769D2',
 			average: s?.summarySpeed.averageValue,
@@ -109,7 +111,7 @@ export function metrics(workout: Workout): Metric[] {
 		},
 		{
 			key: 'altitude',
-			title: '海拔',
+			title: L.metric_altitude(),
 			unit: 'm',
 			color: '#586B63',
 			average: s?.summaryAltitude.averageValue,
@@ -121,7 +123,7 @@ export function metrics(workout: Workout): Metric[] {
 	result.push(
 		{
 			key: 'grade',
-			title: '坡度',
+			title: L.metric_grade(),
 			unit: '%',
 			color: '#586B63',
 			samples: m.motionGrade,
@@ -131,7 +133,7 @@ export function metrics(workout: Workout): Metric[] {
 		},
 		{
 			key: 'temperature',
-			title: '温度',
+			title: L.metric_temperature(),
 			unit: '°C',
 			color: '#9A6300',
 			samples: m.motionEnvironment.ambientTemperature,
@@ -144,7 +146,7 @@ export function metrics(workout: Workout): Metric[] {
 		result.push(
 			{
 				key: 'step-length',
-				title: '步长',
+				title: L.metric_step_length(),
 				unit: 'm',
 				color: '#1769D2',
 				samples: sport.data.runningDynamics.stepLength,
@@ -152,7 +154,7 @@ export function metrics(workout: Workout): Metric[] {
 			},
 			{
 				key: 'vertical-oscillation',
-				title: '垂直振幅',
+				title: L.metric_vertical_oscillation(),
 				unit: 'cm',
 				color: '#9A6300',
 				samples: sport.data.runningDynamics.verticalOscillation,
@@ -160,7 +162,7 @@ export function metrics(workout: Workout): Metric[] {
 			},
 			{
 				key: 'ground-contact-time',
-				title: '触地时间',
+				title: L.metric_ground_contact(),
 				unit: 'ms',
 				color: '#586B63',
 				samples: sport.data.runningDynamics.groundContactTime,
@@ -220,10 +222,10 @@ export function recordedMetricSummary(
 }
 export const valueText = (value: number | undefined, factor = 1, digits = 0) =>
 	value === undefined
-		? '未记录'
-		: (value * factor).toLocaleString('zh-CN', { maximumFractionDigits: digits });
+		? L.value_not_recorded()
+		: (value * factor).toLocaleString(formatLocale(), { maximumFractionDigits: digits });
 export function duration(seconds: number | undefined) {
-	if (seconds === undefined) return '未记录';
+	if (seconds === undefined) return L.value_not_recorded();
 	const total = Math.floor(seconds),
 		h = Math.floor(total / 3600),
 		m = Math.floor((total % 3600) / 60),
@@ -232,32 +234,42 @@ export function duration(seconds: number | undefined) {
 }
 export function timeSummary(summary: CommonSummary) {
 	if (summary.summaryMovingTime !== undefined)
-		return { label: '移动时长', seconds: summary.summaryMovingTime };
+		return { label: L.label_moving_time(), seconds: summary.summaryMovingTime };
 	if (summary.summaryTimerTime !== undefined)
-		return { label: '计时时长', seconds: summary.summaryTimerTime };
-	return { label: '经过时长', seconds: summary.summaryElapsedTime };
+		return { label: L.label_timer_time(), seconds: summary.summaryTimerTime };
+	return { label: L.label_elapsed_time(), seconds: summary.summaryElapsedTime };
 }
-export const dateText = (value: string) =>
-	new Date(value).toLocaleString('zh-CN', {
+export function dateText(value: string, zone = browserTimeZone(), locale = formatLocale()): string {
+	if (!zone) return '—';
+	return new Intl.DateTimeFormat(locale, {
+		timeZone: zone,
 		year: 'numeric',
 		month: 'long',
 		day: 'numeric',
 		hour: '2-digit',
 		minute: '2-digit',
 		hour12: false
-	});
-export const dayText = (value: string) =>
-	new Date(value).toLocaleDateString('zh-CN', {
+	}).format(new Date(value));
+}
+export function dayText(value: string, zone = browserTimeZone(), locale = formatLocale()): string {
+	if (!zone) return '—';
+	return new Intl.DateTimeFormat(locale, {
+		timeZone: zone,
 		year: 'numeric',
 		month: 'long',
 		day: 'numeric',
 		weekday: 'long'
-	});
+	}).format(new Date(value));
+}
 
-export function groupCards(items: readonly WorkoutCard[]): [string, WorkoutCard[]][] {
+export function groupCards(
+	items: readonly WorkoutCard[],
+	zone = browserTimeZone()
+): [string, WorkoutCard[]][] {
 	const groups = new Map<string, WorkoutCard[]>();
+	if (!zone) return [];
 	for (const item of items) {
-		const key = dayText(item.range.rangeStart);
+		const key = dayKey(item.range.rangeStart, zone);
 		const group = groups.get(key);
 		if (group) group.push(item);
 		else groups.set(key, [item]);

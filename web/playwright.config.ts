@@ -5,6 +5,7 @@ export default defineConfig({
 	workers: 1,
 	reporter: [['list']],
 	use: {
+		locale: 'zh-CN',
 		baseURL: 'http://127.0.0.1:5180',
 		trace: 'retain-on-failure',
 		screenshot: 'only-on-failure'

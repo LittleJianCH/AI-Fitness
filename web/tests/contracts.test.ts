@@ -146,8 +146,8 @@ describe('presentation semantics', () => {
 		expect(metrics(workouts[3]).find((m) => m.key === 'heart-rate')).toBeUndefined();
 		expect(metrics(workouts[2]).find((m) => m.key === 'power')?.samples).toEqual([]);
 		expect(metrics(workouts[0]).find((m) => m.key === 'cadence')?.unit).toBe('rpm');
-		expect(metrics(workouts[1]).find((m) => m.key === 'cadence')?.unit).toBe('步/分钟');
-		expect(timeSummary(common(workouts[0])).label).toBe('计时时长');
+		expect(metrics(workouts[1]).find((m) => m.key === 'cadence')?.unit).toBe('steps/min');
+		expect(timeSummary(common(workouts[0])).label).toBe('Timer time');
 	});
 	it('keeps zeros and irregular timestamps; gaps never become zeros', () => {
 		const points = chartPoints(
@@ -166,7 +166,7 @@ describe('presentation semantics', () => {
 	});
 	it('uses explicit empty values and validates URL scenario input', () => {
 		expect(duration(0)).toBe('00:00:00');
-		expect(duration(undefined)).toBe('未记录');
+		expect(duration(undefined)).toBe('Not recorded');
 		expect(readScenario('unknown')).toBe('normal');
 	});
 });

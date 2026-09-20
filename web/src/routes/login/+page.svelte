@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { m } from '$lib/paraglide/messages.js';
+	import { protectUnsavedChanges } from '$lib/i18n/guard.svelte';
 	import { browser } from '$app/environment';
 	import { createQuery } from '@tanstack/svelte-query';
 	import { useSession } from '$lib/auth/session.svelte';
@@ -26,6 +28,11 @@
 	let busy = $state(false);
 	let error = $state<Error | null>(null);
 	let notice = $state('');
+	protectUnsavedChanges(
+		() => !session.user && (!!username || !!password),
+		() => m.discard_login(),
+		() => busy
+	);
 	async function submit(event: SubmitEvent) {
 		event.preventDefault();
 		if (busy || demo) return;
@@ -34,7 +41,7 @@
 		const input = { username, password };
 		const parsed = (registering ? postAuthRegisterBody : postAuthWebLoginBody).safeParse(input);
 		if (!parsed.success || !username || !password) {
-			notice = '请填写用户名和密码。';
+			notice = m.auth_required();
 			return;
 		}
 		if (registering && policy.data) {
@@ -43,7 +50,10 @@
 				length < policy.data.minimumPasswordLength ||
 				length > policy.data.maximumPasswordLength
 			) {
-				notice = `密码需要 ${policy.data.minimumPasswordLength}–${policy.data.maximumPasswordLength} 个字符。`;
+				notice = m.auth_password_length({
+					minimum: policy.data.minimumPasswordLength,
+					maximum: policy.data.maximumPasswordLength
+				});
 				return;
 			}
 		}
@@ -53,7 +63,7 @@
 				await session.register(input);
 				registering = false;
 				password = '';
-				notice = '账号已创建，请登录。';
+				notice = m.auth_created();
 			} else {
 				await session.login(input);
 				password = '';
@@ -71,17 +81,19 @@
 	}
 </script>
 
-<svelte:head><title>{registering ? '注册' : '登录'} · AI Fitness</title></svelte:head>
+<svelte:head
+	><title>{registering ? m.auth_register() : m.auth_login()} · AI Fitness</title></svelte:head
+>
 <div class="auth-page">
-	{#if demo}<div class="status">登录需要使用真实接入模式，演示模式仅供查看。</div>{:else}
+	{#if demo}<div class="status">{m.auth_demo()}</div>{:else}
 		<div>
-			<div class="eyebrow">YOUR TRAINING SPACE</div>
-			<h1>{registering ? '创建你的账号' : '欢迎回来'}</h1>
-			<p class="subtle">登录后，继续回看每一次训练。</p>
+			<div class="eyebrow">{m.auth_eyebrow()}</div>
+			<h1>{registering ? m.auth_create_heading() : m.auth_welcome()}</h1>
+			<p class="subtle">{m.auth_intro()}</p>
 		</div>
 		<form class="surface form-stack" onsubmit={submit}>
 			<label
-				>用户名<input
+				>{m.auth_username()}<input
 					name="username"
 					autocomplete="username"
 					bind:value={username}
@@ -90,10 +102,10 @@
 				/></label
 			>
 			{#if registering}<p class="small subtle">
-					使用 3–64 位英文字母、数字或 _ . -，区分大小写。
+					{m.auth_username_hint()}
 				</p>{/if}
 			<label
-				>密码<input
+				>{m.auth_password()}<input
 					name="password"
 					type="password"
 					autocomplete={registering ? 'new-password' : 'current-password'}
@@ -103,14 +115,17 @@
 				/></label
 			>
 			{#if registering && policy.data}<p class="small subtle">
-					密码需要 {policy.data.minimumPasswordLength}–{policy.data.maximumPasswordLength} 个字符。
+					{m.auth_password_length({
+						minimum: policy.data.minimumPasswordLength,
+						maximum: policy.data.maximumPasswordLength
+					})}
 				</p>{/if}
 			{#if notice}<p role="status">{notice}</p>{/if}
 			{#if error}<p class="form-error" role="alert">{errorText(error)}</p>{/if}
 			<button
 				class="button primary"
 				disabled={busy || (registering && policy.data?.registration !== 'openRegistration')}
-				>{busy ? '正在处理…' : registering ? '创建账号' : '登录'}</button
+				>{busy ? m.auth_working() : registering ? m.auth_create() : m.auth_login()}</button
 			>
 			{#if policy.data?.registration === 'openRegistration'}<button
 					class="button"
@@ -121,9 +136,9 @@
 						error = null;
 						notice = '';
 						password = '';
-					}}>{registering ? '已有账号，返回登录' : '注册新账号'}</button
+					}}>{registering ? m.auth_back_login() : m.auth_new_account()}</button
 				>
-			{:else if policy.data}<p class="small subtle">当前仅开放已有账号登录。</p>{/if}
+			{:else if policy.data}<p class="small subtle">{m.auth_existing_only()}</p>{/if}
 		</form>
 		{#if policy.isError}<Feedback error={policy.error} retry={() => policy.refetch()} />{/if}
 	{/if}

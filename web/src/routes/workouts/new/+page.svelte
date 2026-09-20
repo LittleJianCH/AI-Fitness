@@ -1,7 +1,10 @@
 <script lang="ts">
+	import { m as L } from '$lib/paraglide/messages.js';
+	import { m } from '$lib/paraglide/messages.js';
+	import { protectUnsavedChanges } from '$lib/i18n/guard.svelte';
 	import { onDestroy } from 'svelte';
 	import { navigating } from '$app/state';
-	import { goto, beforeNavigate } from '$app/navigation';
+	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { useQueryClient } from '@tanstack/svelte-query';
 	import { useSession } from '$lib/auth/session.svelte';
@@ -34,14 +37,11 @@
 		active = false;
 	});
 	const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-	beforeNavigate((navigation) => {
-		if (
-			dirty &&
-			(navigation.type === 'leave' ||
-				!window.confirm('这条训练尚未确认保存，离开会丢失当前填写内容。确定离开？'))
-		)
-			navigation.cancel();
-	});
+	protectUnsavedChanges(
+		() => dirty,
+		() => m.discard_workout(),
+		() => busy
+	);
 	async function submit(event: SubmitEvent) {
 		event.preventDefault();
 		if (busy || demo) return;
@@ -49,25 +49,28 @@
 		validation = '';
 		if (!attempt) {
 			tagInput?.flush();
-			const parsed = manualDraftSchema.safeParse({
-				sport,
-				start,
-				minutes,
-				seconds,
-				distanceKm,
-				title,
-				notes,
-				tags
-			});
+			const parsed = manualDraftSchema.safeParse(
+				{
+					sport,
+					start,
+					minutes,
+					seconds,
+					distanceKm,
+					title,
+					notes,
+					tags
+				},
+				{ error: () => L.manual_check_fields() }
+			);
 			if (!parsed.success) {
-				validation = parsed.error.issues[0]?.message ?? '请检查填写内容。';
+				validation = parsed.error.issues[0]?.message ?? L.manual_check_fields();
 				return;
 			}
 			try {
 				attempt = buildManualWorkout(parsed.data, crypto.randomUUID());
 				uncertain = false;
 			} catch {
-				validation = '请检查时间、时长和距离是否有效。';
+				validation = L.manual_check_values();
 				return;
 			}
 		}
@@ -101,39 +104,50 @@
 	}
 </script>
 
-<svelte:head><title>手动录入 · AI Fitness</title></svelte:head>
-<nav class="breadcrumb" aria-label="面包屑">
-	<a href={resolve('/workouts')}>训练</a><span>/</span><span>手动录入</span>
+<svelte:head><title>{L.page_manual_title()}</title></svelte:head>
+<nav class="breadcrumb" aria-label={L.navigation_breadcrumb()}>
+	<a href={resolve('/workouts')}>{L.navigation_workouts()}</a><span>/</span><span
+		>{L.action_manual_workout()}</span
+	>
 </nav>
 <header class="page-heading">
 	<div>
-		<div class="eyebrow">MANUAL WORKOUT</div>
-		<h1>记录一次训练</h1>
-		<p class="subtle">填写时间与距离，保存这次骑行或跑步。</p>
+		<div class="eyebrow">{L.eyebrow_manual_workout()}</div>
+		<h1>{L.manual_heading()}</h1>
+		<p class="subtle">{L.manual_intro()}</p>
 	</div>
 </header>
-{#if demo}<div class="status">手动录入需要登录真实账号，演示模式仅供查看。</div>
+{#if demo}<div class="status">{L.manual_demo()}</div>
 {:else}<form
 		class="surface manual-form form-stack"
 		onsubmit={submit}
 		oninput={() => (dirty = true)}
 	>
 		<fieldset disabled={busy || attempt !== null}>
-			<legend>训练内容</legend>
+			<legend>{L.manual_content()}</legend>
 			<div class="form-stack">
 				<div class="form-grid">
 					<label
-						>运动类型<select bind:value={sport}
-							><option value="cycling">骑行</option><option value="running">跑步</option></select
+						>{L.label_sport()}<select bind:value={sport}
+							><option value="cycling">{L.sport_cycling()}</option><option value="running"
+								>{L.sport_running()}</option
+							></select
 						></label
-					><label>标题（可选）<input bind:value={title} /></label>
+					><label>{L.workout_optional_title()}<input bind:value={title} /></label>
 				</div>
-				<label>开始时间<input type="datetime-local" step="1" required bind:value={start} /></label>
-				<p class="small subtle">使用本地时区：{timezone}</p>
+				<label
+					>{L.label_start_time()}<input
+						type="datetime-local"
+						step="1"
+						required
+						bind:value={start}
+					/></label
+				>
+				<p class="small subtle">{L.label_local_zone({ zone: timezone })}</p>
 				<div>
 					<div class="form-grid">
 						<label
-							>经过时长（分钟）<input
+							>{L.manual_minutes()}<input
 								type="number"
 								min="0"
 								step="1"
@@ -141,7 +155,7 @@
 								bind:value={minutes}
 							/></label
 						><label
-							>秒（可选）<input
+							>{L.manual_seconds()}<input
 								type="number"
 								min="0"
 								max="59"
@@ -150,24 +164,29 @@
 							/></label
 						>
 					</div>
-					<p class="small subtle">经过时长包括暂停时间。</p>
+					<p class="small subtle">{L.manual_elapsed_note()}</p>
 				</div>
 				<label
-					>距离（km，可选）<input type="number" min="0" step="any" bind:value={distanceKm} /></label
+					>{L.manual_distance()}<input
+						type="number"
+						min="0"
+						step="any"
+						bind:value={distanceKm}
+					/></label
 				>
-				<label>备注（可选）<textarea bind:value={notes}></textarea></label>
+				<label>{L.workout_optional_notes()}<textarea bind:value={notes}></textarea></label>
 				<TagsInput bind:tags bind:this={tagInput} />
 			</div>
 		</fieldset>
 		{#if validation}<p class="form-error" role="alert">{validation}</p>{/if}
 		{#if error}<p class="form-error" role="alert">{errorText(error)}</p>{/if}
 		{#if attempt && !busy}<p role="status">
-				保存结果尚未确认。重试会核对同一次提交；刷新或离开前，请先确认列表中是否已有这条记录。
+				{L.manual_uncertain()}
 			</p>{/if}
 		<div class="form-actions">
 			<button class="button primary" disabled={busy}
-				>{busy ? '正在保存…' : attempt ? '重试保存' : '保存训练'}</button
-			><a class="button" href={resolve('/workouts')}>返回训练</a>
+				>{busy ? L.action_saving() : attempt ? L.manual_retry() : L.manual_save()}</button
+			><a class="button" href={resolve('/workouts')}>{L.action_back_workouts()}</a>
 		</div>
 	</form>{/if}
 

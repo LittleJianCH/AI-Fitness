@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m as L } from '$lib/paraglide/messages.js';
 	import { metricValueText } from '$lib/analysis/presentation';
 	import { sampleAt } from '$lib/workouts/timeline';
 	import { nearestIndex } from '$lib/workouts/chart-data';
@@ -50,7 +51,11 @@
 				const stats = analysis.data?.analysisMetrics.find(
 					(m) => m.metricKind === metricKinds[metric.key]
 				)?.metricStatistics;
-				return { ...metric, average: stats?.averageValue, maximum: stats?.maximumValue };
+				return {
+					...metric,
+					average: stats?.averageValue ?? metric.average,
+					maximum: stats?.maximumValue ?? metric.maximum
+				};
 			})
 			.sort((a, b) => order.indexOf(a.key) - order.indexOf(b.key))
 	);
@@ -143,61 +148,67 @@
 </script>
 
 <svelte:window onkeydown={release} />
-<div class="series-caption"><span>时间序列</span><span>横轴：经过时间</span></div>
+<div class="series-caption">
+	<span>{L.chart_time_series()}</span><span>{L.chart_elapsed_axis()}</span>
+</div>
 <div class="review-grid" class:has-route={positions.length > 0}>
 	{#if positions.length}<aside class="surface route-card">
 			<div class="review-heading">
-				<h2>轨迹</h2>
-				<span class="small subtle">点击放大 ↗</span>
+				<h2>{L.route_title()}</h2>
+				<span class="small subtle">{L.action_expand()}</span>
 			</div>
-			<button class="map-open" onclick={openRoute} aria-label="放大轨迹地图"
+			<button class="map-open" onclick={openRoute} aria-label={L.route_expand()}
 				><RoutePlot samples={positions} selected={positionIndex} /></button
 			>
-			<p class="small subtle">轨迹示意 · 无地图底图</p>
+			<p class="small subtle">{L.route_no_basemap()}</p>
 			<div class="route-position">
 				<strong>{duration(selectedSeconds)}</strong><span
-					>累计 {valueText(sampleAt(motion(workout).motionDistance, selectedTime)?.value, 0.001, 1)} km</span
+					>{L.point_cumulative({
+						distance: `${valueText(sampleAt(motion(workout).motionDistance, selectedTime)?.value, 0.001, 1)} km`
+					})}</span
 				>
 			</div>
 			<p class="small subtle">
-				{positionIndex >= 0 ? '标记与图表时间点同步' : '此时间点未记录位置'}
+				{positionIndex >= 0 ? L.route_synced() : L.route_point_missing()}
 			</p>
 			<a
 				data-return-focus="route"
 				use:restoreFocus
-				href={resolve(`/workouts/[id]/route${suffix}`, { id: workout.workoutId })}>查看完整轨迹 →</a
+				href={resolve(`/workouts/[id]/route${suffix}`, { id: workout.workoutId })}
+				>{L.route_view_full()}</a
 			>
 		</aside>{/if}
-	<section class="surface linked-panel" aria-label="联动训练图表">
+	<section class="surface linked-panel" aria-label={L.chart_linked_region()}>
 		<div class="review-heading">
 			<div>
-				<h2>同一时刻，一起看</h2>
-				<p>移动查看 · 点击图表放大 · Esc 解除固定</p>
+				<h2>{L.chart_linked_heading()}</h2>
+				<p>{L.chart_interaction_hint()}</p>
 			</div>
 			<div class="zoom-actions">
 				<button
 					class="button"
-					aria-label="缩小时间范围"
+					aria-label={L.chart_zoom_in()}
 					disabled={zoom === 1}
 					onclick={() => changeZoom(zoom / 2)}>−</button
 				><button
 					class="button"
-					aria-label="放大时间范围"
+					aria-label={L.chart_zoom_out()}
 					disabled={zoom === 16}
 					onclick={() => changeZoom(zoom * 2)}>＋</button
-				><button class="button" onclick={() => changeZoom(1)}>全程</button>
+				><button class="button" onclick={() => changeZoom(1)}>{L.chart_full_range()}</button>
 			</div>
 		</div>
 		{#if selectedTime}<div class="time-controls">
-				<label for="review-time">经过时间 <strong>{duration(selectedSeconds)}</strong></label
+				<label for="review-time"
+					>{L.label_elapsed()} <strong>{duration(selectedSeconds)}</strong></label
 				><button
 					class="button"
-					aria-label="上一个时间点"
+					aria-label={L.point_previous()}
 					onclick={() => step(-1)}
 					disabled={index === 0}>←</button
 				><input
 					id="review-time"
-					aria-label="选择时间点"
+					aria-label={L.point_choose()}
 					type="range"
 					min="0"
 					max={times.length - 1}
@@ -210,11 +221,11 @@
 					aria-valuetext={duration(selectedSeconds)}
 				/><button
 					class="button"
-					aria-label="下一个时间点"
+					aria-label={L.point_next()}
 					onclick={() => step(1)}
 					disabled={index === times.length - 1}>→</button
 				><button class="button" onclick={() => (pinned = !pinned)} aria-pressed={pinned}
-					>{pinned ? '解除固定' : '固定时间点'}</button
+					>{pinned ? L.point_unpin() : L.point_pin()}</button
 				>
 			</div>
 			<div class="mobile-details">
@@ -228,7 +239,7 @@
 			class="linked-plots"
 			onpointerleave={() => (tip = false)}
 			role="group"
-			aria-label="按时间对齐的指标"
+			aria-label={L.chart_aligned_metrics()}
 			onpointermove={move}
 		>
 			{#each items as metric (metric.key)}
@@ -238,20 +249,20 @@
 					metric.average ?? metric.maximum ?? recorded.averageValue ?? recorded.maximumValue}
 				{@const statisticLabel =
 					metric.average !== undefined
-						? '计算平均'
+						? L.stat_calculated_average()
 						: metric.maximum !== undefined
-							? '计算最大'
+							? L.stat_calculated_maximum()
 							: recorded.averageValue !== undefined
-								? '记录平均'
+								? L.stat_recorded_average()
 								: recorded.maximumValue !== undefined
-									? '记录最大'
-									: '统计暂不可用'}
+									? L.stat_recorded_maximum()
+									: L.stat_unavailable()}
 				<button
 					class="metric-open"
 					data-return-focus={`metric-${metric.key}`}
 					use:restoreFocus
 					onclick={() => (opened = metric.key)}
-					aria-label={`放大${metric.title}图表`}
+					aria-label={L.metric_expand({ metric: metric.title })}
 				>
 					<div class="metric-heading">
 						<h3>{metric.title}</h3>
@@ -264,12 +275,14 @@
 								{metric.unit} ·
 							{/if}{statisticLabel}</span
 						><strong class="current"
-							>此刻 {metricValueText(
-								sample?.value,
-								metricKinds[metric.key],
-								metric.key === 'speed' ? 1 : 0
-							)}
-							{sample ? metric.unit : ''}</strong
+							>{L.metric_current_value({
+								value: metricValueText(
+									sample?.value,
+									metricKinds[metric.key],
+									metric.key === 'speed' ? 1 : 0
+								),
+								unit: sample ? metric.unit : ''
+							})}</strong
 						>
 					</div>
 					{#if metric.samples.length}<TimeChart
@@ -281,9 +294,9 @@
 							compact
 							viewStart={windowStart}
 							viewEnd={windowEnd}
-						/>{:else}<p class="subtle">仅记录汇总 · 无逐点曲线</p>{/if}
+						/>{:else}<p class="subtle">{L.metric_recorded_only()}</p>{/if}
 				</button>
-			{:else}<p class="subtle">这条训练缺少逐点采样，暂时无法计算指标平均值或最大值。</p>{/each}
+			{:else}<p class="subtle">{L.metric_missing_samples()}</p>{/each}
 			{#if selectedTime && cursorVisible}<div
 					class="linked-guide"
 					style:left={`${cursorX}px`}
@@ -297,48 +310,54 @@
 					<TimePointDetails {workout} time={selectedTime} {pinned} />
 				</div>{/if}
 		</div>
-		<p class="chart-foot">横轴：经过时间（时:分:秒）。缺失样本保留断线，不补零。</p>
+		<p class="chart-foot">{L.chart_gap_note()}</p>
 	</section>
 	<section class="surface training-summary">
-		<h2>训练摘要</h2>
+		<h2>{L.workout_summary()}</h2>
 		<dl>
 			<div>
-				<dt>运动类型</dt>
+				<dt>{L.label_sport()}</dt>
 				<dd>
-					{workout.workoutObservation.observationSport.type === 'cycling' ? '骑行' : '跑步'}
+					{workout.workoutObservation.observationSport.type === 'cycling'
+						? L.sport_cycling()
+						: L.sport_running()}
 				</dd>
 			</div>
 			<div>
-				<dt>平均速度 · 记录</dt>
+				<dt>{L.stat_recorded_speed()}</dt>
 				<dd>{valueText(common(workout).summarySpeed.averageValue, 3.6, 1)} km/h</dd>
 			</div>
 			<div>
-				<dt>数据来源</dt>
-				<dd>{import.meta.env.MODE === 'demo' ? '合成训练' : '训练记录'}</dd>
+				<dt>{L.data_source()}</dt>
+				<dd>
+					{import.meta.env.MODE === 'demo' ? L.data_synthetic_workout() : L.data_workout_record()}
+				</dd>
 			</div>
 		</dl>
-		<h3>我的备注</h3>
-		<p class="notes">{workout.workoutUserData.workoutNotes ?? '暂无备注'}</p>
+		<h3>{L.workout_notes()}</h3>
+		<p class="notes">{workout.workoutUserData.workoutNotes ?? L.workout_notes_empty()}</p>
 		<div class="tags">
 			{#each workout.workoutUserData.workoutTags as tag, i (i)}<span class="tag">{tag}</span>{/each}
 		</div>
 	</section>
 </div>
 {#if opened === 'route'}
-	<DetailDialog title="轨迹详情" onclose={() => (opened = null)}>
+	<DetailDialog title={L.route_details()} onclose={() => (opened = null)}>
 		<div class="route-modal-grid">
 			<div>
 				<RoutePlot samples={positions} selected={routeIndex} onSelect={(i) => (routeIndex = i)} />
-				<p class="small subtle">点击路线选择样本</p>
+				<p class="small subtle">{L.route_select_sample()}</p>
 			</div>
 			<TimePointDetails {workout} time={positions[routeIndex]?.timestamp} pinned />
 		</div>
-		<p class="subtle">轨迹示意 · 无地图底图</p>
+		<p class="subtle">{L.route_no_basemap()}</p>
 		<p>
-			{duration((Date.parse(positions[routeIndex].timestamp) - startTime) / 1000)} · 经过时间
+			{L.point_elapsed_value({
+				time: duration((Date.parse(positions[routeIndex].timestamp) - startTime) / 1000)
+			})}
 		</p>
 		<label
-			>选择轨迹样本<input
+			>{L.route_sample_picker()}<input
 				type="range"
 				min="0"
 				max={positions.length - 1}
@@ -347,14 +366,17 @@
 		>
 	</DetailDialog>
 {:else if selectedMetric}
-	<DetailDialog title={`${selectedMetric.title}详情`} onclose={() => (opened = null)}>
+	<DetailDialog
+		title={L.metric_details_title({ metric: selectedMetric.title })}
+		onclose={() => (opened = null)}
+	>
 		<MetricAnalysis {workout} metric={selectedMetric} initialTime={selectedTime} embedded />
 		<a
 			data-return-focus={`metric-${selectedMetric.key}`}
 			href={resolve(`/workouts/[id]/metrics/[metric]${suffix}`, {
 				id: workout.workoutId,
 				metric: selectedMetric.key
-			})}>独立页面查看</a
+			})}>{L.action_standalone_page()}</a
 		>
 	</DetailDialog>
 {/if}

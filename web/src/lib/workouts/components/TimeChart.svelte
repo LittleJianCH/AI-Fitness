@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { formatNumber } from '$lib/i18n/format';
 	import { onMount } from 'svelte';
 	import { init, use, type EChartsType } from 'echarts/core';
 	import { LineChart } from 'echarts/charts';
@@ -6,6 +7,7 @@
 	import { SVGRenderer } from 'echarts/renderers';
 	import {
 		chartPoints,
+		coordinateIndex,
 		nearestIndex,
 		nearestCoordinateIndex,
 		sampleTimes
@@ -40,6 +42,12 @@
 		onSelect?: (index: number) => void;
 	} = $props();
 	const timestamps = $derived(sampleTimes(metric.samples));
+	const distanceIndex = $derived(
+		coordinateIndex(
+			distanceCoordinates ?? [],
+			metric.samples.map((sample) => sample.value * metric.factor)
+		)
+	);
 	const points = $derived(
 		chartPoints(metric.samples, start, metric.factor, maxGapSeconds, distanceCoordinates)
 	);
@@ -94,7 +102,24 @@
 			if (!Array.isArray(position) || typeof position[0] !== 'number') return;
 			const seconds = position[0];
 			if (distanceCoordinates) {
-				const index = nearestCoordinateIndex(distanceCoordinates, seconds);
+				const next: unknown = instance.convertFromPixel('grid', [
+					event.offsetX + 1,
+					event.offsetY + 1
+				]);
+				if (
+					!Array.isArray(next) ||
+					typeof position[1] !== 'number' ||
+					typeof next[0] !== 'number' ||
+					typeof next[1] !== 'number'
+				)
+					return;
+				const index = nearestCoordinateIndex(
+					distanceIndex,
+					seconds,
+					position[1],
+					Math.abs(next[0] - seconds) || 1,
+					Math.abs(next[1] - position[1]) || 1
+				);
 				if (index !== undefined) onSelect(index);
 			} else if (timestamps.length) onSelect(nearestIndex(timestamps, startTime + seconds * 1000));
 		};
@@ -143,7 +168,8 @@
 					splitNumber: compact ? 3 : 5,
 					show: !preview,
 					axisLabel: {
-						formatter: (v: number) => (distanceCoordinates ? `${v.toFixed(1)} km` : duration(v)),
+						formatter: (v: number) =>
+							distanceCoordinates ? `${formatNumber(v, 1)} km` : duration(v),
 						alignMinLabel: 'left',
 						alignMaxLabel: 'right',
 						hideOverlap: true,

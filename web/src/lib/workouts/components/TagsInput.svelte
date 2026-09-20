@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m as L } from '$lib/paraglide/messages.js';
 	let {
 		tags = $bindable(),
 		pending = $bindable(''),
@@ -13,10 +14,10 @@
 
 <div class="tag-editor">
 	<label
-		>添加标签<input
+		>{L.tags_add()}<input
 			bind:value={pending}
 			{disabled}
-			placeholder="例如：通勤、轻松跑"
+			placeholder={L.tags_placeholder()}
 			onkeydown={(event) => {
 				if (event.key === 'Enter' && !event.isComposing && event.keyCode !== 229) {
 					event.preventDefault();
@@ -25,14 +26,14 @@
 			}}
 		/></label
 	>
-	<button type="button" class="button" {disabled} onclick={flush}>添加标签</button>
+	<button type="button" class="button" {disabled} onclick={flush}>{L.tags_add()}</button>
 </div>
-{#if tags.length}<ul class="editable-tags" aria-label="已选标签">
+{#if tags.length}<ul class="editable-tags" aria-label={L.tags_selected()}>
 		{#each tags as tag, index (index)}<li>
 				<span>{tag}</span><button
 					type="button"
 					{disabled}
-					aria-label={`移除标签 ${tag}`}
+					aria-label={L.tag_remove({ tag })}
 					onclick={() => (tags = tags.filter((_, i) => i !== index))}>×</button
 				>
 			</li>{/each}

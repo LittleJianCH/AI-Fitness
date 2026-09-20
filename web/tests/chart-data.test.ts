@@ -1,6 +1,7 @@
 import { expect, it } from 'vitest';
 import {
 	chartPoints,
+	coordinateIndex,
 	distanceCoordinates,
 	nearestCoordinateIndex,
 	nearestIndex,
@@ -53,9 +54,11 @@ it('breaks distance plots at unaligned samples, time gaps and distance resets wh
 		[3, null],
 		[3, 0]
 	]);
-	expect(nearestCoordinateIndex([undefined, 3, 1, 1, 4], 1)).toBe(2);
-	expect(nearestCoordinateIndex([undefined, 3, 1], 2)).toBe(1);
-	expect(nearestCoordinateIndex([undefined], 2)).toBeUndefined();
+	expect(
+		nearestCoordinateIndex(coordinateIndex([undefined, 3, 1, 1, 4], [0, 0, 0, 0, 0]), 1, 0)
+	).toBe(2);
+	expect(nearestCoordinateIndex(coordinateIndex([undefined, 3, 1], [0, 0, 0]), 2, 0)).toBe(1);
+	expect(nearestCoordinateIndex([], 2, 0)).toBeUndefined();
 });
 
 it('keeps nearest-sample lookup logarithmic for long activities', () => {
@@ -88,4 +91,26 @@ it('prepares numeric times and display gaps without changing recorded samples', 
 		[240.999, null],
 		[241, 14.4]
 	]);
+});
+
+it('selects both sides of a distance reset using pointer height without scanning the full stream', () => {
+	const points = coordinateIndex([0, 1, 2, 0, 1, 2], [10, 20, 30, 40, 50, 60]);
+	expect(nearestCoordinateIndex(points, 1, 20)).toBe(1);
+	expect(nearestCoordinateIndex(points, 1, 50)).toBe(4);
+	expect(nearestCoordinateIndex(points, 1.01, 50, 0.01, 1)).toBe(4);
+	let reads = 0;
+	const long = new Proxy(
+		coordinateIndex(
+			Array.from({ length: 20000 }, (_, i) => i),
+			Array(20000).fill(0)
+		),
+		{
+			get(target, key, receiver) {
+				if (typeof key === 'string' && /^\d+$/.test(key)) reads++;
+				return Reflect.get(target, key, receiver);
+			}
+		}
+	);
+	expect(nearestCoordinateIndex(long, 15000, 0)).toBe(15000);
+	expect(reads).toBeLessThan(60);
 });

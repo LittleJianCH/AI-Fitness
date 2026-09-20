@@ -1,3 +1,4 @@
+import { m } from '$lib/paraglide/messages.js';
 import { z } from 'zod';
 import { getWorkoutsDefaultResponse } from './generated/schemas';
 import type { FieldError } from './generated/client';
@@ -7,7 +8,8 @@ export class ApiError extends Error {
 		public code: string,
 		public status = 0,
 		public fields: FieldError[] = [],
-		public retryAfter?: number
+		public retryAfter?: number,
+		public requestId?: string
 	) {
 		super(code);
 		this.name = 'ApiError';
@@ -34,7 +36,8 @@ export async function request<T>(
 				problem.success ? problem.data.code : 'invalid_response',
 				response.status,
 				problem.success ? problem.data.fields : [],
-				seconds !== undefined && Number.isSafeInteger(seconds) ? seconds : undefined
+				seconds !== undefined && Number.isSafeInteger(seconds) ? seconds : undefined,
+				problem.success ? problem.data.requestId : undefined
 			);
 		}
 		const result = schema.safeParse(status === 204 ? undefined : response.data);
@@ -47,57 +50,58 @@ export async function request<T>(
 	}
 }
 export function errorText(error: Error | null): string {
-	const code = error instanceof ApiError ? error.code : 'network_error';
+	if (error?.name === 'AbortError') return m.error_cancelled();
+	const code = error instanceof ApiError ? error.code : 'unknown_error';
 	switch (code) {
 		case 'not_found':
-			return '没有找到这条记录，可能已被删除。';
+			return m.error_not_found();
 		case 'unauthenticated':
-			return import.meta.env.MODE === 'demo'
-				? '当前会话不可用，请重新登录。演示模式可切回正常场景继续体验。'
-				: '登录已失效，请重新登录。';
+			return import.meta.env.MODE === 'demo' ? m.error_demo_session() : m.error_session();
 		case 'invalid_current_password':
-			return '当前密码不正确，请重试。';
+			return m.error_current_password();
 		case 'invalid_credentials':
-			return '用户名或密码不正确，请重试。';
+			return m.error_credentials();
 		case 'registration_closed':
-			return '当前暂停注册，请使用已有账号登录。';
+			return m.error_registration_closed();
 		case 'registration_conflict':
-			return '这个用户名无法注册，请尝试其他用户名。';
+			return m.error_registration_conflict();
 		case 'session_conflict':
-			return '会话状态已变化，请重试。';
+			return m.error_session_conflict();
 		case 'csrf_failed':
-			return '会话校验未通过，请重试；如果仍然失败，请重新登录。';
+			return m.error_csrf();
 		case 'forbidden':
-			return '当前账号无法执行这个操作。';
+			return m.error_forbidden();
 		case 'analysis_revision_conflict':
-			return '训练已更新，请刷新后查看对应版本的分析。';
+			return m.error_analysis_revision();
 		case 'analysis_too_large':
-			return '这段历史的数据量超过处理上限，请缩短日期范围后重试。';
+			return m.error_analysis_large();
 		case 'analysis_unavailable':
-			return '当前历史数据暂时无法完成分析，请检查记录与个人参数。';
+			return m.error_analysis_unavailable();
 		case 'revision_conflict':
-			return '这条训练已被更新，请重新加载最新版本后再修改。';
+			return m.error_revision();
 		case 'submission_conflict':
-			return '本次提交的内容已发生变化，请确认已保存的记录。';
+			return m.error_submission();
 		case 'reconciliation_required':
-			return '当前仅支持删除手动录入的训练，这条记录暂时无法删除。';
+			return m.error_delete_imported();
 		case 'invalid_cursor':
-			return '列表状态已变化，请从第一页重新加载。';
+			return m.error_cursor();
 		case 'validation_failed':
-			return '请检查填写内容，服务器未接受本次保存。';
+			return m.error_validation();
 		case 'invalid_query':
-			return '请检查筛选条件和日期范围。';
+			return m.error_query();
 		case 'rate_limited':
 			return error instanceof ApiError && error.retryAfter
-				? `操作过于频繁，请等待 ${error.retryAfter} 秒后重试。`
-				: '操作过于频繁，请稍后重试。';
+				? m.error_rate_wait({ seconds: error.retryAfter })
+				: m.error_rate_limited();
 		case 'payload_too_large':
-			return '文件超过服务器允许的大小，请选择较小的 FIT 文件。';
+			return m.error_upload_large();
 		case 'invalid_response':
-			return '收到的数据不符合接口约定，暂时无法展示。';
+			return m.error_response();
 		case 'internal_error':
-			return '服务暂时无法完成请求，请稍后重试。';
+			return m.error_server();
+		case 'network_error':
+			return m.error_network();
 		default:
-			return '连接失败，请检查网络后重试。';
+			return m.error_unknown();
 	}
 }

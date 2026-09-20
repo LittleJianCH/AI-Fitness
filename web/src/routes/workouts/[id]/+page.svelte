@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m as L } from '$lib/paraglide/messages.js';
 	import { page } from '$app/state';
 	import { createFocusSnapshot } from '$lib/focus-snapshot.svelte';
 	import { resolve } from '$app/paths';
@@ -23,7 +24,7 @@
 	);
 </script>
 
-<svelte:head><title>训练详情 · AI Fitness</title></svelte:head>
+<svelte:head><title>{L.page_workout_title()}</title></svelte:head>
 
 <div>
 	<WorkoutGate {id} {scenario}>
@@ -32,26 +33,28 @@
 			<div class="workspace">
 				<div class="recent-column"><RecentWorkouts {id} {scenario} /></div>
 				<div class="workout-content">
-					<nav class="breadcrumb" aria-label="面包屑">
-						<a href={resolve(`/workouts${suffix}`)}><Icon kind="back" size={16} /> 训练</a><span
-							>/</span
-						><span>训练详情</span>
+					<nav class="breadcrumb" aria-label={L.navigation_breadcrumb()}>
+						<a href={resolve(`/workouts${suffix}`)}
+							><Icon kind="back" size={16} /> {L.navigation_workouts()}</a
+						><span>/</span><span>{L.workout_details()}</span>
 					</nav>
 					<header class="page-heading">
 						<div>
-							<h1>{workout.workoutUserData.workoutTitle ?? '未命名训练'}</h1>
+							<h1>{workout.workoutUserData.workoutTitle ?? L.workout_untitled()}</h1>
 							<p class="subtle">
-								{dateText(workout.workoutObservation.observationRange.rangeStart)} · 本地时区
+								{L.label_local_time({
+									time: dateText(workout.workoutObservation.observationRange.rangeStart)
+								})}
 							</p>
 						</div>
-						{#if demo}<span class="tag">合成训练</span>{:else}<a
+						{#if demo}<span class="tag">{L.data_synthetic_workout()}</span>{:else}<a
 								class="button"
-								href={resolve('/workouts/[id]/edit', { id })}>编辑训练</a
+								href={resolve('/workouts/[id]/edit', { id })}>{L.workout_edit()}</a
 							>{/if}
 					</header>
 					<div class="summary-strip">
 						<div>
-							<div class="summary-label">距离</div>
+							<div class="summary-label">{L.label_distance()}</div>
 							<div class="summary-number">
 								{valueText(summary.summaryDistance, 0.001, 1)}<small>km</small>
 							</div>
@@ -61,17 +64,17 @@
 							<div class="summary-number">{duration(timing.seconds)}</div>
 						</div>
 						<div>
-							<div class="summary-label">累计爬升</div>
+							<div class="summary-label">{L.label_ascent()}</div>
 							<div class="summary-number">{valueText(summary.summaryAscent)}<small>m</small></div>
 						</div>
 						<div>
-							<div class="summary-label">平均功率 · 记录</div>
+							<div class="summary-label">{L.stat_recorded_power()}</div>
 							<div class="summary-number">
 								{valueText(summary.summaryPower.averageValue)}<small>W</small>
 							</div>
 						</div>
 						<div>
-							<div class="summary-label">平均心率 · 记录</div>
+							<div class="summary-label">{L.stat_recorded_heart()}</div>
 							<div class="summary-number">
 								{valueText(summary.summaryHeartRate.averageValue)}<small>bpm</small>
 							</div>
@@ -85,26 +88,26 @@
 					{#if !demo}<WorkoutDetails {workout} />{/if}
 					<section class="source-details">
 						<details>
-							<summary>查看来源与统计口径</summary>
+							<summary>{L.workout_show_provenance()}</summary>
 							<dl class="stats-rows">
 								<div>
-									<dt>数据来源</dt>
-									<dd>{demo ? '合成演示响应' : '当前账号的训练记录'}</dd>
+									<dt>{L.data_source()}</dt>
+									<dd>{demo ? L.data_synthetic_response() : L.data_account_workout()}</dd>
 								</div>
 								<div>
-									<dt>统计口径</dt>
-									<dd>记录汇总，未重新计算</dd>
+									<dt>{L.workout_statistic_basis()}</dt>
+									<dd>{L.workout_summary_recorded()}</dd>
 								</div>
 								<div>
-									<dt>修订号</dt>
+									<dt>{L.workout_revision()}</dt>
 									<dd>{workout.workoutRevision}</dd>
 								</div>
 								<div>
-									<dt>经过时长</dt>
+									<dt>{L.label_elapsed_time()}</dt>
 									<dd>{duration(summary.summaryElapsedTime)}</dd>
 								</div>
 								<div>
-									<dt>累计爬升</dt>
+									<dt>{L.label_ascent()}</dt>
 									<dd>{valueText(summary.summaryAscent)} m</dd>
 								</div>
 							</dl>

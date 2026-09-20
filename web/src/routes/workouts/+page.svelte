@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { formatLocale } from '$lib/i18n/format';
+	import { m as L } from '$lib/paraglide/messages.js';
 	import { useSession } from '$lib/auth/session.svelte';
 	import { page } from '$app/state';
 	import { createFocusSnapshot, type FocusSnapshot } from '$lib/focus-snapshot.svelte';
@@ -14,6 +16,7 @@
 	import {
 		commonCard,
 		groupCards,
+		dayText,
 		duration,
 		timeSummary,
 		valueText
@@ -111,7 +114,7 @@
 		}
 		const result = filtersFromUrl(url.searchParams);
 		if (!result.success) {
-			validation = result.error.issues[0]?.message ?? '请检查筛选条件。';
+			validation = result.error.issues[0]?.message ?? L.filter_invalid();
 			return;
 		}
 		validation = '';
@@ -138,69 +141,69 @@
 	);
 </script>
 
-<svelte:head><title>训练 · AI Fitness</title></svelte:head>
+<svelte:head><title>{L.page_workouts_title()}</title></svelte:head>
 <header class="page-heading">
 	<div>
-		<div class="eyebrow">TRAINING LOG</div>
-		<h1>每一次训练，都值得回看</h1>
-		<p class="subtle">记录你的节奏，读懂每一段努力。</p>
+		<div class="eyebrow">{L.eyebrow_training_log()}</div>
+		<h1>{L.workouts_heading()}</h1>
+		<p class="subtle">{L.workouts_intro()}</p>
 	</div>
-	{#if demo}<a class="button" href={resolve('/demo')}>演示说明 <Icon kind="arrow" size={16} /></a
+	{#if demo}<a class="button" href={resolve('/demo')}
+			>{L.workouts_demo_info()} <Icon kind="arrow" size={16} /></a
 		>{:else}<div class="form-actions">
-			<a class="button primary" href={resolve('/workouts/import')}>上传 FIT</a><a
+			<a class="button primary" href={resolve('/workouts/import')}>{L.action_upload_fit()}</a><a
 				class="button"
-				href={resolve('/workouts/new')}>手动录入</a
+				href={resolve('/workouts/new')}>{L.action_manual_workout()}</a
 			>
 		</div>{/if}
 </header>
 <div class="list-toolbar">
-	<div class="filters" aria-label="运动类型">
+	<div class="filters" aria-label={L.label_sport()}>
 		<button class:chosen={!selectedSport} aria-pressed={!selectedSport} onclick={() => filter('')}
-			>全部训练</button
+			>{L.workouts_all()}</button
 		><button
 			class:chosen={selectedSport === 'cycling'}
 			aria-pressed={selectedSport === 'cycling'}
-			onclick={() => filter('cycling')}>骑行</button
+			onclick={() => filter('cycling')}>{L.sport_cycling()}</button
 		><button
 			class:chosen={selectedSport === 'running'}
 			aria-pressed={selectedSport === 'running'}
-			onclick={() => filter('running')}>跑步</button
+			onclick={() => filter('running')}>{L.sport_running()}</button
 		>
 	</div>
-	<span class="small subtle">按开始时间排序 · 本地时区</span>
+	<span class="small subtle">{L.workouts_order()}</span>
 </div>
 <form class="surface form-stack filter-form" onsubmit={applyFilters}>
 	<div class="filter-fields">
-		<label>开始日期<input type="date" name="from" bind:value={fromDate} /></label>
-		<label>结束日期（含当天）<input type="date" name="through" bind:value={throughDate} /></label>
-		<label>标签（精确匹配）<input name="tag" bind:value={tagDraft} /></label>
+		<label>{L.label_start_date()}<input type="date" name="from" bind:value={fromDate} /></label>
+		<label>{L.filter_end_date()}<input type="date" name="through" bind:value={throughDate} /></label
+		>
+		<label>{L.filter_tag()}<input name="tag" bind:value={tagDraft} /></label>
 	</div>
 	<div class="form-actions">
-		<button class="button primary">应用筛选</button><button
+		<button class="button primary">{L.filter_apply()}</button><button
 			type="button"
 			class="button"
-			onclick={clearFilters}>清除筛选</button
+			onclick={clearFilters}>{L.filter_clear()}</button
 		>
 	</div>
-	<p class="small subtle">按训练开始时间筛选 · {timezone}</p>
+	<p class="small subtle">{L.filter_time_zone({ zone: timezone })}</p>
 	{#if filterError}<p class="form-error" role="alert">{filterError}</p>{/if}
 </form>
-{#if !filters.success}<div class="status">请修正筛选条件后再查看训练。</div>
-{:else if query.isPending}<div class="status" role="status">正在读取训练记录…</div>
+{#if !filters.success}<div class="status">{L.filter_correct()}</div>
+{:else if query.isPending}<div class="status" role="status">{L.workouts_loading()}</div>
 {:else if query.isError && !query.data}<Feedback error={query.error} {retry} />
 {:else if !items.length}<div class="feedback">
 		<Icon size={32} />
-		<h2>还没有训练记录</h2>
+		<h2>{L.workouts_empty_title()}</h2>
 		<p>
-			{demo
-				? '当前筛选下没有训练。可以切换运动类型，或在演示场景中选择正常数据。'
-				: '当前筛选下没有训练记录。可以切换运动类型，或手动录入一次训练。'}
+			{demo ? L.workouts_demo_empty() : L.workouts_empty()}
 		</p>
-		<button class="button" onclick={clearFilters}>查看全部训练</button>
+		<button class="button" onclick={clearFilters}>{L.workouts_view_all()}</button>
 	</div>
 {:else}
 	{#each groups as [day, activities] (day)}<section class="activity-group">
-			<h2>{day}</h2>
+			<h2>{dayText(activities[0].range.rangeStart)}</h2>
 			<div class="activity-list">
 				{#each activities as activity (activity.id)}{@const summary =
 						commonCard(activity)}{@const timing = timeSummary(summary)}{@const kind =
@@ -214,15 +217,15 @@
 						<span class="sport-icon"><Icon {kind} size={26} /></span>
 						<div class="activity-identity">
 							<span class="activity-type"
-								>{kind === 'cycling' ? '骑行' : '跑步'} · {new Date(
+								>{kind === 'cycling' ? L.sport_cycling() : L.sport_running()} · {new Date(
 									activity.range.rangeStart
-								).toLocaleTimeString('zh-CN', {
+								).toLocaleTimeString(formatLocale(), {
 									hour: '2-digit',
 									minute: '2-digit',
 									hour12: false
 								})}</span
 							>
-							<h3>{activity.userData.workoutTitle ?? '未命名训练'}</h3>
+							<h3>{activity.userData.workoutTitle ?? L.workout_untitled()}</h3>
 							<div class="tags">
 								{#each activity.userData.workoutTags as tag, i (i)}<span class="tag">{tag}</span
 									>{/each}
@@ -231,7 +234,7 @@
 						<div class="activity-numbers">
 							<div>
 								<strong>{valueText(summary.summaryDistance, 0.001, 1)} <small>km</small></strong
-								><span>距离</span>
+								><span>{L.label_distance()}</span>
 							</div>
 							<div><strong>{duration(timing.seconds)}</strong><span>{timing.label}</span></div>
 						</div>
@@ -249,8 +252,8 @@
 					query.error instanceof ApiError && query.error.code === 'invalid_cursor'
 						? retry()
 						: query.fetchNextPage()}
-				>{query.isFetchingNextPage ? '正在读取…' : '加载更多训练'}</button
-			>{:else}<span class="small subtle">已显示全部 {items.length} 条训练</span>{/if}
+				>{query.isFetchingNextPage ? L.action_loading() : L.workouts_load_more()}</button
+			>{:else}<span class="small subtle">{L.workouts_all_shown({ count: items.length })}</span>{/if}
 	</div>
 {/if}
 

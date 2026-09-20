@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m as L } from '$lib/paraglide/messages.js';
 	import { createQuery } from '@tanstack/svelte-query';
 	import { browser } from '$app/environment';
 	import { resolve } from '$app/paths';
@@ -22,24 +23,24 @@
 	}));
 </script>
 
-<aside aria-label="近期训练" class="recent">
-	<h2>近期训练</h2>
+<aside aria-label={L.workouts_recent()} class="recent">
+	<h2>{L.workouts_recent()}</h2>
 	{#each query.data?.items ?? [] as item (item.id)}<a
 			class:active={item.id === id}
 			aria-current={item.id === id ? 'page' : undefined}
 			href={resolve(`/workouts/[id]${suffix}`, { id: item.id })}
 			><small>{dateText(item.range.rangeStart)}</small><strong
-				>{item.userData.workoutTitle ?? '未命名训练'}</strong
+				>{item.userData.workoutTitle ?? L.workout_untitled()}</strong
 			><small
 				>{valueText(commonCard(item).summaryDistance, 0.001, 1)} km · {duration(
 					timeSummary(commonCard(item)).seconds
 				)}</small
 			></a
 		>{/each}
-	{#if query.isPending}<p class="small subtle">正在加载…</p>{:else if query.isError}<p
+	{#if query.isPending}<p class="small subtle">{L.status_loading()}</p>{:else if query.isError}<p
 			class="small subtle"
 		>
-			暂时无法读取近期训练
+			{L.workouts_recent_unavailable()}
 		</p>{/if}
 </aside>
 

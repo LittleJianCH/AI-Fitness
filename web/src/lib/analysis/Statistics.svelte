@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m as L } from '$lib/paraglide/messages.js';
 	import type { MetricAnalysis } from '$lib/api/generated/client';
 	import { metricInfo, metricValueText } from './presentation';
 	import { duration } from '$lib/workouts/presentation';
@@ -9,7 +10,7 @@
 
 <div class="surface">
 	<dl class="stats-rows">
-		{#each [['平均', metric.metricStatistics.averageValue], ['最大', metric.metricStatistics.maximumValue], ['最小', metric.metricStatistics.minimumValue], ['非零平均', metric.metricAverageExcludingZeros]] as row, index (index)}<div
+		{#each [[L.stat_average(), metric.metricStatistics.averageValue], [L.stat_maximum(), metric.metricStatistics.maximumValue], [L.stat_minimum(), metric.metricStatistics.minimumValue], [L.stat_nonzero_average(), metric.metricAverageExcludingZeros]] as row, index (index)}<div
 			>
 				<dt>{row[0]}</dt>
 				<dd>
@@ -18,20 +19,20 @@
 				</dd>
 			</div>{/each}
 		<div>
-			<dt>有效覆盖</dt>
+			<dt>{L.stat_coverage()}</dt>
 			<dd>{duration(metric.metricCoveredSeconds)}</dd>
 		</div>
 		<div>
-			<dt>真实采样数</dt>
+			<dt>{L.stat_sample_count()}</dt>
 			<dd>{metric.metricSampleCount}</dd>
 		</div>
 	</dl>
-	<h3>{info.title}分布</h3>
+	<h3>{L.stat_distribution({ metric: info.title })}</h3>
 	{#if metric.metricDistribution.length}
 		<AnalysisPlot
 			kind="bar"
 			xLabel={`${info.title} (${info.unit})`}
-			yLabel="分钟"
+			yLabel={L.unit_minutes()}
 			labels={metric.metricDistribution.map(
 				(b) =>
 					`${metricValueText(b.binLower, metric.metricKind, 1)}–${metricValueText(b.binUpper, metric.metricKind, 1)}`
@@ -39,10 +40,17 @@
 			points={metric.metricDistribution.map((b, i) => [i, b.binSeconds / 60])}
 		/>
 		<details>
-			<summary>查看分布数据</summary>
-			<div class="table-scroll" role="region" aria-label={`${info.title}分布表`}>
+			<summary>{L.stat_distribution_data()}</summary>
+			<div
+				class="table-scroll"
+				role="region"
+				aria-label={L.stat_distribution_table({ metric: info.title })}
+			>
 				<table>
-					<thead><tr><th>区间 ({info.unit})</th><th>时间</th></tr></thead><tbody
+					<thead
+						><tr><th>{L.stat_interval_unit({ unit: info.unit })}</th><th>{L.label_time()}</th></tr
+						></thead
+					><tbody
 						>{#each metric.metricDistribution as bin, i (i)}<tr
 								><td
 									>{metricValueText(bin.binLower, metric.metricKind, 2)}–{metricValueText(
@@ -56,7 +64,7 @@
 				</table>
 			</div>
 		</details>
-	{:else}<p class="subtle">没有足够的连续采样，无法计算时间分布。</p>{/if}
+	{:else}<p class="subtle">{L.stat_distribution_missing()}</p>{/if}
 </div>
 
 <style>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m as L } from '$lib/paraglide/messages.js';
 	import type { ZoneDuration } from '$lib/api/generated/client';
 	import { valueText, duration } from '$lib/workouts/presentation';
 	let { zones, unit, title }: { zones: ZoneDuration[]; unit: string; title: string } = $props();
@@ -9,11 +10,16 @@
 <h3>{title}</h3>
 {#if zones.length}<div class="table-scroll" role="region" aria-label={title}>
 		<table>
-			<thead><tr><th>分区</th><th>范围 ({unit})</th><th>时间</th></tr></thead><tbody
+			<thead
+				><tr
+					><th>{L.zone_label()}</th><th>{L.zone_range_unit({ unit })}</th><th>{L.label_time()}</th
+					></tr
+				></thead
+			><tbody
 				>{#each zones as zone (zone.zoneIndex)}<tr
 						><td>Z{zone.zoneIndex}</td><td
 							>{valueText(zone.zoneLower, 1, 1)}–{zone.zoneUpper === undefined
-								? '以上'
+								? L.zone_above()
 								: valueText(zone.zoneUpper, 1, 1)}</td
 						><td
 							>{duration(zone.zoneSeconds)}
@@ -22,7 +28,7 @@
 					>{/each}</tbody
 			>
 		</table>
-	</div>{:else}<p class="subtle">缺少有效参数或连续采样，分区暂不可用。</p>{/if}
+	</div>{:else}<p class="subtle">{L.zone_missing()}</p>{/if}
 
 <style>
 	h3 {

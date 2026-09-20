@@ -1,4 +1,8 @@
 <script lang="ts">
+	import { protectUnsavedChanges } from '$lib/i18n/guard.svelte';
+	import { formatLocale } from '$lib/i18n/format';
+
+	import { m as L } from '$lib/paraglide/messages.js';
 	import { createInfiniteQuery, createQuery, useQueryClient } from '@tanstack/svelte-query';
 	import { z } from 'zod';
 	import { useSession } from '$lib/auth/session.svelte';
@@ -51,7 +55,12 @@
 	let confirmation = $state('');
 	let validation = $state('');
 	let notice = $state('');
-	const time = (value: string) => new Date(value).toLocaleString('zh-CN', { hour12: false });
+	protectUnsavedChanges(
+		() => !!session.user && !!(currentPassword || newPassword || confirmation),
+		() => L.discard_password(),
+		() => busy
+	);
+	const time = (value: string) => new Date(value).toLocaleString(formatLocale(), { hour12: false });
 	async function retrySessions() {
 		if (sessions.error instanceof ApiError && sessions.error.code === 'invalid_cursor')
 			await client.resetQueries({ queryKey, exact: true });
@@ -60,10 +69,10 @@
 	}
 	async function revoke(item?: Session) {
 		const message = !item
-			? '退出所有设备？当前页面也会退出登录。'
+			? L.account_confirm_all()
 			: item.current
-				? '退出当前设备？当前页面会返回登录。'
-				: '退出这台设备？该设备需要重新登录。';
+				? L.account_confirm_current()
+				: L.account_confirm_device();
 		if (busy || !window.confirm(message)) return;
 		busy = true;
 		actionError = null;
@@ -81,7 +90,7 @@
 			);
 			if (!item || item.current) session.end();
 			else {
-				notice = '已退出这台设备。';
+				notice = L.account_device_revoked();
 				await client.resetQueries({ queryKey, exact: true });
 			}
 		} catch (cause) {
@@ -98,15 +107,18 @@
 		const parsed = putAuthPasswordBody.safeParse({ currentPassword, newPassword });
 		const length = [...newPassword].length;
 		if (!parsed.success || !currentPassword) {
-			validation = '请填写当前密码和新密码。';
+			validation = L.account_password_required();
 			return;
 		}
 		if (length < policy.data.minimumPasswordLength || length > policy.data.maximumPasswordLength) {
-			validation = `新密码需要 ${policy.data.minimumPasswordLength}–${policy.data.maximumPasswordLength} 个字符。`;
+			validation = L.account_password_length({
+				minimum: policy.data.minimumPasswordLength,
+				maximum: policy.data.maximumPasswordLength
+			});
 			return;
 		}
 		if (newPassword !== confirmation) {
-			validation = '两次输入的新密码不一致。';
+			validation = L.account_password_mismatch();
 			return;
 		}
 		busy = true;
@@ -148,46 +160,54 @@
 	<section class="surface form-stack">
 		<div class="section-heading">
 			<div>
-				<h2>登录设备</h2>
-				<p class="small subtle">时间按本地时区显示。</p>
+				<h2>{L.account_devices()}</h2>
+				<p class="small subtle">{L.account_local_time()}</p>
 			</div>
 			<button
 				class="button"
 				disabled={busy || sessions.isFetching}
-				onclick={() => client.resetQueries({ queryKey, exact: true })}>刷新设备</button
+				onclick={() => client.resetQueries({ queryKey, exact: true })}
+				>{L.account_refresh_devices()}</button
 			>
 		</div>
 		{#if actionError}<p class="form-error" role="alert">{errorText(actionError)}</p>{/if}
 		{#if notice}<p role="status">{notice}</p>{/if}
-		{#if sessions.isPending}<p role="status">正在读取登录设备…</p>
-		{:else if items.length}<ul class="sessions" aria-label="登录设备">
+		{#if sessions.isPending}<p role="status">{L.account_devices_loading()}</p>
+		{:else if items.length}<ul class="sessions" aria-label={L.account_devices()}>
 				{#each items as item (item.id)}<li class="session-card">
 						<div class="section-heading">
-							<h3>{item.deviceName ?? (item.transport === 'browser' ? '浏览器' : '客户端')}</h3>
-							{#if item.current}<span class="tag">当前设备</span>{/if}
+							<h3>
+								{item.deviceName ??
+									(item.transport === 'browser' ? L.account_browser() : L.account_client())}
+							</h3>
+							{#if item.current}<span class="tag">{L.account_current_device()}</span>{/if}
 						</div>
-						<p class="small subtle">{item.transport === 'browser' ? '浏览器会话' : '客户端会话'}</p>
+						<p class="small subtle">
+							{item.transport === 'browser'
+								? L.account_browser_session()
+								: L.account_client_session()}
+						</p>
 						<dl class="stats-rows small">
 							<div>
-								<dt>登录时间</dt>
+								<dt>{L.account_signed_in_at()}</dt>
 								<dd>{time(item.createdAt)}</dd>
 							</div>
 							<div>
-								<dt>最近活动</dt>
+								<dt>{L.account_last_active()}</dt>
 								<dd>{time(item.lastSeenAt)}</dd>
 							</div>
 							<div>
-								<dt>会话最晚到期</dt>
+								<dt>{L.account_session_expiry()}</dt>
 								<dd>{time(item.absoluteExpiresAt)}</dd>
 							</div>
 						</dl>
 						<div>
 							<button class="button" disabled={busy} onclick={() => revoke(item)}
-								>{item.current ? '退出当前设备' : '退出这台设备'}</button
+								>{item.current ? L.account_sign_out_current() : L.account_sign_out_device()}</button
 							>
 						</div>
 					</li>{/each}
-			</ul>{:else if !sessions.isError}<p>没有可显示的登录设备。</p>{/if}
+			</ul>{:else if !sessions.isError}<p>{L.account_devices_empty()}</p>{/if}
 		{#if sessions.isError}<Feedback error={sessions.error} retry={retrySessions} />{/if}
 		{#if sessions.hasNextPage}<button
 				class="button"
@@ -196,18 +216,20 @@
 					sessions.error instanceof ApiError && sessions.error.code === 'invalid_cursor'
 						? retrySessions()
 						: sessions.fetchNextPage()}
-				>{sessions.isFetchingNextPage ? '正在读取…' : '加载更多设备'}</button
+				>{sessions.isFetchingNextPage ? L.action_loading() : L.account_more_devices()}</button
 			>{/if}
 		<div>
-			<button class="button danger" disabled={busy} onclick={() => revoke()}>退出所有设备</button>
+			<button class="button danger" disabled={busy} onclick={() => revoke()}
+				>{L.account_sign_out_all()}</button
+			>
 		</div>
 	</section>
 	<section class="surface form-stack password-section">
-		<h2>修改密码</h2>
-		<p class="subtle">修改成功后会退出所有设备，请使用新密码重新登录。</p>
+		<h2>{L.account_password_change()}</h2>
+		<p class="subtle">{L.account_password_note()}</p>
 		<form class="form-stack" onsubmit={changePassword}>
 			<label
-				>当前密码<input
+				>{L.account_current_password()}<input
 					type="password"
 					autocomplete="current-password"
 					required
@@ -216,7 +238,7 @@
 				/></label
 			>
 			<label
-				>新密码<input
+				>{L.account_new_password()}<input
 					type="password"
 					autocomplete="new-password"
 					required
@@ -225,7 +247,7 @@
 				/></label
 			>
 			<label
-				>确认新密码<input
+				>{L.account_confirm_password()}<input
 					type="password"
 					autocomplete="new-password"
 					required
@@ -234,12 +256,15 @@
 				/></label
 			>
 			{#if policy.data}<p class="small subtle">
-					新密码需要 {policy.data.minimumPasswordLength}–{policy.data.maximumPasswordLength} 个字符。
+					{L.account_password_length({
+						minimum: policy.data.minimumPasswordLength,
+						maximum: policy.data.maximumPasswordLength
+					})}
 				</p>{/if}
 			{#if validation}<p class="form-error" role="alert">{validation}</p>{/if}
 			{#if passwordError}<p class="form-error" role="alert">{errorText(passwordError)}</p>{/if}
 			<button class="button primary" disabled={busy || !policy.data}
-				>{busy ? '正在处理…' : '修改密码并退出'}</button
+				>{busy ? L.action_processing() : L.account_password_submit()}</button
 			>
 		</form>
 		{#if policy.isError}<Feedback error={policy.error} retry={() => policy.refetch()} />{/if}

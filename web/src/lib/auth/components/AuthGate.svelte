@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$lib/paraglide/messages.js';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -32,4 +33,4 @@
 	{#key session.user.id}{@render children()}{/key}
 {:else if session.state.type === 'error'}
 	<Feedback error={session.state.error} retry={() => session.restore()} />
-{:else}<div class="status" role="status">正在确认登录状态…</div>{/if}
+{:else}<div class="status" role="status">{m.auth_restoring()}</div>{/if}

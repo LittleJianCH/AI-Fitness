@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m as L } from '$lib/paraglide/messages.js';
 	import { untrack } from 'svelte';
 	import type { SportProfile, LoadWeighting } from '$lib/api/generated/client';
 	let { title, profile = $bindable() }: { title: string; profile: SportProfile } = $props();
@@ -16,9 +17,9 @@
 		weighting: previous?.heartRateWeighting ?? 'exponent192'
 	});
 	const fields = [
-		['resting', '静息'],
-		['threshold', '阈值'],
-		['maximum', '最大']
+		['resting', L.label_resting()],
+		['threshold', L.label_threshold()],
+		['maximum', L.stat_maximum()]
 	] as const;
 	function update() {
 		profile.sportHeartRate =
@@ -39,11 +40,15 @@
 <fieldset>
 	<legend>{title}</legend>
 	<label
-		>{title}阈值功率 (W)<input
+		>{L.settings_sport_ftp({ sport: title })}<input
 			type="number"
 			min="0.01"
 			step="any"
-			bind:value={profile.sportThresholdWatts}
+			value={profile.sportThresholdWatts ?? ''}
+			oninput={(event) => {
+				profile.sportThresholdWatts =
+					event.currentTarget.value === '' ? undefined : event.currentTarget.valueAsNumber;
+			}}
 		/></label
 	>
 	<label
@@ -54,12 +59,12 @@
 				enabled = e.currentTarget.checked;
 				update();
 			}}
-		/>配置{title}心率参数</label
+		/>{L.settings_sport_enable_heart({ sport: title })}</label
 	>
 	{#if enabled}
-		<p class="small subtle">请填写自己的参数。负荷使用明确选择的指数，不根据身份推断。</p>
+		<p class="small subtle">{L.settings_heart_note()}</p>
 		{#each fields as [key, label] (key)}<label
-				>{title}{label}心率 (bpm)<input
+				>{L.settings_sport_heart_value({ sport: title, kind: label })}<input
 					type="number"
 					required
 					min="1"
@@ -72,7 +77,7 @@
 				/></label
 			>{/each}
 		<label
-			>{title}TRIMP 指数<select
+			>{L.settings_sport_trimp({ sport: title })}<select
 				value={draft.weighting}
 				onchange={(e) => {
 					draft.weighting = e.currentTarget.value === 'exponent167' ? 'exponent167' : 'exponent192';

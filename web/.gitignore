@@ -26,3 +26,11 @@ vite.config.ts.timestamp-*
 /src/lib/api/generated/
 /test-results/
 /playwright-report/
+
+/src/lib/paraglide/
+/project.inlang/cache/
+/project.inlang/project_id
+
+# Compiler-created project metadata is not maintained source.
+project.inlang/*
+!project.inlang/settings.json

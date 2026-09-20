@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m as L } from '$lib/paraglide/messages.js';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import WorkoutGate from '$lib/workouts/components/WorkoutGate.svelte';
@@ -19,36 +20,40 @@
 	}
 </script>
 
-<svelte:head><title>轨迹 · AI Fitness</title></svelte:head>
-<nav class="breadcrumb" aria-label="面包屑">
-	<a href={resolve(`/workouts${suffix}`)}>训练</a><span>/</span><a
-		href={resolve(`/workouts/[id]${suffix}`, { id })}>训练详情</a
-	><span>/</span><span>轨迹</span>
+<svelte:head><title>{L.page_route_title()}</title></svelte:head>
+<nav class="breadcrumb" aria-label={L.navigation_breadcrumb()}>
+	<a href={resolve(`/workouts${suffix}`)}>{L.navigation_workouts()}</a><span>/</span><a
+		href={resolve(`/workouts/[id]${suffix}`, { id })}>{L.workout_details()}</a
+	><span>/</span><span>{L.route_title()}</span>
 </nav>
 <WorkoutGate {id} {scenario}>
 	{#snippet children(workout)}{@const samples = motion(workout).motionPosition}{@const sample =
 			samples[selected]}
 		<header class="page-heading">
 			<div>
-				<div class="eyebrow">ROUTE REVIEW</div>
-				<h1>沿着轨迹，再看一次</h1>
+				<div class="eyebrow">{L.eyebrow_route_review()}</div>
+				<h1>{L.route_heading()}</h1>
 				<p class="subtle">{workout.workoutUserData.workoutTitle}</p>
 			</div>
 		</header>
 		{#if samples.length && sample}<section class="surface">
 				<RoutePlot {samples} {selected} />
 				<p class="subtle small">
-					{import.meta.env.MODE === 'demo' ? '合成轨迹示意' : '轨迹示意'} · 无地图底图 · WGS84
+					{L.route_basemap_note({
+						kind: import.meta.env.MODE === 'demo' ? L.route_synthetic() : L.route_diagram()
+					})}
 				</p>
 				<label for="route-sample"
-					>经过时间：{duration(
-						(Date.parse(sample.timestamp) -
-							Date.parse(workout.workoutObservation.observationRange.rangeStart)) /
-							1000
-					)}</label
+					>{L.point_elapsed_value({
+						time: duration(
+							(Date.parse(sample.timestamp) -
+								Date.parse(workout.workoutObservation.observationRange.rangeStart)) /
+								1000
+						)
+					})}</label
 				><input
 					id="route-sample"
-					aria-label="选择轨迹样本"
+					aria-label={L.route_sample_picker()}
 					type="range"
 					min="0"
 					max={samples.length - 1}
@@ -56,8 +61,8 @@
 					value={selected}
 					oninput={selectSample}
 				/>
-				<p class="small subtle">起点为空心圆，当前选中位置为深色圆点。选择的是实际记录时间点。</p>
-			</section>{:else}<div class="status">这次训练没有记录 GPS 轨迹。</div>{/if}
+				<p class="small subtle">{L.route_help()}</p>
+			</section>{:else}<div class="status">{L.route_missing()}</div>{/if}
 	{/snippet}
 </WorkoutGate>
 

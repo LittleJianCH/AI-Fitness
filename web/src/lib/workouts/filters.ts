@@ -1,3 +1,4 @@
+import { m as L } from '$lib/paraglide/messages.js';
 import { z } from 'zod';
 import type { GetWorkoutsParams } from '../api/generated/client';
 export function localDay(value: string): Date | undefined {
@@ -9,21 +10,21 @@ export function localDay(value: string): Date | undefined {
 		return;
 	return date;
 }
-const day = z
-	.string()
-	.refine((value) => value === '' || localDay(value) !== undefined, '请使用有效的本地日期。');
+const day = z.string().refine((value) => value === '' || localDay(value) !== undefined, {
+	error: () => L.date_invalid_local()
+});
 export const workoutFilters = z
 	.object({
-		sport: z.enum(['', 'cycling', 'running']),
+		sport: z.enum(['', 'cycling', 'running'], { error: () => L.filter_invalid() }),
 		from: day,
 		through: day,
 		tag: z.string()
 	})
 	.superRefine((value, context) => {
 		if (value.from && value.through && value.from > value.through)
-			context.addIssue({ code: 'custom', message: '结束日期应不早于开始日期。' });
+			context.addIssue({ code: 'custom', message: L.date_range_reversed() });
 		if (value.through === '9999-12-31')
-			context.addIssue({ code: 'custom', message: '结束日期超出支持范围。' });
+			context.addIssue({ code: 'custom', message: L.date_range_overflow() });
 	})
 	.transform((value): GetWorkoutsParams => {
 		const from = value.from ? localDay(value.from) : undefined;

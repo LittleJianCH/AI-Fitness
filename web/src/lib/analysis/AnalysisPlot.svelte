@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { formatLocale } from '$lib/i18n/format';
 	import { onMount } from 'svelte';
 	import { init, use, type EChartsType } from 'echarts/core';
 	import { BarChart, ScatterChart, LineChart } from 'echarts/charts';
@@ -71,7 +72,7 @@
 										return '';
 									const [x, y] = params.value;
 									return typeof x === 'number' && typeof y === 'number'
-										? `${xLabel}: ${x.toLocaleString('zh-CN', { maximumFractionDigits: 2 })}\n${yLabel}: ${y.toLocaleString('zh-CN', { maximumFractionDigits: 2 })}`
+										? `${xLabel}: ${x.toLocaleString(formatLocale(), { maximumFractionDigits: 2 })}\n${yLabel}: ${y.toLocaleString(formatLocale(), { maximumFractionDigits: 2 })}`
 										: '';
 								}
 							: undefined
